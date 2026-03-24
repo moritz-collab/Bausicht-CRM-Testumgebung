@@ -170,16 +170,67 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 .appt-type { font-size:12px; color:var(--muted); margin-top:1px; }
 .appt-co   { font-size:13px; font-weight:600; margin-top:3px; color:var(--acc); }
 
-/* ── KANBAN ─────────────────────────────────────────────── */
-.kanban { display:flex; gap:12px; padding:4px 14px 20px; overflow-x:auto; min-height:60vh; scrollbar-width:none; }
+/* ── KANBAN PIPELINE ────────────────────────────────────── */
+.pipe-stats { display:flex; gap:8px; padding:0 14px 10px; overflow-x:auto; scrollbar-width:none; }
+.pipe-stats::-webkit-scrollbar { display:none; }
+.pipe-stat { background:var(--surf); border-radius:12px; padding:10px 14px; flex-shrink:0; box-shadow:var(--sh); border:.5px solid var(--border); }
+.pipe-stat-v { font-size:20px; font-weight:800; letter-spacing:-.5px; color:var(--text); }
+.pipe-stat-l { font-size:10.5px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.4px; margin-top:1px; }
+.kanban { display:flex; gap:10px; padding:4px 14px 24px; overflow-x:auto; min-height:60vh; scrollbar-width:none; align-items:flex-start; }
 .kanban::-webkit-scrollbar { display:none; }
-.k-col { min-width:200px; max-width:200px; }
-.k-head { display:flex; align-items:center; justify-content:space-between; padding:4px 2px 10px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
-.k-cnt { background:var(--border); color:var(--muted); border-radius:8px; padding:2px 7px; font-size:11px; }
-.k-card { background:var(--surf); border-radius:var(--r); padding:11px 12px; margin-bottom:8px; cursor:pointer; box-shadow:var(--sh); border:.5px solid var(--border); transition:transform .1s; }
-.k-card:active { transform:scale(.97); }
-.k-name { font-size:13.5px; font-weight:600; margin-bottom:3px; }
-.k-sub  { font-size:12px; color:var(--muted); }
+.k-col { min-width:210px; max-width:210px; display:flex; flex-direction:column; }
+.k-head { border-top:3px solid var(--k-clr, var(--border)); border-radius:var(--r) var(--r) 0 0; background:var(--surf); padding:10px 11px 8px; box-shadow:var(--sh); }
+.k-head-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:2px; }
+.k-head-lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--k-clr, var(--muted)); }
+.k-cnt { background:var(--border); color:var(--muted); border-radius:7px; padding:1px 6px; font-size:10.5px; font-weight:700; }
+.k-vol { font-size:10.5px; color:var(--muted); }
+.k-body { display:flex; flex-direction:column; gap:7px; padding:7px 0 0; }
+.k-card { background:var(--surf); border-radius:var(--r); padding:11px 12px; cursor:pointer; box-shadow:var(--sh); border:.5px solid var(--border); transition:transform .1s, box-shadow .1s; }
+.k-card:active { transform:scale(.97); box-shadow:none; }
+.k-card-co { font-size:13.5px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:1px; }
+.k-card-ttl { font-size:12px; color:var(--sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.k-card-foot { display:flex; align-items:center; justify-content:space-between; margin-top:7px; }
+.k-card-vol { font-size:12.5px; font-weight:700; color:var(--text); }
+.k-card-meta { font-size:10.5px; color:var(--muted); }
+.k-add-btn { margin-top:6px; width:100%; padding:8px; border:1.5px dashed var(--border); border-radius:var(--r); background:none; cursor:pointer; font-size:12px; color:var(--muted); font-family:inherit; transition:background .1s, color .1s; }
+.k-add-btn:hover { background:var(--surf); color:var(--acc); border-color:var(--acc); }
+/* Deal detail bottom sheet */
+#deal-sheet { position:fixed; inset:0; z-index:600; display:none; align-items:flex-end; }
+#deal-sheet.on { display:flex; }
+#deal-sheet-bg { position:absolute; inset:0; background:rgba(0,0,0,.4); animation:fadeIn .2s; }
+#deal-sheet-card { position:relative; z-index:1; width:100%; max-height:82vh; overflow-y:auto; background:var(--surf); border-radius:20px 20px 0 0; padding:0 0 calc(var(--safe-b) + 16px); animation:sheetUp .22s cubic-bezier(.32,0,.25,1); }
+@keyframes sheetUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+.dsh-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:12px auto 0; }
+.dsh-head { padding:14px 18px 12px; border-bottom:.5px solid var(--border); }
+.dsh-ttl { font-size:17px; font-weight:800; letter-spacing:-.4px; }
+.dsh-co { font-size:13px; color:var(--acc); font-weight:600; margin-top:3px; cursor:pointer; }
+.dsh-stages { display:flex; gap:6px; padding:12px 18px; overflow-x:auto; scrollbar-width:none; border-bottom:.5px solid var(--border); }
+.dsh-stages::-webkit-scrollbar { display:none; }
+.dsh-stage-btn { flex-shrink:0; padding:5px 11px; border-radius:20px; border:1.5px solid var(--border); background:none; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; transition:all .12s; color:var(--sub); }
+.dsh-stage-btn.active { border-color:currentColor; }
+.dsh-body { padding:14px 18px; }
+.dsh-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:.5px solid var(--border); font-size:14px; }
+.dsh-row:last-child { border-bottom:none; }
+.dsh-row-k { color:var(--muted); font-size:12.5px; }
+.dsh-row-v { font-weight:600; }
+.dsh-actions { display:flex; gap:8px; padding:4px 18px 0; }
+.dsh-btn-edit { flex:1; padding:11px; background:var(--acc); color:white; border:none; border-radius:11px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; }
+.dsh-btn-del  { padding:11px 16px; background:var(--red-s); color:var(--red); border:none; border-radius:11px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; }
+/* Deal edit modal */
+#deal-modal { position:fixed; inset:0; z-index:700; display:none; align-items:flex-start; justify-content:center; background:rgba(0,0,0,.45); padding:56px 12px 0; }
+#deal-modal.on { display:flex; }
+#deal-modal-card { width:100%; max-width:480px; background:var(--surf); border-radius:var(--r-lg); overflow:hidden; animation:sheetDrop .22s cubic-bezier(.32,0,.25,1); max-height:calc(100vh - 64px); overflow-y:auto; }
+.dm-head { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:.5px solid var(--border); }
+.dm-title { font-size:17px; font-weight:800; }
+.dm-close { border:none; background:none; font-size:22px; cursor:pointer; color:var(--muted); line-height:1; padding:0 4px; }
+.dm-body { padding:18px; display:flex; flex-direction:column; gap:14px; }
+.dm-lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin-bottom:5px; display:block; }
+.dm-inp { width:100%; padding:10px 12px; font-size:15px; font-family:inherit; border:1.5px solid var(--border); border-radius:10px; outline:none; color:var(--text); background:var(--bg); transition:border-color .15s; }
+.dm-inp:focus { border-color:var(--acc); background:var(--surf); }
+.dm-sel { width:100%; padding:10px 12px; font-size:15px; font-family:inherit; border:1.5px solid var(--border); border-radius:10px; outline:none; color:var(--text); background:var(--bg); }
+.dm-foot { padding:14px 18px; border-top:.5px solid var(--border); display:flex; gap:8px; }
+.dm-save { flex:1; padding:12px; background:var(--acc); color:white; border:none; border-radius:10px; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer; }
+.dm-del { padding:12px 16px; background:var(--red-s); color:var(--red); border:none; border-radius:10px; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer; display:none; }
 
 /* ── MEHR ───────────────────────────────────────────────── */
 .prof-card { margin:14px 14px 0; background:linear-gradient(135deg,var(--acc),#5B21B6); border-radius:var(--r-lg); padding:20px; color:white; box-shadow:0 8px 24px rgba(124,58,237,.3); }
@@ -1111,11 +1162,81 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 
     <!-- ── PIPELINE ─────────────────────── -->
     <div class="view" id="view-pipeline">
-      <div class="v-head"><div class="v-title">Pipeline</div><div class="v-sub">Deals nach Phase</div></div>
+      <div class="v-head">
+        <div class="v-head-row">
+          <div><div class="v-title">Pipeline</div></div>
+          <button onclick="openDealModal(null,null)" style="background:var(--acc);color:white;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Neuer Deal
+          </button>
+        </div>
+      </div>
+      <div class="pipe-stats" id="pipe-stats">
+        <div class="pipe-stat"><div class="pipe-stat-v" id="ps-open">–</div><div class="pipe-stat-l">Offene Deals</div></div>
+        <div class="pipe-stat"><div class="pipe-stat-v" id="ps-vol">–</div><div class="pipe-stat-l">Pipeline-Volumen</div></div>
+        <div class="pipe-stat"><div class="pipe-stat-v" id="ps-won">–</div><div class="pipe-stat-l">Gewonnen (30d)</div></div>
+      </div>
       <div class="kanban" id="pipe-board">
-        <div class="k-col"><div class="k-card sk" style="height:80px"> </div><div class="k-card sk" style="height:70px"> </div></div>
-        <div class="k-col"><div class="k-card sk" style="height:90px"> </div></div>
-        <div class="k-col"><div class="k-card sk" style="height:75px"> </div></div>
+        <div class="k-col"><div class="k-body"><div class="k-card sk" style="height:72px"> </div><div class="k-card sk" style="height:72px"> </div></div></div>
+        <div class="k-col"><div class="k-body"><div class="k-card sk" style="height:72px"> </div></div></div>
+        <div class="k-col"><div class="k-body"><div class="k-card sk" style="height:72px"> </div><div class="k-card sk" style="height:72px"> </div></div></div>
+      </div>
+    </div>
+
+    <!-- Deal detail bottom sheet -->
+    <div id="deal-sheet" onclick="if(event.target===document.getElementById('deal-sheet-bg'))closeDealSheet()">
+      <div id="deal-sheet-bg"></div>
+      <div id="deal-sheet-card">
+        <div class="dsh-handle"></div>
+        <div class="dsh-head">
+          <div class="dsh-ttl" id="dsh-ttl">–</div>
+          <div class="dsh-co" id="dsh-co" onclick="dshGoToFirma()"></div>
+        </div>
+        <div class="dsh-stages" id="dsh-stages"></div>
+        <div class="dsh-body" id="dsh-body"></div>
+        <div class="dsh-actions">
+          <button class="dsh-btn-edit" onclick="dshEdit()">Bearbeiten</button>
+          <button class="dsh-btn-del"  onclick="dshDelete()">Löschen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deal create/edit modal -->
+    <div id="deal-modal" onclick="if(event.target===this)closeDealModal()">
+      <div id="deal-modal-card">
+        <div class="dm-head">
+          <span class="dm-title" id="dm-title">Neuer Deal</span>
+          <button class="dm-close" onclick="closeDealModal()">×</button>
+        </div>
+        <div class="dm-body">
+          <div>
+            <label class="dm-lbl">Titel / Projekt</label>
+            <input class="dm-inp" id="dm-titel" placeholder="z.B. Neubau Logistikzentrum Nord">
+          </div>
+          <div>
+            <label class="dm-lbl">Unternehmen</label>
+            <input class="dm-inp" id="dm-co-inp" placeholder="Firma suchen…" autocomplete="off"
+              oninput="dmCoFilter(this.value)" onfocus="dmCoFilter(this.value)">
+            <input type="hidden" id="dm-co-id">
+            <div id="dm-co-drop" style="margin-top:4px;border-radius:10px;overflow:hidden;border:.5px solid var(--border);display:none"></div>
+          </div>
+          <div>
+            <label class="dm-lbl">Phase</label>
+            <select class="dm-sel" id="dm-stage"></select>
+          </div>
+          <div>
+            <label class="dm-lbl">Volumen (€)</label>
+            <input class="dm-inp" id="dm-vol" type="number" placeholder="0" min="0">
+          </div>
+          <div>
+            <label class="dm-lbl">Zuständig</label>
+            <input class="dm-inp" id="dm-zustaendig" placeholder="Name…">
+          </div>
+        </div>
+        <div class="dm-foot">
+          <button class="dm-del" id="dm-del-btn" onclick="deleteDealFromModal()">Löschen</button>
+          <button class="dm-save" onclick="saveDeal()">Speichern</button>
+        </div>
       </div>
     </div>
 
@@ -1971,34 +2092,264 @@ function setTermFilter(el) {
 // ══════════════════════════════════════════════════════════
 // PIPELINE
 // ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+// PIPELINE — Kanban Board
+// ══════════════════════════════════════════════════════════
+
+const PIPELINE_STAGES = [
+  { key: 'demo_angefragt', label: 'Demo angefragt', color: '#2563EB' },
+  { key: 'demo_gehalten',  label: 'Demo gehalten',  color: '#7C3AED' },
+  { key: 'pilot_angebot',  label: 'Pilotangebot',   color: '#D97706' },
+  { key: 'pilot_aktiv',    label: 'Pilot aktiv',    color: '#0891B2' },
+  { key: 'rollout',        label: 'Gewonnen',        color: '#16A34A' },
+  { key: 'churned',        label: 'Verloren',        color: '#DC2626' },
+];
+const STAGE_MAP = Object.fromEntries(PIPELINE_STAGES.map(s => [s.key, s]));
+
+let _pipeDeals = [];       // loaded deals cache
+let _dshDealId = null;     // open deal in sheet
+let _dmDealId  = null;     // deal being edited in modal
+
 async function loadPipeline() {
   const board = qi('pipe-board');
-  // Pipeline table doesn't exist — show kunden grouped by status as a simple board
-  const { data, error } = await db.from('kunden')
-    .select('id,name,status,umsatz,typ')
-    .order('name', {ascending:true});
+  board.innerHTML = `<div class="k-col"><div class="k-body"><div class="k-card sk" style="height:72px"></div><div class="k-card sk" style="height:72px"></div></div></div><div class="k-col"><div class="k-body"><div class="k-card sk" style="height:72px"></div></div></div><div class="k-col"><div class="k-body"><div class="k-card sk" style="height:72px"></div></div></div>`;
 
-  if (error || !data?.length) {
-    board.innerHTML = '<div class="empty"><div class="empty-ico">⚡</div><div class="empty-msg">Keine Daten verfügbar</div></div>';
+  const { data, error } = await db.from('pipeline_deals')
+    .select('id,titel,stage,volumen,zustaendig,erstellt,gewonnen_datum,churn_datum,kunde_id,kunden(id,name)')
+    .order('erstellt', { ascending: false });
+
+  if (error) {
+    board.innerHTML = `<div style="padding:30px 18px;color:var(--red);font-size:13px">Fehler: ${escHtml(error.message)}</div>`;
     return;
   }
 
-  // Group by status
-  const groups = {};
-  data.forEach(k => { (groups[k.status] = groups[k.status]||[]).push(k); });
-  const statusColors = {'Aktiv':'#16A34A','Lead':'#2563EB','Inaktiv':'#6B7280','Churned':'#DC2626'};
+  _pipeDeals = data || [];
+  renderPipelineStats();
+  renderPipelineBoard();
+}
 
-  board.innerHTML = Object.entries(groups).map(([status, items]) => `
-    <div class="k-col">
+function renderPipelineStats() {
+  const open = _pipeDeals.filter(d => d.stage !== 'churned');
+  const vol  = open.reduce((s, d) => s + (Number(d.volumen) || 0), 0);
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+  const won  = _pipeDeals.filter(d => d.stage === 'rollout' && new Date(d.gewonnen_datum || d.erstellt) >= cutoff).length;
+  qi('ps-open').textContent = open.length;
+  qi('ps-vol').textContent  = vol >= 1000000 ? (vol/1000000).toFixed(1).replace('.',',')+' M€'
+                              : vol >= 1000   ? (vol/1000).toFixed(0)+' k€'
+                              : vol.toLocaleString('de-DE')+'€';
+  qi('ps-won').textContent  = won;
+}
+
+function renderPipelineBoard() {
+  const board = qi('pipe-board');
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+  board.innerHTML = PIPELINE_STAGES.map(s => {
+    const isTerminal = s.key === 'rollout' || s.key === 'churned';
+    const cards = _pipeDeals.filter(d => {
+      if (d.stage !== s.key) return false;
+      if (isTerminal) {
+        const dt = s.key === 'churned' ? (d.churn_datum || d.erstellt) : (d.gewonnen_datum || d.erstellt);
+        return !dt || new Date(dt) >= cutoff;
+      }
+      return true;
+    });
+    const colVol = cards.reduce((a,d) => a + (Number(d.volumen)||0), 0);
+    const volStr = colVol > 0 ? (colVol >= 1000 ? (colVol/1000).toFixed(0)+'k€' : colVol.toLocaleString('de-DE')+'€') : '';
+    const cardsHtml = cards.map(d => {
+      const co  = d.kunden?.name || '';
+      const ttl = d.titel || '';
+      const vol = d.volumen ? (Number(d.volumen) >= 1000 ? (Number(d.volumen)/1000).toFixed(0)+'k€' : Number(d.volumen).toLocaleString('de-DE')+'€') : '';
+      const age = d.erstellt ? Math.floor((Date.now() - new Date(d.erstellt)) / 86400000) : null;
+      return `<div class="k-card" onclick="openDealSheet('${d.id}')">
+        <div class="k-card-co">${escHtml(co || ttl || '–')}</div>
+        ${co && ttl ? `<div class="k-card-ttl">${escHtml(ttl)}</div>` : ''}
+        <div class="k-card-foot">
+          <span class="k-card-vol">${escHtml(vol)}</span>
+          <span class="k-card-meta">${d.zustaendig ? escHtml(d.zustaendig) : ''}${age !== null ? (d.zustaendig ? ' · ' : '') + age + 'd' : ''}</span>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="k-col" style="--k-clr:${s.color}">
       <div class="k-head">
-        <span style="color:${statusColors[status]||'#555'}">${status}</span>
-        <span class="k-cnt">${items.length}</span>
+        <div class="k-head-row">
+          <span class="k-head-lbl">${s.label}</span>
+          <span class="k-cnt">${cards.length}</span>
+        </div>
+        ${volStr ? `<div class="k-vol">${volStr}</div>` : ''}
+        ${isTerminal ? `<div style="font-size:9.5px;color:var(--muted);margin-top:1px">letzte 30 Tage</div>` : ''}
       </div>
-      ${items.map(k=>`<div class="k-card" onclick="openPanel('${k.id}')">
-        <div class="k-name">${k.name}</div>
-        <div class="k-sub">${k.typ||'–'}${k.umsatz?' · '+k.umsatz:''}</div>
-      </div>`).join('')}
-    </div>`).join('');
+      <div class="k-body">
+        ${cardsHtml}
+        <button class="k-add-btn" onclick="openDealModal(null,'${s.key}')">+ Deal hinzufügen</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Deal Detail Sheet ─────────────────────────────────────
+
+function openDealSheet(id) {
+  const d = _pipeDeals.find(x => x.id === id);
+  if (!d) return;
+  _dshDealId = id;
+  const s = STAGE_MAP[d.stage] || { label: d.stage, color: '#888' };
+  qi('dsh-ttl').textContent = d.titel || d.kunden?.name || '–';
+  const coEl = qi('dsh-co');
+  if (d.kunden?.name) { coEl.textContent = d.kunden.name; coEl.style.display = ''; }
+  else { coEl.textContent = ''; coEl.style.display = 'none'; }
+  // Stage selector
+  qi('dsh-stages').innerHTML = PIPELINE_STAGES.map(st =>
+    `<button class="dsh-stage-btn ${st.key === d.stage ? 'active' : ''}"
+      style="${st.key === d.stage ? `color:${st.color};border-color:${st.color};background:${st.color}18` : ''}"
+      onclick="dshChangeStage('${d.id}','${st.key}')">${st.label}</button>`
+  ).join('');
+  // Body rows
+  const vol = d.volumen ? Number(d.volumen).toLocaleString('de-DE') + ' €' : '–';
+  const dt  = d.erstellt ? new Date(d.erstellt).toLocaleDateString('de-DE', {day:'numeric',month:'short',year:'numeric'}) : '–';
+  qi('dsh-body').innerHTML = `
+    <div class="dsh-row"><span class="dsh-row-k">Phase</span><span class="dsh-row-v" style="color:${s.color}">${s.label}</span></div>
+    <div class="dsh-row"><span class="dsh-row-k">Volumen</span><span class="dsh-row-v">${vol}</span></div>
+    ${d.zustaendig ? `<div class="dsh-row"><span class="dsh-row-k">Zuständig</span><span class="dsh-row-v">${escHtml(d.zustaendig)}</span></div>` : ''}
+    <div class="dsh-row"><span class="dsh-row-k">Erstellt</span><span class="dsh-row-v">${dt}</span></div>
+  `;
+  qi('deal-sheet').classList.add('on');
+}
+
+function closeDealSheet() {
+  qi('deal-sheet').classList.remove('on');
+  _dshDealId = null;
+}
+
+function dshGoToFirma() {
+  const d = _pipeDeals.find(x => x.id === _dshDealId);
+  if (!d?.kunde_id) return;
+  closeDealSheet();
+  openFirmaDetail(d.kunde_id);
+}
+
+function dshEdit() {
+  const d = _pipeDeals.find(x => x.id === _dshDealId);
+  if (!d) return;
+  closeDealSheet();
+  openDealModal(d, null);
+}
+
+async function dshDelete() {
+  if (!_dshDealId || !confirm('Deal löschen?')) return;
+  const { error } = await db.from('pipeline_deals').delete().eq('id', _dshDealId);
+  if (error) { showToast('Fehler: ' + error.message, true); return; }
+  showToast('Deal gelöscht ✓');
+  closeDealSheet();
+  loadPipeline();
+}
+
+async function dshChangeStage(id, newStage) {
+  const d = _pipeDeals.find(x => x.id === id);
+  if (!d) return;
+  const payload = { stage: newStage };
+  if (newStage === 'rollout' && !d.gewonnen_datum) payload.gewonnen_datum = new Date().toISOString().slice(0,10);
+  if (newStage === 'churned' && !d.churn_datum)    payload.churn_datum    = new Date().toISOString().slice(0,10);
+  const { error } = await db.from('pipeline_deals').update(payload).eq('id', id);
+  if (error) { showToast('Fehler: ' + error.message, true); return; }
+  d.stage = newStage;
+  Object.assign(d, payload);
+  showToast('Phase geändert ✓');
+  closeDealSheet();
+  renderPipelineStats();
+  renderPipelineBoard();
+}
+
+// ── Deal Modal (Create / Edit) ────────────────────────────
+
+let _dmFirmen = [];   // firms for autocomplete
+
+function _dmFillStages(selected) {
+  const sel = qi('dm-stage');
+  sel.innerHTML = PIPELINE_STAGES.map(s =>
+    `<option value="${s.key}" ${s.key === selected ? 'selected' : ''}>${s.label}</option>`
+  ).join('');
+}
+
+async function openDealModal(dealOrNull, defaultStage) {
+  _dmDealId = dealOrNull?.id || null;
+  const d = typeof dealOrNull === 'object' && dealOrNull !== null ? dealOrNull : null;
+  qi('dm-title').textContent = d ? 'Deal bearbeiten' : 'Neuer Deal';
+  qi('dm-titel').value      = d?.titel || '';
+  qi('dm-vol').value        = d?.volumen || '';
+  qi('dm-zustaendig').value = d?.zustaendig || (_user?.email?.split('@')[0] || '');
+  qi('dm-co-inp').value     = d?.kunden?.name || '';
+  qi('dm-co-id').value      = d?.kunde_id || '';
+  qi('dm-co-drop').style.display = 'none';
+  _dmFillStages(d?.stage || defaultStage || 'demo_angefragt');
+  qi('dm-del-btn').style.display = d ? '' : 'none';
+  // Pre-load firms for autocomplete
+  if (!_dmFirmen.length) {
+    const { data } = await db.from('kunden').select('id,name').order('name');
+    _dmFirmen = data || [];
+  }
+  qi('deal-modal').classList.add('on');
+  setTimeout(() => qi('dm-titel').focus(), 80);
+}
+
+function closeDealModal() {
+  qi('deal-modal').classList.remove('on');
+  qi('dm-co-drop').style.display = 'none';
+  _dmDealId = null;
+}
+
+function dmCoFilter(q) {
+  const drop = qi('dm-co-drop');
+  const results = q.length < 1 ? _dmFirmen.slice(0, 8) : _dmFirmen.filter(f => f.name.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
+  if (!results.length) { drop.style.display = 'none'; return; }
+  drop.style.display = '';
+  drop.innerHTML = results.map(f =>
+    `<div onclick="dmCoSelect('${f.id}','${escHtml(f.name).replace(/'/g,"\\'")}');event.stopPropagation()"
+      style="padding:9px 13px;font-size:14px;cursor:pointer;border-bottom:.5px solid var(--border);background:var(--surf)"
+      onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background='var(--surf)'"
+    >${escHtml(f.name)}</div>`
+  ).join('');
+}
+
+function dmCoSelect(id, name) {
+  qi('dm-co-id').value  = id;
+  qi('dm-co-inp').value = name;
+  qi('dm-co-drop').style.display = 'none';
+}
+
+async function saveDeal() {
+  const titel = qi('dm-titel').value.trim();
+  const stage = qi('dm-stage').value;
+  const vol   = parseFloat(qi('dm-vol').value) || null;
+  const zust  = qi('dm-zustaendig').value.trim() || null;
+  const coId  = qi('dm-co-id').value || null;
+  if (!titel) { showToast('Bitte Titel eingeben', true); qi('dm-titel').focus(); return; }
+  const payload = { titel, stage, volumen: vol, zustaendig: zust, kunde_id: coId };
+  let error;
+  if (_dmDealId) {
+    ({ error } = await db.from('pipeline_deals').update(payload).eq('id', _dmDealId));
+    if (!error) { const idx = _pipeDeals.findIndex(x => x.id === _dmDealId); if (idx >= 0) Object.assign(_pipeDeals[idx], payload); }
+  } else {
+    payload.erstellt = new Date().toISOString();
+    const { data: nd, error: e } = await db.from('pipeline_deals').insert(payload).select('id,titel,stage,volumen,zustaendig,erstellt,gewonnen_datum,churn_datum,kunde_id,kunden(id,name)').single();
+    error = e;
+    if (!error && nd) _pipeDeals.unshift(nd);
+  }
+  if (error) { showToast('Fehler: ' + error.message, true); return; }
+  showToast(_dmDealId ? 'Deal aktualisiert ✓' : 'Deal erstellt ✓');
+  closeDealModal();
+  renderPipelineStats();
+  renderPipelineBoard();
+}
+
+async function deleteDealFromModal() {
+  if (!_dmDealId || !confirm('Deal löschen?')) return;
+  const { error } = await db.from('pipeline_deals').delete().eq('id', _dmDealId);
+  if (error) { showToast('Fehler: ' + error.message, true); return; }
+  _pipeDeals = _pipeDeals.filter(d => d.id !== _dmDealId);
+  showToast('Deal gelöscht ✓');
+  closeDealModal();
+  renderPipelineStats();
+  renderPipelineBoard();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -2653,7 +3004,10 @@ function closeApModal() {
 // ── Leads / Pipeline-Navigation ──────────────────────────
 function openDealFromOverview(dealId) {
   closeFirmaDetail();
-  setTimeout(() => navTo('pipeline'), 60);
+  setTimeout(() => {
+    navTo('pipeline');
+    if (dealId) setTimeout(() => openDealSheet(dealId), 150);
+  }, 60);
 }
 
 // ── Termine-Listen-Modal ──────────────────────────────────
@@ -3599,6 +3953,8 @@ document.addEventListener('keydown', e => {
     if (qi('fd-ap-modal')?.classList.contains('on'))          { closeApModal(); return; }
     if (qi('fd-termin-edit-modal')?.classList.contains('on')) { closeTerminEdit(); return; }
     if (qi('fd-term-modal')?.classList.contains('on'))        { closeTermineModal(); return; }
+    if (qi('deal-modal')?.classList.contains('on')) { closeDealModal(); return; }
+    if (qi('deal-sheet')?.classList.contains('on'))  { closeDealSheet(); return; }
     if (_view === 'google-settings') { closeGoogleSettings(); return; }
     if (_view === 'firma-detail') { closeFirmaDetail(); return; }
     closePanel();
