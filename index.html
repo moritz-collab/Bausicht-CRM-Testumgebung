@@ -1,0 +1,3748 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bausicht CRM</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ── RESET + TOKENS ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --acc:      #7C3AED;  --acc-s: #EDE9FE;  --acc-m: #DDD6FE;
+  --green:    #16A34A;  --green-s: #DCFCE7;
+  --blue:     #2563EB;  --blue-s:  #DBEAFE;
+  --orange:   #D97706;  --orange-s:#FEF3C7;
+  --red:      #DC2626;  --red-s:   #FEE2E2;
+  --bg:       #F4F4F8;
+  --surf:     #FFFFFF;
+  --border:   #E5E5EA;
+  --text:     #1C1C1E;
+  --sub:      #636366;
+  --muted:    #8E8E93;
+  --r: 13px; --r-lg: 18px;
+  --sh: 0 1px 4px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --tab-h: 64px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica Neue','Inter',sans-serif; background:var(--bg); color:var(--text); font-size:15px; line-height:1.45; -webkit-font-smoothing:antialiased; }
+
+/* ── AUTH ──────────────────────────────────────────────── */
+#auth { position:fixed; inset:0; z-index:9000; display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,#EDE9FE,#F5F3FF 50%,#E0E7FF); }
+.auth-card { width:360px; max-width:calc(100vw - 40px); background:white; border-radius:22px; padding:36px 32px; box-shadow:0 24px 64px rgba(124,58,237,.18); }
+.auth-logo { font-size:20px; font-weight:800; color:var(--acc); letter-spacing:-.6px; margin-bottom:2px; }
+.auth-tag  { font-size:13px; color:var(--muted); margin-bottom:28px; }
+.f-lbl { display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin-bottom:6px; }
+.f-inp { width:100%; padding:11px 14px; font-size:15px; font-family:inherit; border:1.5px solid var(--border); border-radius:10px; outline:none; transition:border-color .15s; margin-bottom:14px; color:var(--text); }
+.f-inp:focus { border-color:var(--acc); }
+.btn-p { width:100%; padding:13px; font-size:15px; font-weight:700; font-family:inherit; background:var(--acc); color:white; border:none; border-radius:11px; cursor:pointer; transition:opacity .15s; }
+.btn-p:hover { opacity:.88; } .btn-p:active { opacity:.76; } .btn-p:disabled { opacity:.5; cursor:not-allowed; }
+#auth-err { font-size:12.5px; color:var(--red); margin-top:10px; min-height:16px; }
+
+/* ── APP ────────────────────────────────────────────────── */
+#app { position:fixed; inset:0; display:none; flex-direction:column; overflow:hidden; }
+#app.on { display:flex; }
+
+/* ── VIEWS ──────────────────────────────────────────────── */
+#views { flex:1; position:relative; overflow:hidden; }
+.view { position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; opacity:0; pointer-events:none; transform:translateY(6px); transition:opacity .18s ease,transform .18s ease; padding-bottom:calc(var(--tab-h) + var(--safe-b) + 72px); }
+.view.on { opacity:1; pointer-events:auto; transform:translateY(0); }
+
+/* ── TAB BAR ────────────────────────────────────────────── */
+#tab-bar { flex-shrink:0; height:calc(var(--tab-h) + var(--safe-b)); background:rgba(255,255,255,.94); backdrop-filter:blur(20px) saturate(1.5); -webkit-backdrop-filter:blur(20px) saturate(1.5); border-top:.5px solid var(--border); display:flex; z-index:100; padding-bottom:var(--safe-b); }
+.tab { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; border:none; background:none; cursor:pointer; padding:8px 0; color:var(--muted); transition:color .12s; }
+.tab.on { color:var(--acc); }
+.t-wrap { position:relative; }
+.tab svg { width:24px; height:24px; stroke-width:1.8; fill:none; stroke:currentColor; }
+.tab.on svg { stroke-width:2.2; }
+.t-lbl { font-size:10px; font-weight:500; letter-spacing:.1px; }
+.t-dot { position:absolute; top:-2px; right:-4px; width:8px; height:8px; background:var(--red); border-radius:50%; border:1.5px solid white; display:none; }
+.t-dot.on { display:block; }
+
+/* ── SIDEBAR (≥768px) ───────────────────────────────────── */
+#sidebar { display:none; position:fixed; left:0; top:0; bottom:0; width:220px; background:white; border-right:.5px solid var(--border); flex-direction:column; padding:24px 10px 20px; z-index:50; }
+.sb-logo { font-size:17px; font-weight:800; color:var(--acc); letter-spacing:-.5px; padding:0 10px 20px; }
+.sb-nav { flex:1; display:flex; flex-direction:column; gap:1px; }
+.sb-i { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px; font-size:14px; font-weight:500; color:#555; cursor:pointer; border:none; background:none; width:100%; text-align:left; transition:background .1s,color .1s; position:relative; }
+.sb-i:hover { background:var(--bg); color:var(--text); }
+.sb-i.on { background:var(--acc-s); color:var(--acc); font-weight:600; }
+.sb-i svg { width:17px; height:17px; stroke-width:1.8; fill:none; stroke:currentColor; flex-shrink:0; }
+.sb-i.on svg { stroke-width:2.2; }
+.sb-badge { margin-left:auto; min-width:18px; height:18px; background:var(--red); color:white; border-radius:9px; font-size:10px; font-weight:700; display:none; align-items:center; justify-content:center; padding:0 4px; }
+.sb-badge.on { display:flex; }
+.sb-foot { border-top:.5px solid var(--border); padding:14px 10px 0; font-size:12px; color:var(--muted); }
+.sb-foot strong { display:block; font-size:13px; color:var(--text); font-weight:600; }
+.sb-divider { height:.5px; background:var(--border); margin:8px 10px; }
+
+/* ── FAB ────────────────────────────────────────────────── */
+#fab { position:fixed; bottom:calc(var(--tab-h) + var(--safe-b) + 14px); right:18px; width:50px; height:50px; border-radius:25px; background:var(--acc); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 18px rgba(124,58,237,.45); z-index:99; transition:transform .15s; }
+#fab:active { transform:scale(.92); }
+
+/* ── VIEW HEADER ────────────────────────────────────────── */
+.v-head { padding:18px 18px 10px; position:sticky; top:0; z-index:10; background:var(--bg); }
+.v-title { font-size:28px; font-weight:800; letter-spacing:-.8px; line-height:1.1; }
+.v-sub   { font-size:13px; color:var(--muted); margin-top:2px; }
+.v-head-row { display:flex; align-items:flex-end; justify-content:space-between; }
+.sec-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); padding:16px 18px 8px; }
+
+/* ── CARD GROUP (iOS-style) ─────────────────────────────── */
+.grp { margin:0 14px 10px; background:var(--surf); border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--sh); }
+.row { display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:.5px solid var(--border); cursor:pointer; transition:background .1s; min-height:54px; }
+.row:last-child { border-bottom:none; }
+.row:active { background:#F2F2F7; }
+.row-icon { width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+.row-body { flex:1; min-width:0; }
+.row-title { font-size:14.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.row-sub   { font-size:12px; color:var(--muted); margin-top:1px; }
+.row-right { text-align:right; flex-shrink:0; }
+.row-arr   { color:#C7C7CC; font-size:18px; margin-left:4px; }
+
+/* ── KPI GRID ───────────────────────────────────────────── */
+.kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 14px 2px; }
+.kpi { background:var(--surf); border-radius:var(--r-lg); padding:14px 16px; box-shadow:var(--sh); }
+.kpi-val { font-size:26px; font-weight:800; letter-spacing:-1px; line-height:1; }
+.kpi-lbl { font-size:12px; color:var(--muted); margin-top:4px; font-weight:500; }
+.kpi-ico { font-size:19px; margin-bottom:8px; }
+
+/* ── HEUTE: UNIFIED TIMELINE ────────────────────────────── */
+.timeline-item { display:flex; gap:12px; padding:10px 18px; border-bottom:.5px solid var(--border); cursor:pointer; transition:background .1s; }
+.timeline-item:last-child { border-bottom:none; }
+.timeline-item:active { background:#F9F9F9; }
+.tl-time { width:46px; flex-shrink:0; font-size:12px; font-weight:600; color:var(--muted); padding-top:2px; text-align:right; }
+.tl-dot-col { display:flex; flex-direction:column; align-items:center; gap:0; padding:0 6px; }
+.tl-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+.tl-line { flex:1; width:1px; background:var(--border); min-height:16px; }
+.tl-body { flex:1; padding-bottom:10px; }
+.tl-title { font-size:14.5px; font-weight:600; }
+.tl-sub   { font-size:12px; color:var(--muted); margin-top:2px; }
+.tl-tag   { display:inline-flex; align-items:center; margin-top:4px; }
+
+/* ── BADGES ─────────────────────────────────────────────── */
+.badge { display:inline-flex; align-items:center; padding:3px 8px; border-radius:6px; font-size:11.5px; font-weight:600; white-space:nowrap; }
+.b-g { background:var(--green-s);  color:var(--green); }
+.b-b { background:var(--blue-s);   color:var(--blue); }
+.b-o { background:var(--orange-s); color:var(--orange); }
+.b-r { background:var(--red-s);    color:var(--red); }
+.b-x { background:#F2F2F7;         color:var(--muted); }
+.b-p { background:var(--acc-s);    color:var(--acc); }
+
+/* ── SEARCH + CHIPS ─────────────────────────────────────── */
+.search-wrap { padding:4px 14px 2px; }
+.search-box { display:flex; align-items:center; gap:8px; background:var(--surf); border-radius:12px; padding:10px 14px; box-shadow:var(--sh); border:1px solid var(--border); }
+.search-box svg { width:15px; height:15px; stroke:var(--muted); flex-shrink:0; stroke-width:2; fill:none; }
+.search-box input { flex:1; border:none; outline:none; font-size:15px; background:transparent; color:var(--text); font-family:inherit; }
+.search-box input::placeholder { color:var(--muted); }
+.chips { display:flex; gap:6px; padding:8px 14px 6px; overflow-x:auto; scrollbar-width:none; }
+.chips::-webkit-scrollbar { display:none; }
+.chip { padding:6px 13px; border-radius:20px; font-size:12.5px; font-weight:600; border:1.5px solid var(--border); background:var(--surf); color:var(--muted); cursor:pointer; white-space:nowrap; transition:all .12s; }
+.chip.on { background:var(--acc); color:white; border-color:var(--acc); }
+
+/* ── COMPANY CARD ───────────────────────────────────────── */
+.co-card { display:flex; align-items:center; gap:12px; padding:13px 14px; border-bottom:.5px solid var(--border); cursor:pointer; transition:background .1s; }
+.co-card:last-child { border-bottom:none; }
+.co-card:active { background:#F2F2F7; }
+.co-av { width:42px; height:42px; border-radius:11px; background:var(--acc-s); color:var(--acc); font-weight:800; font-size:17px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.co-name { font-size:15px; font-weight:600; }
+.co-meta { font-size:12px; color:var(--muted); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.co-right { margin-left:auto; text-align:right; flex-shrink:0; }
+.co-mrr  { font-size:12px; color:var(--muted); margin-top:3px; }
+
+/* ── TASK ROW ───────────────────────────────────────────── */
+.t-row { display:flex; align-items:center; gap:12px; padding:11px 14px; border-bottom:.5px solid var(--border); transition:background .1s; }
+.t-row:last-child { border-bottom:none; }
+.t-row:active { background:#F2F2F7; }
+.t-check { width:24px; height:24px; border-radius:50%; border:2px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s; background:white; }
+.t-check:hover { border-color:var(--acc); }
+.t-check.done { background:var(--acc); border-color:var(--acc); }
+.t-check svg { width:12px; height:12px; stroke:transparent; stroke-width:3; fill:none; opacity:0; transition:opacity .15s; }
+.t-check.done svg { stroke:white; opacity:1; }
+.t-body { flex:1; min-width:0; cursor:pointer; }
+.t-name { font-size:14.5px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.t-name.done { text-decoration:line-through; color:var(--muted); }
+.t-meta { font-size:12px; color:var(--muted); margin-top:1px; }
+
+/* ── TERMINE / ACTIVITY ─────────────────────────────────── */
+.appt-card { background:var(--surf); border-radius:var(--r-lg); margin:0 14px 8px; overflow:hidden; box-shadow:var(--sh); }
+.appt-top { display:flex; align-items:center; gap:12px; padding:12px 14px; cursor:pointer; transition:background .1s; }
+.appt-top:active { background:#F2F2F7; }
+.appt-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.appt-time { font-size:14px; font-weight:700; }
+.appt-type { font-size:12px; color:var(--muted); margin-top:1px; }
+.appt-co   { font-size:13px; font-weight:600; margin-top:3px; color:var(--acc); }
+
+/* ── KANBAN ─────────────────────────────────────────────── */
+.kanban { display:flex; gap:12px; padding:4px 14px 20px; overflow-x:auto; min-height:60vh; scrollbar-width:none; }
+.kanban::-webkit-scrollbar { display:none; }
+.k-col { min-width:200px; max-width:200px; }
+.k-head { display:flex; align-items:center; justify-content:space-between; padding:4px 2px 10px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+.k-cnt { background:var(--border); color:var(--muted); border-radius:8px; padding:2px 7px; font-size:11px; }
+.k-card { background:var(--surf); border-radius:var(--r); padding:11px 12px; margin-bottom:8px; cursor:pointer; box-shadow:var(--sh); border:.5px solid var(--border); transition:transform .1s; }
+.k-card:active { transform:scale(.97); }
+.k-name { font-size:13.5px; font-weight:600; margin-bottom:3px; }
+.k-sub  { font-size:12px; color:var(--muted); }
+
+/* ── MEHR ───────────────────────────────────────────────── */
+.prof-card { margin:14px 14px 0; background:linear-gradient(135deg,var(--acc),#5B21B6); border-radius:var(--r-lg); padding:20px; color:white; box-shadow:0 8px 24px rgba(124,58,237,.3); }
+.prof-av { width:48px; height:48px; border-radius:50%; background:rgba(255,255,255,.22); font-weight:800; font-size:20px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
+.prof-name  { font-size:17px; font-weight:700; }
+.prof-email { font-size:13px; opacity:.75; margin-top:2px; }
+
+/* ── COMPANY PANEL ──────────────────────────────────────── */
+#cpanel { position:fixed; inset:0; z-index:500; display:none; }
+#cpanel.on { display:block; }
+#cp-bg { position:absolute; inset:0; background:rgba(0,0,0,.35); animation:fadeIn .2s; }
+@keyframes fadeIn { from{opacity:0} }
+#cp-sheet { position:absolute; top:0; right:0; bottom:0; width:min(460px,100vw); background:white; overflow-y:auto; -webkit-overflow-scrolling:touch; transform:translateX(100%); transition:transform .3s cubic-bezier(.32,.72,0,1); display:flex; flex-direction:column; }
+#cpanel.on #cp-sheet { transform:translateX(0); }
+.cp-head { padding:16px 16px 12px; border-bottom:.5px solid var(--border); display:flex; align-items:center; gap:10px; position:sticky; top:0; background:white; z-index:2; }
+.cp-close { width:30px; height:30px; border-radius:8px; background:var(--bg); border:none; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; color:var(--muted); flex-shrink:0; }
+.cp-av { width:42px; height:42px; border-radius:11px; background:var(--acc-s); color:var(--acc); font-weight:800; font-size:18px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.cp-name { font-size:16px; font-weight:700; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cp-hero { padding:12px 16px 10px; border-bottom:.5px solid var(--border); }
+.cp-stat-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.cp-quick-btns { display:flex; gap:8px; }
+.cp-qbtn { flex:1; padding:10px 6px; border-radius:11px; background:var(--bg); border:none; cursor:pointer; font-size:12px; font-weight:600; color:var(--acc); display:flex; flex-direction:column; align-items:center; gap:4px; transition:background .1s; }
+.cp-qbtn:active { background:var(--acc-m); }
+.cp-qbtn svg { width:18px; height:18px; stroke:var(--acc); stroke-width:2; fill:none; }
+.cp-tabs { display:flex; border-bottom:.5px solid var(--border); padding:0 4px; position:sticky; top:73px; background:white; z-index:1; }
+.cp-tab { padding:10px 13px; font-size:13px; font-weight:600; color:var(--muted); border:none; background:none; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-.5px; transition:color .12s; }
+.cp-tab.on { color:var(--acc); border-bottom-color:var(--acc); }
+#cp-body { padding:14px; flex:1; }
+.info-tbl { background:white; border-radius:var(--r-lg); border:.5px solid var(--border); overflow:hidden; margin-bottom:12px; }
+.info-row { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:.5px solid var(--border); }
+.info-row:last-child { border-bottom:none; }
+.info-k { font-size:13px; color:var(--muted); flex-shrink:0; }
+.info-v { font-size:14px; font-weight:500; text-align:right; max-width:62%; word-break:break-word; }
+.sd-toggle-hd { display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px 10px; cursor:pointer; -webkit-tap-highlight-color:transparent; user-select:none; }
+.sd-toggle-hd .sd-toggle-lbl { font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.6px; color:var(--muted); }
+.sd-toggle-chevron { width:16px; height:16px; stroke:var(--muted); fill:none; stroke-width:2.5;
+  stroke-linecap:round; stroke-linejoin:round; transition:transform .22s; flex-shrink:0; }
+.sd-toggle-chevron.open { transform:rotate(180deg); }
+.sd-body { display:none; }
+.sd-body.open { display:block; }
+.sd-grid { display:grid; grid-template-columns:repeat(2,1fr); }
+.sd-cell { display:flex; flex-direction:column; padding:10px 14px 9px;
+  border-bottom:.5px solid var(--border); border-right:.5px solid var(--border); min-width:0; }
+.sd-cell.sd-full { grid-column:1/-1; border-right:none; }
+.sd-k { font-size:11px; color:var(--muted); font-weight:600; margin-bottom:5px; letter-spacing:.1px; }
+.sd-v-inp, .sd-v-sel { border:none; outline:none; background:transparent; font-size:14px;
+  color:var(--text); font-family:inherit; padding:0; width:100%;
+  transition:background .15s, padding .12s; border-radius:5px; }
+.sd-v-inp:focus, .sd-v-sel:focus { background:var(--bg); padding:2px 5px; }
+.sd-v-ta { border:none; outline:none; background:transparent; resize:none; font-size:14px;
+  color:var(--text); font-family:inherit; padding:0; width:100%; line-height:1.55;
+  min-height:24px; overflow:hidden; transition:background .15s, padding .12s; border-radius:5px; }
+.sd-v-ta:focus { background:var(--bg); padding:2px 5px; }
+.sd-v-inp::placeholder, .sd-v-ta::placeholder { color:var(--border); font-weight:400; }
+.sd-saved { background:rgba(52,199,89,.13) !important; transition:background .4s !important; }
+
+/* ── QUICK CAPTURE ──────────────────────────────────────── */
+#capture { position:fixed; inset:0; z-index:600; display:none; }
+#capture.on { display:block; }
+#cap-bg { position:absolute; inset:0; background:rgba(0,0,0,.45); animation:fadeIn .18s; }
+#cap-body { position:absolute; left:0; right:0; bottom:0; background:white; border-radius:22px 22px 0 0; padding:16px 18px calc(18px + var(--safe-b)); transform:translateY(100%); transition:transform .3s cubic-bezier(.32,.72,0,1); }
+#capture.on #cap-body { transform:translateY(0); }
+.cap-handle { width:38px; height:4px; border-radius:2px; background:#E0E0E0; margin:0 auto 16px; }
+.cap-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.cap-title { font-size:17px; font-weight:700; }
+.cap-x { background:none; border:none; font-size:20px; color:var(--muted); cursor:pointer; padding:0 4px; }
+.cap-types { display:flex; gap:8px; margin-bottom:14px; }
+.cap-type { flex:1; padding:10px 6px; border-radius:11px; border:1.5px solid var(--border); background:white; font-size:12.5px; font-weight:600; cursor:pointer; text-align:center; color:var(--muted); transition:all .12s; }
+.cap-type.on { border-color:var(--acc); color:var(--acc); background:var(--acc-s); }
+.cap-f { width:100%; padding:11px 14px; border:1.5px solid var(--border); border-radius:11px; font-size:15px; margin-bottom:10px; outline:none; font-family:inherit; color:var(--text); transition:border-color .15s; }
+.cap-f:focus { border-color:var(--acc); }
+.cap-row { display:flex; gap:8px; }
+.cap-row .cap-f { flex:1; }
+.cap-save { width:100%; padding:14px; background:var(--acc); color:white; border:none; border-radius:13px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; margin-top:4px; transition:opacity .15s; }
+.cap-save:active { opacity:.85; }
+
+/* ── SKELETON ───────────────────────────────────────────── */
+.sk { border-radius:8px; background:linear-gradient(90deg,#F0F0F2 25%,#E8E8EC 50%,#F0F0F2 75%); background-size:200% 100%; animation:shimmer 1.4s ease-in-out infinite; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ── TOAST ──────────────────────────────────────────────── */
+#toast { position:fixed; bottom:calc(var(--tab-h) + var(--safe-b) + 16px); left:50%; transform:translateX(-50%) translateY(8px); background:#1C1C1E; color:white; padding:10px 18px; border-radius:22px; font-size:13.5px; font-weight:500; z-index:9999; white-space:nowrap; opacity:0; transition:opacity .2s,transform .2s; pointer-events:none; }
+#toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ── EMPTY ──────────────────────────────────────────────── */
+.empty { display:flex; flex-direction:column; align-items:center; padding:44px 20px; color:var(--muted); text-align:center; }
+.empty-ico { font-size:38px; margin-bottom:10px; }
+.empty-msg { font-size:14.5px; font-weight:500; }
+.empty-sub { font-size:13px; margin-top:4px; color:#B0B0B8; }
+
+/* ── FIRMEN: STATS STRIP ────────────────────────────── */
+.stats-strip { display:flex; gap:8px; padding:2px 14px 12px; overflow-x:auto; scrollbar-width:none; }
+.stats-strip::-webkit-scrollbar { display:none; }
+.stat-pill { background:var(--surf); border-radius:14px; padding:13px 18px; box-shadow:var(--sh); flex-shrink:0; text-align:center; min-width:76px; }
+.stat-pill-val { font-size:22px; font-weight:800; letter-spacing:-.6px; line-height:1; }
+.stat-pill-lbl { font-size:11px; color:var(--muted); margin-top:3px; font-weight:500; }
+
+/* ── FIRMEN: SORT ROW ───────────────────────────────── */
+.sort-row { display:flex; align-items:center; gap:6px; padding:0 14px 8px; }
+.sort-lbl { font-size:11px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.5px; flex-shrink:0; }
+.sort-chip { padding:5px 11px; border-radius:16px; font-size:12px; font-weight:600; border:1.5px solid var(--border); background:var(--surf); color:var(--muted); cursor:pointer; transition:all .12s; white-space:nowrap; }
+.sort-chip.on { background:var(--text); color:white; border-color:var(--text); }
+
+/* ── FIRMEN: ENHANCED COMPANY CARD ─────────────────── */
+.co-bottom { display:flex; align-items:center; gap:6px; margin-top:5px; flex-wrap:wrap; }
+.co-mrr-tag { font-size:12px; color:var(--muted); font-weight:500; }
+.co-act-btn { width:38px; height:38px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:all .15s; }
+.co-act-btn:active { transform:scale(.88); }
+.co-act-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.co-call-btn { background:var(--green-s); color:var(--green); }
+.co-call-btn:active { background:var(--green); color:white; }
+
+/* ── PANEL: QUICK NOTE ──────────────────────────────── */
+.qn-wrap { display:flex; gap:8px; margin-bottom:14px; }
+.qn-inp { flex:1; padding:10px 14px; border:1.5px solid var(--border); border-radius:11px; font-size:14px; font-family:inherit; outline:none; color:var(--text); background:white; transition:border-color .15s; }
+.qn-inp:focus { border-color:var(--acc); }
+.qn-btn { padding:10px 16px; background:var(--acc); color:white; border:none; border-radius:11px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:opacity .15s; }
+.qn-btn:active { opacity:.8; }
+
+/* ── DESKTOP ────────────────────────────────────────────── */
+@media (min-width:768px) {
+  #sidebar { display:flex; }
+  #tab-bar { display:none; }
+  #app { flex-direction:row; }
+  #views { margin-left:220px; }
+  .view { padding-bottom:40px; }
+  #fab { bottom:28px; right:28px; width:52px; height:52px; }
+  #cp-sheet { width:min(480px,55vw); }
+  #toast { bottom:28px; }
+}
+
+/* ── GOOGLE SETTINGS — full-screen overlay ─────────────── */
+#view-google-settings { background:var(--bg); overflow-y:auto; -webkit-overflow-scrolling:touch; }
+#app.gs-mode #tab-bar { display:none !important; }
+#app.gs-mode #fab     { display:none !important; }
+.gs-head { position:sticky; top:0; z-index:10; background:rgba(244,244,248,.95); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:.5px solid var(--border); display:flex; align-items:center; gap:10px; padding:14px 16px; }
+.gs-back { border:none; background:none; cursor:pointer; color:var(--acc); font-size:15px; font-weight:600; display:flex; align-items:center; gap:4px; padding:0; }
+.gs-back svg { width:20px; height:20px; stroke:var(--acc); fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+.gs-title { font-size:17px; font-weight:700; flex:1; }
+.gs-body { padding:16px 0 40px; }
+.gs-info { margin:0 14px; padding:16px; background:rgba(124,58,237,.06); border:1px solid rgba(124,58,237,.15); border-radius:var(--r-lg); }
+.gs-info-ttl { font-size:12px; font-weight:700; color:var(--acc); margin-bottom:10px; }
+.gs-info-row { font-size:12.5px; color:var(--sub); line-height:1.6; margin-bottom:5px; }
+.gs-info-row:last-child { margin-bottom:0; }
+.gs-acct-hd { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:.5px solid var(--border); }
+.gs-acct-hd-lbl { font-size:13.5px; font-weight:600; }
+.gs-acct-hd-sub { font-size:11.5px; color:var(--muted); margin-top:2px; }
+.gs-connect-btn { flex-shrink:0; background:var(--acc); color:white; border:none; border-radius:9px; padding:7px 14px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:opacity .15s; display:flex; align-items:center; gap:5px; }
+.gs-connect-btn:hover { opacity:.88; }
+.gs-connect-btn:disabled { opacity:.5; cursor:not-allowed; }
+.gs-acct-row { display:flex; align-items:center; gap:12px; padding:13px 16px; border-bottom:.5px solid var(--border); }
+.gs-acct-row:last-child { border-bottom:none; }
+.gs-acct-av { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#4285f4 0%,#34a853 100%); color:white; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; flex-shrink:0; }
+.gs-acct-body { flex:1; min-width:0; }
+.gs-acct-email { font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gs-acct-meta { font-size:11px; color:var(--muted); margin-top:2px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.gs-badge-ok  { background:var(--green-s); color:var(--green); padding:1px 7px; border-radius:7px; font-size:10.5px; font-weight:600; }
+.gs-badge-err { background:var(--red-s);   color:var(--red);   padding:1px 7px; border-radius:7px; font-size:10.5px; font-weight:600; }
+.gs-revoke-btn { border:none; background:none; color:var(--red); font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; padding:6px 10px; border-radius:8px; transition:background .1s; }
+.gs-revoke-btn:hover { background:var(--red-s); }
+
+/* ── FIRMA DETAIL — full-screen app-within-app ─────────── */
+#view-firma-detail { overflow:hidden; background:var(--bg); }
+/* Hide main chrome when company detail is open */
+#app.fd-mode #tab-bar { display:none !important; }
+#app.fd-mode #fab     { display:none !important; }
+
+/* Content region fills everything above the firm bottom bar */
+#fd-content {
+  position:absolute; inset:0;
+  bottom:calc(58px + var(--safe-b) + 24px);
+  overflow:hidden;
+}
+
+/* Each section = one full-height pane */
+.fd-sec {
+  position:absolute; inset:0;
+  overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  display:none;
+  padding-bottom:16px;
+}
+.fd-sec.on { display:block; }
+
+/* ── Overview section ── */
+.fd-brand-hd  { margin:14px 14px 14px; border-radius:var(--r-lg); padding:20px 18px;
+  display:flex; align-items:center; gap:16px;
+  background:linear-gradient(135deg,#6C3AED 0%,#9B70F5 100%);
+  box-shadow:0 4px 18px rgba(108,58,237,.35); }
+.fd-brand-logo{ width:56px; height:56px; border-radius:15px; flex-shrink:0;
+  background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:800; color:white; letter-spacing:-.5px; }
+.fd-brand-name{ font-size:21px; font-weight:800; color:white; letter-spacing:-.4px; line-height:1.2; }
+.fd-brand-typ { font-size:13px; color:rgba(255,255,255,.7); margin-top:4px; font-weight:500; }
+.fd-hero-card { margin:14px 14px 10px; background:var(--surf); border-radius:var(--r-lg); padding:16px; box-shadow:var(--sh); }
+.fd-hero-top  { display:flex; align-items:flex-start; gap:13px; }
+.fd-av { width:50px; height:50px; border-radius:12px; font-weight:800; font-size:19px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.fd-co-name   { font-size:18px; font-weight:800; letter-spacing:-.4px; line-height:1.2; flex:1; min-width:0; margin-top:2px; }
+.fd-co-badges { display:flex; gap:5px; flex-wrap:wrap; margin-top:7px; }
+.fd-qbtns     { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px; }
+.fd-qbtn      { padding:10px 4px; border-radius:11px; background:var(--bg); border:none; cursor:pointer; font-size:11px; font-weight:600; color:var(--acc); display:flex; flex-direction:column; align-items:center; gap:3px; transition:background .1s; -webkit-tap-highlight-color:transparent; }
+.fd-qbtn:active { background:var(--acc-m); }
+.fd-qbtn svg  { width:17px; height:17px; stroke:var(--acc); stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.fd-kpi-row   { display:flex; gap:8px; padding:0 14px 10px; overflow-x:auto; scrollbar-width:none; }
+.fd-kpi-row::-webkit-scrollbar { display:none; }
+.fd-kpi-pill  { background:var(--surf); border-radius:12px; padding:10px 16px; box-shadow:var(--sh); flex-shrink:0; text-align:center; min-width:66px; }
+.fd-kpi-v     { font-size:19px; font-weight:800; letter-spacing:-.4px; line-height:1; }
+.fd-kpi-l     { font-size:10.5px; color:var(--muted); margin-top:2px; font-weight:500; }
+
+/* ── Notes section — Apple Notes style ── */
+.fd-sec.fd-notes-sec { overflow:hidden; padding-bottom:0; }
+.fd-sec.fd-notes-sec.on { display:flex; flex-direction:row; }
+/* Note list panel */
+.fd-nl { width:100%; flex-shrink:0; display:flex; flex-direction:column; background:#FAFAF8; overflow:hidden; }
+.fd-nl-hd { padding:14px 16px 11px; display:flex; align-items:center; justify-content:space-between; background:#FAFAF8; border-bottom:.5px solid #E8E5DC; flex-shrink:0; }
+.fd-nl-title { font-size:22px; font-weight:800; letter-spacing:-.5px; color:#2C2217; }
+.fd-nl-add  { width:30px; height:30px; border-radius:9px; background:var(--acc); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:transform .15s; }
+.fd-nl-add:active { transform:scale(.88); }
+.fd-nl-add svg { width:16px; height:16px; stroke:white; stroke-width:2.5; fill:none; stroke-linecap:round; }
+.fd-nl-list { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+/* Note list items */
+.fd-ni { padding:12px 16px; border-bottom:.5px solid #EDE9DE; cursor:pointer; transition:background .1s; -webkit-tap-highlight-color:transparent; }
+.fd-ni:active { background:#FFF3D0; }
+.fd-ni.on { background:#FFF8E6; }
+.fd-ni-top  { display:flex; align-items:center; gap:6px; margin-bottom:3px; }
+.fd-ni-emo  { font-size:14px; }
+.fd-ni-typ  { font-size:11px; font-weight:600; color:#8A8070; }
+.fd-ni-dt   { font-size:11px; color:#B0A898; margin-left:auto; }
+.fd-ni-ttl  { font-size:13.5px; font-weight:600; color:#2C2217; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fd-ni-prv  { font-size:12px; color:#8A8070; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* Note edit panel — slides in from the right on mobile */
+.fd-ne { display:flex; flex-direction:column; background:#FFFEF7; overflow:hidden;
+  position:absolute; inset:0; transform:translateX(100%);
+  transition:transform .28s cubic-bezier(.32,.72,0,1); z-index:10; }
+.fd-ne.open { transform:translateX(0); }
+.fd-ne-hd   { padding:10px 16px; display:flex; align-items:center; gap:8px;
+  background:rgba(255,254,247,.96); border-bottom:.5px solid #E8E5DC;
+  flex-shrink:0; backdrop-filter:blur(8px); position:sticky; top:0; z-index:5; }
+.fd-ne-back { display:flex; align-items:center; gap:2px; background:none; border:none;
+  color:var(--acc); font-size:14px; font-weight:600; cursor:pointer; padding:0 8px 0 0; -webkit-tap-highlight-color:transparent; }
+.fd-ne-back svg { width:14px; height:14px; stroke:var(--acc); fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+.fd-ne-st   { font-size:12px; color:#8A8070; margin-left:auto; min-width:60px; text-align:right; }
+.fd-ne-types { display:flex; gap:6px; padding:10px 16px 9px; overflow-x:auto; scrollbar-width:none;
+  background:#FFFEF7; border-bottom:.5px solid #E8E5DC; flex-shrink:0; }
+.fd-ne-types::-webkit-scrollbar { display:none; }
+.fd-ne-tc   { padding:5px 12px; border-radius:16px; font-size:12px; font-weight:600;
+  background:#F0EDE5; color:#8A8070; border:none; cursor:pointer; white-space:nowrap;
+  transition:all .12s; flex-shrink:0; }
+.fd-ne-tc.on { background:var(--acc); color:white; }
+.fd-ne-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:18px 20px 40px; display:flex; flex-direction:column; }
+.fd-ne-ttl  { font-size:22px; font-weight:700; color:#2C2217; width:100%;
+  border:none; outline:none; background:transparent; resize:none;
+  font-family:-apple-system,'Helvetica Neue',sans-serif;
+  line-height:1.3; margin-bottom:14px; padding:0; display:block; min-height:1.3em; }
+.fd-ne-ttl::placeholder { color:#C8C0B4; font-weight:400; }
+.fd-ne-txt  { font-size:15.5px; color:#3D3020; width:100%; min-height:200px;
+  border:none; outline:none; background:transparent; resize:none;
+  font-family:-apple-system,'Helvetica Neue',sans-serif;
+  line-height:1.72; padding:0; display:block; flex:1; }
+.fd-ne-txt::placeholder { color:#C8C0B4; }
+.fd-ne-empty { display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:100%; text-align:center; color:#8A8070; padding:40px 20px; }
+.fd-ne-empty-ico { font-size:40px; opacity:.35; margin-bottom:12px; }
+.fd-ne-del { background:none; border:none; cursor:pointer; padding:5px 6px; border-radius:7px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  opacity:.65; transition:opacity .15s, background .12s; -webkit-tap-highlight-color:transparent; }
+.fd-ne-del:active { opacity:1; background:rgba(255,59,48,.1); }
+
+/* ── Firma detail bottom tab bar — floating pill ── */
+#fd-tab-bar {
+  position:absolute;
+  bottom:calc(var(--safe-b) + 12px);
+  left:14px; right:14px;
+  height:58px;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(24px) saturate(1.6);
+  -webkit-backdrop-filter:blur(24px) saturate(1.6);
+  border-radius:22px;
+  box-shadow:0 4px 24px rgba(0,0,0,.13), 0 1px 4px rgba(0,0,0,.08);
+  display:flex; z-index:100;
+  overflow:hidden;
+}
+.fd-tb { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px; border:none; background:none; cursor:pointer; color:var(--muted);
+  font-size:9.5px; font-weight:500; padding:8px 0; transition:color .12s;
+  -webkit-tap-highlight-color:transparent; letter-spacing:.1px; }
+.fd-tb.on  { color:var(--acc); }
+.fd-tb svg { width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.fd-tb.on svg { stroke-width:2.2; }
+.fd-tb-back { color:var(--acc); max-width:48px; }
+.fd-tb-back svg { stroke-width:2.5; }
+
+@media (min-width:768px) {
+  #app.fd-mode #sidebar { display:flex !important; }
+  #app.fd-mode #views   { margin-left:220px !important; }
+  .fd-nl { width:280px; min-width:280px; border-right:.5px solid #E8E5DC; }
+  .fd-ne { position:relative; flex:1; transform:none !important; z-index:auto; }
+  .fd-ne-back { display:none; }
+  #fd-tab-bar { left:14px; right:14px; }
+}
+
+/* ── Lizenz-Kachel (Übersicht) ────────────────────────── */
+.fd-liz-card {
+  margin:0 14px 14px;
+  background:var(--surf);
+  border-radius:var(--r-lg);
+  box-shadow:var(--sh);
+  overflow:hidden;
+  cursor:pointer;
+  transition:transform .12s, box-shadow .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.fd-liz-card:active { transform:scale(.985); box-shadow:none; }
+.fd-liz-hd {
+  padding:13px 16px 10px;
+  display:flex; align-items:baseline; justify-content:space-between;
+  border-bottom:.5px solid var(--border);
+}
+.fd-liz-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+.fd-liz-mrr   { font-size:20px; font-weight:800; letter-spacing:-.5px; color:var(--acc); }
+.fd-liz-period { font-size:11px; color:var(--muted); font-weight:500; margin-top:1px; }
+.fd-liz-body  { padding:10px 0 4px; }
+.fd-liz-row   { display:flex; align-items:center; gap:10px; padding:6px 16px; }
+.fd-liz-row:last-child { margin-bottom:4px; }
+.fd-liz-ico   { font-size:16px; width:24px; text-align:center; flex-shrink:0; }
+.fd-liz-name  { flex:1; font-size:13px; font-weight:600; color:var(--text); min-width:0; }
+.fd-liz-cnt   { font-size:12px; color:var(--muted); font-weight:500; flex-shrink:0; }
+.fd-liz-val   { font-size:13px; font-weight:700; color:var(--text); flex-shrink:0; min-width:68px; text-align:right; }
+.fd-liz-footer { padding:9px 16px; border-top:.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.fd-liz-hint  { font-size:11.5px; color:var(--acc); font-weight:600; }
+.fd-liz-arr   { font-size:15px; color:var(--muted); }
+
+/* ── Lizenz-Modal ─────────────────────────────────────── */
+#fd-liz-modal {
+  display:none;
+  position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,.45);
+  -webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);
+  align-items:flex-start;
+  justify-content:center;
+  padding:56px 12px 0;
+  box-sizing:border-box;
+}
+#fd-liz-modal.on { display:flex; }
+.fd-liz-sheet {
+  width:100%; max-width:780px;
+  max-height:calc(100vh - 76px);
+  background:var(--surf);
+  border-radius:22px;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,.22);
+  animation: sheetDrop .24s cubic-bezier(.32,.72,0,1) both;
+}
+@keyframes sheetDrop { from { transform:translateY(-18px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.fd-liz-sh-hd {
+  padding:16px 20px 12px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:.5px solid var(--border);
+  flex-shrink:0;
+}
+.fd-liz-sh-title { font-size:17px; font-weight:800; letter-spacing:-.3px; }
+.fd-liz-sh-close {
+  width:30px; height:30px; border-radius:50%; background:var(--bg);
+  border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:15px; color:var(--muted); transition:background .12s;
+}
+.fd-liz-sh-close:hover { background:var(--border); }
+.fd-liz-sh-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px 20px 24px; }
+/* Summary stats row */
+.fd-liz-stats { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+.fd-liz-stat  { background:var(--bg); border-radius:12px; padding:10px 14px; flex:1; min-width:100px; }
+.fd-liz-stat-v { font-size:18px; font-weight:800; letter-spacing:-.4px; }
+.fd-liz-stat-l { font-size:10.5px; color:var(--muted); margin-top:2px; font-weight:500; }
+/* Month selector chips */
+.fd-liz-months { display:flex; gap:6px; margin-bottom:16px; overflow-x:auto; scrollbar-width:none; padding-bottom:2px; }
+.fd-liz-months::-webkit-scrollbar { display:none; }
+.fd-liz-mchip {
+  padding:5px 12px; border-radius:16px; font-size:12px; font-weight:600;
+  border:none; background:var(--bg); color:var(--muted); cursor:pointer;
+  white-space:nowrap; flex-shrink:0; transition:all .12s;
+}
+.fd-liz-mchip.on { background:var(--acc); color:white; }
+/* Module rows in modal */
+.fd-liz-mod-list { display:flex; flex-direction:column; gap:8px; }
+.fd-liz-mod-card {
+  background:var(--bg); border-radius:12px; padding:12px 14px;
+  display:flex; align-items:center; gap:12px;
+}
+.fd-liz-mod-icon { font-size:20px; width:32px; text-align:center; flex-shrink:0; }
+.fd-liz-mod-info { flex:1; min-width:0; }
+.fd-liz-mod-name { font-size:14px; font-weight:700; color:var(--text); }
+.fd-liz-mod-sub  { font-size:12px; color:var(--muted); margin-top:2px; }
+.fd-liz-mod-right { text-align:right; flex-shrink:0; }
+.fd-liz-mod-eur  { font-size:15px; font-weight:800; color:var(--text); letter-spacing:-.3px; }
+.fd-liz-mod-cnt  { font-size:11px; color:var(--muted); margin-top:1px; }
+.fd-liz-divider  { height:.5px; background:var(--border); margin:14px 0; }
+
+/* ── Baustellen-Kachel (Übersicht) ───────────────────── */
+.fd-bs-card {
+  margin:0 14px 14px;
+  background:var(--surf);
+  border-radius:var(--r-lg);
+  box-shadow:var(--sh);
+  overflow:hidden;
+  cursor:pointer;
+  transition:transform .12s, box-shadow .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.fd-bs-card:active { transform:scale(.985); box-shadow:none; }
+.fd-bs-hd {
+  padding:13px 16px 10px;
+  display:flex; align-items:baseline; justify-content:space-between;
+  border-bottom:.5px solid var(--border);
+}
+.fd-bs-title  { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+.fd-bs-count  { font-size:20px; font-weight:800; letter-spacing:-.5px; color:var(--green,#16a34a); }
+.fd-bs-count-lbl { font-size:11px; color:var(--muted); font-weight:500; }
+.fd-bs-body   { padding:8px 0 4px; }
+.fd-bs-row    { display:flex; align-items:center; gap:10px; padding:6px 16px; }
+.fd-bs-dot    { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.fd-bs-dot.aktiv       { background:#16a34a; }
+.fd-bs-dot.geplant     { background:#2563eb; }
+.fd-bs-dot.abgeschlossen { background:#9ca3af; }
+.fd-bs-name   { flex:1; font-size:13px; font-weight:600; color:var(--text); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fd-bs-ort    { font-size:12px; color:var(--muted); flex-shrink:0; }
+.fd-bs-footer { padding:9px 16px; border-top:.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.fd-bs-hint   { font-size:11.5px; color:var(--acc); font-weight:600; }
+.fd-bs-arr    { font-size:15px; color:var(--muted); }
+
+/* ── Baustellen-Modal ─────────────────────────────────── */
+#fd-bs-modal {
+  display:none;
+  position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,.45);
+  -webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);
+  align-items:flex-start;
+  justify-content:center;
+  padding:56px 12px 0;
+  box-sizing:border-box;
+}
+#fd-bs-modal.on { display:flex; }
+.fd-bs-sheet {
+  width:100%; max-width:780px;
+  max-height:calc(100vh - 76px);
+  background:var(--surf);
+  border-radius:22px;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,.22);
+  animation: sheetDrop .24s cubic-bezier(.32,.72,0,1) both;
+}
+.fd-bs-sh-hd {
+  padding:16px 20px 12px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:.5px solid var(--border);
+  flex-shrink:0;
+}
+.fd-bs-sh-title { font-size:17px; font-weight:800; letter-spacing:-.3px; }
+.fd-bs-sh-close {
+  width:30px; height:30px; border-radius:50%; background:var(--bg);
+  border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:15px; color:var(--muted); transition:background .12s;
+}
+.fd-bs-sh-close:hover { background:var(--border); }
+.fd-bs-sh-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px 20px 24px; }
+/* Filter chips */
+.fd-bs-filters { display:flex; gap:6px; margin-bottom:16px; }
+.fd-bs-fchip {
+  padding:5px 12px; border-radius:16px; font-size:12px; font-weight:600;
+  border:none; background:var(--bg); color:var(--muted); cursor:pointer;
+  white-space:nowrap; flex-shrink:0; transition:all .12s;
+}
+.fd-bs-fchip.on { background:var(--acc); color:white; }
+/* Baustellen cards in modal */
+.fd-bs-mc {
+  background:var(--bg); border-radius:14px; padding:14px 16px;
+  margin-bottom:10px;
+}
+.fd-bs-mc-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:6px; }
+.fd-bs-mc-name { font-size:15px; font-weight:700; color:var(--text); }
+.fd-bs-mc-meta { font-size:12px; color:var(--muted); margin-top:2px; }
+.fd-bs-sbadge {
+  font-size:11px; font-weight:600; padding:3px 9px; border-radius:10px;
+  white-space:nowrap; flex-shrink:0; margin-top:2px;
+}
+.fd-bs-sbadge.aktiv       { background:#dcfce7; color:#16a34a; }
+.fd-bs-sbadge.geplant     { background:#dbeafe; color:#2563eb; }
+.fd-bs-sbadge.abgeschlossen { background:#f3f4f6; color:#6b7280; }
+/* Module tags inside modal */
+.fd-bs-mods { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+.fd-bs-mod-tag {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:3px 9px; border-radius:8px; font-size:11px; font-weight:500;
+  background:var(--surf); color:var(--muted); border:.5px solid var(--border);
+}
+.fd-bs-notiz { font-size:12px; color:var(--muted); margin-top:8px; line-height:1.5; }
+
+/* ── Task-Edit-Modal ──────────────────────────────────── */
+#fd-task-modal {
+  display:none;
+  position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,.45);
+  -webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);
+  align-items:flex-start;
+  justify-content:center;
+  padding:56px 12px 0;
+  box-sizing:border-box;
+}
+#fd-task-modal.on { display:flex; }
+.fd-task-sheet {
+  width:100%; max-width:520px;
+  max-height:calc(100vh - 76px);
+  background:var(--surf);
+  border-radius:22px;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,.22);
+  animation: sheetDrop .24s cubic-bezier(.32,.72,0,1) both;
+}
+.fd-task-sh-hd {
+  padding:16px 20px 12px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:.5px solid var(--border); flex-shrink:0;
+}
+.fd-task-sh-title { font-size:17px; font-weight:800; letter-spacing:-.3px; }
+.fd-task-sh-close {
+  width:30px; height:30px; border-radius:50%; background:var(--bg);
+  border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:15px; color:var(--muted); transition:background .12s;
+}
+.fd-task-sh-close:hover { background:var(--border); }
+.fd-task-sh-body { flex:1; overflow-y:auto; padding:20px; }
+.fd-task-field { margin-bottom:16px; }
+.fd-task-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:6px; }
+.fd-task-input, .fd-task-textarea, .fd-task-select {
+  width:100%; box-sizing:border-box;
+  background:var(--bg); border:.5px solid var(--border);
+  border-radius:10px; padding:10px 12px;
+  font-size:14px; color:var(--text); font-family:inherit;
+  outline:none; transition:border-color .12s;
+}
+.fd-task-input:focus, .fd-task-textarea:focus, .fd-task-select:focus { border-color:var(--acc); }
+.fd-task-textarea { resize:none; min-height:80px; line-height:1.55; }
+.fd-task-prio-row { display:flex; gap:6px; }
+.fd-task-prio-btn {
+  flex:1; padding:8px 4px; border-radius:10px; border:.5px solid var(--border);
+  background:var(--bg); font-size:12px; font-weight:600; cursor:pointer;
+  transition:all .12s; color:var(--muted); text-align:center;
+}
+.fd-task-prio-btn.on-hoch    { background:#fee2e2; color:#dc2626; border-color:#fca5a5; }
+.fd-task-prio-btn.on-mittel  { background:#fef3c7; color:#d97706; border-color:#fcd34d; }
+.fd-task-prio-btn.on-niedrig { background:#dcfce7; color:#16a34a; border-color:#86efac; }
+.fd-task-sh-footer {
+  padding:12px 20px; border-top:.5px solid var(--border);
+  display:flex; gap:8px; flex-shrink:0;
+}
+.fd-task-save-btn {
+  flex:1; padding:12px; border-radius:12px; border:none;
+  background:var(--acc); color:white; font-size:14px; font-weight:700;
+  cursor:pointer; transition:opacity .12s;
+}
+.fd-task-save-btn:active { opacity:.8; }
+.fd-task-done-btn {
+  padding:12px 16px; border-radius:12px; border:none;
+  background:var(--bg); color:var(--text); font-size:13px; font-weight:600;
+  cursor:pointer; border:.5px solid var(--border); transition:background .12s;
+}
+.fd-task-done-btn:hover { background:var(--border); }
+.fd-task-del-btn {
+  padding:12px 14px; border-radius:12px; border:none;
+  background:var(--bg); color:var(--red,#dc2626); font-size:13px; font-weight:600;
+  cursor:pointer; border:.5px solid rgba(220,38,38,.25); transition:all .12s;
+}
+.fd-task-del-btn:hover { background:#fee2e2; border-color:#fca5a5; }
+
+/* ── Ansprechpartner-Kachel ───────────────────────────── */
+.fd-ap-card {
+  margin:0 14px 14px; background:var(--surf); border-radius:var(--r-lg);
+  box-shadow:var(--sh); overflow:hidden;
+}
+.fd-ap-hd {
+  padding:12px 16px 10px; display:flex; align-items:center;
+  justify-content:space-between; border-bottom:.5px solid var(--border);
+}
+.fd-ap-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+.fd-ap-add {
+  width:26px; height:26px; border-radius:8px; background:var(--acc); border:none;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:transform .15s; flex-shrink:0;
+}
+.fd-ap-add:active { transform:scale(.88); }
+.fd-ap-add svg { width:14px; height:14px; stroke:white; stroke-width:2.5; fill:none; stroke-linecap:round; }
+.fd-ap-row {
+  display:flex; align-items:center; gap:11px; padding:10px 16px;
+  border-bottom:.5px solid var(--border); cursor:pointer;
+  transition:background .1s; -webkit-tap-highlight-color:transparent;
+}
+.fd-ap-row:last-child { border-bottom:none; }
+.fd-ap-row:active { background:var(--bg); }
+.fd-ap-av {
+  width:34px; height:34px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;
+}
+.fd-ap-info { flex:1; min-width:0; }
+.fd-ap-name { font-size:13.5px; font-weight:600; color:var(--text); }
+.fd-ap-pos  { font-size:11.5px; color:var(--muted); margin-top:1px; }
+.fd-ap-arr  { font-size:14px; color:var(--muted); flex-shrink:0; }
+.fd-ap-empty { padding:14px 16px; font-size:13px; color:var(--muted); }
+
+/* ── Ansprechpartner-Modal ────────────────────────────── */
+#fd-ap-modal {
+  display:none; position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,.45); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  align-items:flex-start; justify-content:center; padding:56px 12px 0; box-sizing:border-box;
+}
+#fd-ap-modal.on { display:flex; }
+.fd-ap-sheet {
+  width:100%; max-width:520px; max-height:calc(100vh - 76px);
+  background:var(--surf); border-radius:22px; display:flex; flex-direction:column;
+  overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,.22);
+  animation: sheetDrop .24s cubic-bezier(.32,.72,0,1) both;
+}
+.fd-ap-sh-hd {
+  padding:16px 20px 12px; display:flex; align-items:center; justify-content:space-between;
+  border-bottom:.5px solid var(--border); flex-shrink:0;
+}
+.fd-ap-sh-title { font-size:17px; font-weight:800; letter-spacing:-.3px; }
+.fd-ap-sh-close {
+  width:30px; height:30px; border-radius:50%; background:var(--bg); border:none;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:15px; color:var(--muted); transition:background .12s;
+}
+.fd-ap-sh-close:hover { background:var(--border); }
+.fd-ap-sh-body { flex:1; overflow-y:auto; padding:20px; }
+.fd-ap-sh-footer {
+  padding:12px 20px; border-top:.5px solid var(--border);
+  display:flex; gap:8px; flex-shrink:0;
+}
+
+/* ── Leads-Kachel ─────────────────────────────────────── */
+.fd-lead-card {
+  margin:0 14px 14px; background:var(--surf); border-radius:var(--r-lg);
+  box-shadow:var(--sh); overflow:hidden;
+}
+.fd-lead-hd {
+  padding:13px 16px 10px; display:flex; align-items:baseline;
+  justify-content:space-between; border-bottom:.5px solid var(--border);
+}
+.fd-lead-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+.fd-lead-count { font-size:20px; font-weight:800; letter-spacing:-.5px; color:#7c3aed; }
+.fd-lead-row {
+  display:flex; align-items:center; gap:10px; padding:9px 16px;
+  border-bottom:.5px solid var(--border); cursor:pointer;
+  transition:background .1s; -webkit-tap-highlight-color:transparent;
+}
+.fd-lead-row:last-child { border-bottom:none; }
+.fd-lead-row:active { background:var(--bg); }
+.fd-lead-stage {
+  font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:8px;
+  flex-shrink:0; white-space:nowrap;
+}
+.fd-lead-name { flex:1; font-size:13px; font-weight:600; color:var(--text); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fd-lead-vol  { font-size:12px; color:var(--muted); flex-shrink:0; }
+.fd-lead-arr  { font-size:14px; color:var(--muted); flex-shrink:0; }
+.fd-lead-footer {
+  padding:9px 16px; border-top:.5px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.fd-lead-hint { font-size:11.5px; color:var(--acc); font-weight:600; }
+
+/* ── Termine-Kachel ───────────────────────────────────── */
+.fd-term-card {
+  margin:0 14px 14px; background:var(--surf); border-radius:var(--r-lg);
+  box-shadow:var(--sh); overflow:hidden;
+}
+.fd-term-hd {
+  padding:12px 16px 10px; display:flex; align-items:center;
+  justify-content:space-between; border-bottom:.5px solid var(--border);
+}
+.fd-term-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+.fd-term-add {
+  width:26px; height:26px; border-radius:8px; background:var(--acc); border:none;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:transform .15s; flex-shrink:0;
+}
+.fd-term-add:active { transform:scale(.88); }
+.fd-term-add svg { width:14px; height:14px; stroke:white; stroke-width:2.5; fill:none; stroke-linecap:round; }
+.fd-term-row {
+  display:flex; align-items:center; gap:11px; padding:10px 16px;
+  border-bottom:.5px solid var(--border); cursor:pointer;
+  transition:background .1s; -webkit-tap-highlight-color:transparent;
+}
+.fd-term-row:last-child { border-bottom:none; }
+.fd-term-row:active { background:var(--bg); }
+.fd-term-ico { font-size:18px; width:32px; text-align:center; flex-shrink:0; }
+.fd-term-info { flex:1; min-width:0; }
+.fd-term-betreff { font-size:13.5px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fd-term-meta   { font-size:11.5px; color:var(--muted); margin-top:1px; }
+.fd-term-badge  { font-size:10px; font-weight:700; padding:2px 7px; border-radius:8px; flex-shrink:0; }
+.fd-term-badge.soon { background:#dbeafe; color:#2563eb; }
+.fd-term-badge.past { background:#f3f4f6; color:#6b7280; }
+.fd-term-footer {
+  padding:9px 16px; border-top:.5px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.fd-term-hint { font-size:11.5px; color:var(--acc); font-weight:600; cursor:pointer; }
+
+/* ── Termine-Listen-Modal ─────────────────────────────── */
+#fd-term-modal {
+  display:none; position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,.45); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  align-items:flex-start; justify-content:center; padding:56px 12px 0; box-sizing:border-box;
+}
+#fd-term-modal.on { display:flex; }
+.fd-term-sheet {
+  width:100%; max-width:640px; max-height:calc(100vh - 76px);
+  background:var(--surf); border-radius:22px; display:flex; flex-direction:column;
+  overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,.22);
+  animation: sheetDrop .24s cubic-bezier(.32,.72,0,1) both;
+}
+.fd-term-sh-hd {
+  padding:16px 20px 12px; display:flex; align-items:center; justify-content:space-between;
+  border-bottom:.5px solid var(--border); flex-shrink:0;
+}
+.fd-term-sh-title { font-size:17px; font-weight:800; letter-spacing:-.3px; }
+.fd-term-sh-close {
+  width:30px; height:30px; border-radius:50%; background:var(--bg); border:none;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:15px; color:var(--muted); transition:background .12s;
+}
+.fd-term-sh-close:hover { background:var(--border); }
+.fd-term-sh-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 20px 20px; }
+/* Filter chips in modal */
+.fd-term-filters { display:flex; gap:6px; margin-bottom:14px; }
+.fd-term-fchip {
+  padding:5px 12px; border-radius:16px; font-size:12px; font-weight:600;
+  border:none; background:var(--bg); color:var(--muted); cursor:pointer;
+  white-space:nowrap; transition:all .12s;
+}
+.fd-term-fchip.on { background:var(--acc); color:white; }
+/* Termin list item in modal */
+.fd-term-item {
+  display:flex; align-items:flex-start; gap:12px; padding:12px 14px;
+  background:var(--bg); border-radius:12px; margin-bottom:8px; cursor:pointer;
+  transition:background .1s; -webkit-tap-highlight-color:transparent;
+}
+.fd-term-item:active { background:var(--border); }
+.fd-term-item-ico { font-size:20px; width:30px; text-align:center; flex-shrink:0; margin-top:1px; }
+.fd-term-item-body { flex:1; min-width:0; }
+.fd-term-item-betreff { font-size:14px; font-weight:700; color:var(--text); margin-bottom:3px; }
+.fd-term-item-meta   { font-size:12px; color:var(--muted); }
+.fd-term-item-notiz  { font-size:12px; color:var(--muted); margin-top:4px; font-style:italic; white-space:pre-wrap; }
+.fd-term-item-arr    { font-size:14px; color:var(--muted); flex-shrink:0; margin-top:3px; }
+/* Section headers in modal */
+.fd-term-section-hd  { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:14px 0 8px; }
+
+/* ── Termin-Edit-Modal ────────────────────────────────── */
+#fd-termin-edit-modal {
+  display:none; position:fixed; inset:0; z-index:10000;
+  background:rgba(0,0,0,.5); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  align-items:flex-start; justify-content:center; padding:56px 12px 0; box-sizing:border-box;
+}
+#fd-termin-edit-modal.on { display:flex; }
+.fd-termin-edit-sheet {
+  width:100%; max-width:560px; max-height:calc(100vh - 76px);
+  background:var(--surf); border-radius:22px; display:flex; flex-direction:column;
+  overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,.26);
+  animation: sheetDrop .24s cubic-bezier(.32,.72,0,1) both;
+}
+.fd-termin-edit-hd {
+  padding:16px 20px 12px; display:flex; align-items:center; justify-content:space-between;
+  border-bottom:.5px solid var(--border); flex-shrink:0;
+}
+.fd-termin-edit-title { font-size:17px; font-weight:800; letter-spacing:-.3px; }
+.fd-termin-edit-close {
+  width:30px; height:30px; border-radius:50%; background:var(--bg); border:none;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:15px; color:var(--muted); transition:background .12s;
+}
+.fd-termin-edit-close:hover { background:var(--border); }
+.fd-termin-edit-body { flex:1; overflow-y:auto; padding:20px; }
+.fd-termin-edit-footer {
+  padding:12px 20px; border-top:.5px solid var(--border);
+  display:flex; gap:8px; flex-shrink:0;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ AUTH ═══════════════════════════════════════════════ -->
+<div id="auth">
+  <div class="auth-card">
+    <div class="auth-logo">Bausicht CRM</div>
+    <div class="auth-tag">Melde dich an</div>
+    <label class="f-lbl">E-Mail</label>
+    <input type="email" class="f-inp" id="a-em" placeholder="name@bausicht.de" autocomplete="email">
+    <label class="f-lbl">Passwort</label>
+    <input type="password" class="f-inp" id="a-pw" placeholder="••••••••" autocomplete="current-password">
+    <button class="btn-p" id="a-btn" onclick="doLogin()">Anmelden</button>
+    <div id="auth-err"></div>
+  </div>
+</div>
+
+<!-- ═══ APP ════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- SIDEBAR (desktop) -->
+  <nav id="sidebar">
+    <div class="sb-logo">Bausicht</div>
+    <div class="sb-nav" id="sb-nav">
+      <button class="sb-i on" data-v="heute"   onclick="navTo('heute')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Heute</button>
+      <button class="sb-i"    data-v="firmen"  onclick="navTo('firmen')"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>Firmen</button>
+      <button class="sb-i"    data-v="tasks"   onclick="navTo('tasks')"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Aufgaben<span class="sb-badge" id="sb-bt"></span></button>
+      <button class="sb-i"    data-v="termine" onclick="navTo('termine')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Termine<span class="sb-badge" id="sb-bterm"></span></button>
+      <div class="sb-divider"></div>
+      <button class="sb-i"    data-v="pipeline" onclick="navTo('pipeline')"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Pipeline</button>
+      <button class="sb-i"    data-v="mehr"    onclick="navTo('mehr')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>Mehr</button>
+    </div>
+    <div class="sb-foot"><strong id="sb-name">–</strong><span id="sb-email">–</span></div>
+  </nav>
+
+  <!-- VIEWS -->
+  <div id="views">
+
+    <!-- ── HEUTE ───────────────────────── -->
+    <div class="view on" id="view-heute">
+      <div class="v-head">
+        <div class="v-title" id="h-gr">Guten Tag 👋</div>
+        <div class="v-sub"  id="h-dt"></div>
+      </div>
+      <div class="kpi-grid" id="h-kpi">
+        <div class="kpi"><div class="kpi-ico">💰</div><div class="kpi-val sk" style="width:80px;height:30px;border-radius:5px"> </div><div class="kpi-lbl">MRR</div></div>
+        <div class="kpi"><div class="kpi-ico">🏢</div><div class="kpi-val sk" style="width:55px;height:30px;border-radius:5px"> </div><div class="kpi-lbl">Aktive Kunden</div></div>
+        <div class="kpi"><div class="kpi-ico">✅</div><div class="kpi-val sk" style="width:55px;height:30px;border-radius:5px"> </div><div class="kpi-lbl">Offene Tasks</div></div>
+        <div class="kpi"><div class="kpi-ico">📅</div><div class="kpi-val sk" style="width:55px;height:30px;border-radius:5px"> </div><div class="kpi-lbl">Termine heute</div></div>
+      </div>
+      <div class="sec-title">Heutiger Tag</div>
+      <div class="grp" id="h-timeline" style="padding:0">
+        <div class="timeline-item"><div class="sk" style="width:100%;height:18px;border-radius:5px"> </div></div>
+      </div>
+      <div class="sec-title">Letzte Aktivitäten</div>
+      <div class="grp" id="h-activity">
+        <div class="row"><div class="sk" style="width:100%;height:16px;border-radius:5px"> </div></div>
+      </div>
+    </div>
+
+    <!-- ── FIRMEN ──────────────────────── -->
+    <div class="view" id="view-firmen">
+      <div class="v-head">
+        <div class="v-head-row">
+          <div>
+            <div class="v-title">Firmen</div>
+            <div class="v-sub" id="firmen-count" style="margin-top:1px"></div>
+          </div>
+        </div>
+      </div>
+      <div id="f-stats"></div>
+      <div class="search-wrap">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" placeholder="Name, Branche, Ort…" id="f-q" oninput="renderFirmen()">
+        </div>
+      </div>
+      <div class="chips" id="f-chips">
+        <div class="chip on" data-f="all"     onclick="setFF(this)">Alle</div>
+        <div class="chip"    data-f="Aktiv"   onclick="setFF(this)">Aktiv</div>
+        <div class="chip"    data-f="Lead"    onclick="setFF(this)">Lead</div>
+        <div class="chip"    data-f="Inaktiv" onclick="setFF(this)">Inaktiv</div>
+        <div class="chip"    data-f="Churned" onclick="setFF(this)">Churned</div>
+      </div>
+      <div class="sort-row">
+        <span class="sort-lbl">Sortieren:</span>
+        <div class="sort-chip on" data-s="name"   onclick="setFSort(this)">A–Z</div>
+        <div class="sort-chip"    data-s="mrr"    onclick="setFSort(this)">MRR ↓</div>
+        <div class="sort-chip"    data-s="status" onclick="setFSort(this)">Status</div>
+      </div>
+      <div id="f-list">
+        <div class="grp">
+          <div class="co-card"><div class="sk" style="width:42px;height:42px;border-radius:11px;flex-shrink:0"> </div><div style="flex:1"><div class="sk" style="width:55%;height:15px;border-radius:4px;margin-bottom:8px"> </div><div class="sk" style="width:35%;height:12px;border-radius:4px;margin-bottom:6px"> </div><div class="sk" style="width:25%;height:20px;border-radius:6px"> </div></div></div>
+          <div class="co-card"><div class="sk" style="width:42px;height:42px;border-radius:11px;flex-shrink:0"> </div><div style="flex:1"><div class="sk" style="width:45%;height:15px;border-radius:4px;margin-bottom:8px"> </div><div class="sk" style="width:30%;height:12px;border-radius:4px;margin-bottom:6px"> </div><div class="sk" style="width:20%;height:20px;border-radius:6px"> </div></div></div>
+          <div class="co-card"><div class="sk" style="width:42px;height:42px;border-radius:11px;flex-shrink:0"> </div><div style="flex:1"><div class="sk" style="width:60%;height:15px;border-radius:4px;margin-bottom:8px"> </div><div class="sk" style="width:40%;height:12px;border-radius:4px;margin-bottom:6px"> </div><div class="sk" style="width:28%;height:20px;border-radius:6px"> </div></div></div>
+          <div class="co-card"><div class="sk" style="width:42px;height:42px;border-radius:11px;flex-shrink:0"> </div><div style="flex:1"><div class="sk" style="width:50%;height:15px;border-radius:4px;margin-bottom:8px"> </div><div class="sk" style="width:33%;height:12px;border-radius:4px;margin-bottom:6px"> </div><div class="sk" style="width:22%;height:20px;border-radius:6px"> </div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AUFGABEN ─────────────────────── -->
+    <div class="view" id="view-tasks">
+      <div class="v-head">
+        <div class="v-head-row">
+          <div class="v-title">Aufgaben</div>
+        </div>
+      </div>
+      <div class="chips" id="t-chips" style="padding-top:4px">
+        <div class="chip on" data-tf="open"     onclick="setTF(this)">Offen</div>
+        <div class="chip"    data-tf="today"    onclick="setTF(this)">Heute fällig</div>
+        <div class="chip"    data-tf="overdue"  onclick="setTF(this)">Überfällig</div>
+        <div class="chip"    data-tf="done"     onclick="setTF(this)">Erledigt</div>
+      </div>
+      <div id="t-content">
+        <div class="grp"><div class="t-row"><div class="sk" style="width:100%;height:17px;border-radius:5px"> </div></div></div>
+      </div>
+    </div>
+
+    <!-- ── TERMINE ──────────────────────── -->
+    <div class="view" id="view-termine">
+      <div class="v-head">
+        <div class="v-head-row">
+          <div class="v-title">Termine</div>
+        </div>
+      </div>
+      <div class="chips" id="term-chips" style="padding-top:4px">
+        <div class="chip on" data-tf="upcoming" onclick="setTermFilter(this)">Kommend</div>
+        <div class="chip"    data-tf="today"    onclick="setTermFilter(this)">Heute</div>
+        <div class="chip"    data-tf="week"     onclick="setTermFilter(this)">Diese Woche</div>
+        <div class="chip"    data-tf="past"     onclick="setTermFilter(this)">Vergangen</div>
+      </div>
+      <div id="term-content">
+        <div class="grp"><div class="row"><div class="sk" style="width:100%;height:17px;border-radius:5px"> </div></div></div>
+      </div>
+    </div>
+
+    <!-- ── PIPELINE ─────────────────────── -->
+    <div class="view" id="view-pipeline">
+      <div class="v-head"><div class="v-title">Pipeline</div><div class="v-sub">Deals nach Phase</div></div>
+      <div class="kanban" id="pipe-board">
+        <div class="k-col"><div class="k-card sk" style="height:80px"> </div><div class="k-card sk" style="height:70px"> </div></div>
+        <div class="k-col"><div class="k-card sk" style="height:90px"> </div></div>
+        <div class="k-col"><div class="k-card sk" style="height:75px"> </div></div>
+      </div>
+    </div>
+
+    <!-- ── MEHR ─────────────────────────── -->
+    <div class="view" id="view-mehr">
+      <div class="prof-card">
+        <div class="prof-av" id="m-av">?</div>
+        <div class="prof-name"  id="m-name">–</div>
+        <div class="prof-email" id="m-email">–</div>
+      </div>
+      <div class="sec-title">Weitere Module</div>
+      <div class="grp">
+        <div class="row" onclick="navTo('baustellen')">   <div class="row-icon" style="background:#FFF7ED">🏗️</div><div class="row-body"><div class="row-title">Baustellen</div></div><div class="row-arr">›</div></div>
+        <div class="row" onclick="navTo('renewals')">     <div class="row-icon" style="background:#ECFDF5">🔄</div><div class="row-body"><div class="row-title">Renewals</div></div><div class="row-arr">›</div></div>
+        <div class="row" onclick="navTo('recherche')">    <div class="row-icon" style="background:#F5F3FF">🔎</div><div class="row-body"><div class="row-title">Recherche</div></div><div class="row-arr">›</div></div>
+        <div class="row" onclick="navTo('mailing')">      <div class="row-icon" style="background:#FDF2F8">✉️</div><div class="row-body"><div class="row-title">Mailing</div></div><div class="row-arr">›</div></div>
+        <div class="row" onclick="navTo('importe')">      <div class="row-icon" style="background:#EFF6FF">📥</div><div class="row-body"><div class="row-title">Importe</div></div><div class="row-arr">›</div></div>
+      </div>
+      <div class="sec-title">Einstellungen</div>
+      <div class="grp">
+        <div class="row" onclick="openGoogleSettings()"><div class="row-icon" style="background:#EFF6FF">
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:none;stroke:#4285f4;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        </div><div class="row-body"><div class="row-title">Google Verbindung</div><div class="row-sub">Gmail-Accounts verbinden</div></div><div class="row-arr">›</div></div>
+      </div>
+      <div class="grp" style="margin-top:6px">
+        <div class="row" onclick="doLogout()"><div class="row-icon" style="background:#FEF2F2">🚪</div><div class="row-body"><div class="row-title" style="color:var(--red)">Abmelden</div></div></div>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+
+    <!-- ── GOOGLE SETTINGS ──────────────── -->
+    <div class="view" id="view-google-settings">
+      <div class="gs-head">
+        <button class="gs-back" onclick="closeGoogleSettings()">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Mehr
+        </button>
+        <span class="gs-title">Google-Integration</span>
+      </div>
+      <div class="gs-body">
+        <div class="sec-title" style="padding-top:14px">Verbundene Accounts</div>
+        <div class="grp" style="overflow:visible">
+          <div class="gs-acct-hd">
+            <div>
+              <div class="gs-acct-hd-lbl">Gmail &amp; Google Kalender</div>
+              <div class="gs-acct-hd-sub">Jeder Nutzer verbindet seinen eigenen Account</div>
+            </div>
+            <button class="gs-connect-btn" id="gs-connect-btn" onclick="startGoogleOAuth()">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Verbinden
+            </button>
+          </div>
+          <div id="gs-accounts-list">
+            <div style="padding:32px 20px;text-align:center;color:var(--muted);font-size:13px">
+              <div style="font-size:28px;margin-bottom:10px">🔗</div>
+              Noch keine Accounts verbunden
+            </div>
+          </div>
+        </div>
+        <div class="sec-title">So funktioniert die Integration</div>
+        <div class="gs-info">
+          <div class="gs-info-ttl">Überblick</div>
+          <div class="gs-info-row">✉️ <strong>Gmail</strong> — Im Tab „Mails" jedes Unternehmens siehst du alle E-Mails mit dieser Domain. Du kannst direkt antworten oder neue Mails schreiben.</div>
+          <div class="gs-info-row">📅 <strong>Kalender</strong> — Termine aus Google Calendar werden im Unternehmensprofil angezeigt.</div>
+          <div class="gs-info-row">🔒 <strong>Sicherheit</strong> — Tokens werden verschlüsselt gespeichert. Jeder Nutzer verwaltet seine eigenen Accounts.</div>
+          <div class="gs-info-row">⚙️ <strong>Mail-Domain</strong> — Trag in den Stammdaten jedes Unternehmens die Mail-Domain ein (z.B. <code style="background:rgba(124,58,237,.1);padding:1px 5px;border-radius:4px;font-family:monospace">@firma.de</code>), damit E-Mails gefunden werden.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FIRMA DETAIL ─────────────────── -->
+    <div class="view" id="view-firma-detail">
+      <!-- Scrollable content panes -->
+      <div id="fd-content">
+        <div class="fd-sec" id="fds-overview"></div>
+        <div class="fd-sec fd-notes-sec" id="fds-notizen">
+          <!-- Note list panel -->
+          <div class="fd-nl" id="fd-nl">
+            <div class="fd-nl-hd">
+              <div class="fd-nl-title" id="fd-nl-title">Notizen</div>
+              <button class="fd-nl-add" onclick="openFdNote(null)" title="Neue Notiz">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+            <div class="fd-nl-list" id="fd-nl-list">
+              <div style="padding:40px 20px;text-align:center;color:#8A8070">Lädt…</div>
+            </div>
+          </div>
+          <!-- Note edit panel (slides in on mobile, always visible on desktop) -->
+          <div class="fd-ne" id="fd-ne">
+            <div class="fd-ne-hd">
+              <button class="fd-ne-back" onclick="closeFdNote()">
+                <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                Notizen
+              </button>
+              <span class="fd-ne-st" id="fd-ne-st"></span>
+              <button class="fd-ne-del" id="fd-ne-del-btn" onclick="deleteFdNote()" title="Notiz löschen" style="display:none">
+                <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--red,#FF3B30);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+              </button>
+            </div>
+            <div class="fd-ne-types" id="fd-ne-types"></div>
+            <div class="fd-ne-body">
+              <textarea class="fd-ne-ttl" id="fd-ne-ttl" rows="1"
+                placeholder="Titel"
+                oninput="autoResizeTA(this);onFdNoteInput()"></textarea>
+              <textarea class="fd-ne-txt" id="fd-ne-txt"
+                placeholder="Notiz schreiben…"
+                oninput="onFdNoteInput()"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="fd-sec" id="fds-mails"></div>
+      </div>
+      <!-- Bottom tab bar (replaces main tab bar when detail is open) -->
+      <div id="fd-tab-bar">
+        <button class="fd-tb fd-tb-back" onclick="closeFirmaDetail()">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          <span>Zurück</span>
+        </button>
+        <button class="fd-tb on" data-fdt="overview" onclick="switchFdTab(this)">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Übersicht</span>
+        </button>
+        <button class="fd-tb" data-fdt="notizen" onclick="switchFdTab(this)">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Notizen</span>
+        </button>
+        <button class="fd-tb" data-fdt="mails" onclick="switchFdTab(this)">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>Mails</span>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /views -->
+
+  <!-- ── Lizenz-Detail-Modal ──────────────────────────── -->
+  <div id="fd-liz-modal" onclick="if(event.target===this)closeLizenzModal()">
+    <div class="fd-liz-sheet">
+      <div class="fd-liz-sh-hd">
+        <div class="fd-liz-sh-title">Module &amp; Lizenzen</div>
+        <button class="fd-liz-sh-close" onclick="closeLizenzModal()">✕</button>
+      </div>
+      <div class="fd-liz-sh-body" id="fd-liz-sh-body"></div>
+    </div>
+  </div>
+
+  <!-- ── Baustellen-Detail-Modal ──────────────────────── -->
+  <div id="fd-bs-modal" onclick="if(event.target===this)closeBaustellenModal()">
+    <div class="fd-bs-sheet">
+      <div class="fd-bs-sh-hd">
+        <div class="fd-bs-sh-title">Baustellen</div>
+        <button class="fd-bs-sh-close" onclick="closeBaustellenModal()">✕</button>
+      </div>
+      <div class="fd-bs-sh-body" id="fd-bs-sh-body"></div>
+    </div>
+  </div>
+
+  <!-- ── Task-Edit-Modal ──────────────────────────────── -->
+  <div id="fd-task-modal" onclick="if(event.target===this)closeTaskEditModal()">
+    <div class="fd-task-sheet">
+      <div class="fd-task-sh-hd">
+        <div class="fd-task-sh-title">Aufgabe bearbeiten</div>
+        <button class="fd-task-sh-close" onclick="closeTaskEditModal()">✕</button>
+      </div>
+      <div class="fd-task-sh-body" id="fd-task-sh-body">
+        <div class="fd-task-field">
+          <div class="fd-task-label">Titel</div>
+          <input class="fd-task-input" id="fdt-titel" type="text" placeholder="Aufgabentitel">
+        </div>
+        <div class="fd-task-field">
+          <div class="fd-task-label">Beschreibung</div>
+          <textarea class="fd-task-textarea" id="fdt-beschreibung" placeholder="Optionale Beschreibung…"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="fd-task-field">
+            <div class="fd-task-label">Fällig am</div>
+            <input class="fd-task-input" id="fdt-faellig" type="date">
+          </div>
+          <div class="fd-task-field">
+            <div class="fd-task-label">Zuständig</div>
+            <input class="fd-task-input" id="fdt-zustaendig" type="text" placeholder="Name…">
+          </div>
+        </div>
+        <div class="fd-task-field">
+          <div class="fd-task-label">Priorität</div>
+          <div class="fd-task-prio-row" id="fdt-prio-row">
+            <button class="fd-task-prio-btn" data-prio="hoch"    onclick="setFdtPrio('hoch')">🔴 Hoch</button>
+            <button class="fd-task-prio-btn" data-prio="mittel"  onclick="setFdtPrio('mittel')">🟡 Mittel</button>
+            <button class="fd-task-prio-btn" data-prio="niedrig" onclick="setFdtPrio('niedrig')">🟢 Niedrig</button>
+          </div>
+        </div>
+      </div>
+      <div class="fd-task-sh-footer">
+        <button class="fd-task-done-btn" id="fdt-done-btn" onclick="markFdTaskDone()">✓ Erledigt</button>
+        <button class="fd-task-del-btn"  onclick="deleteFdTask()">🗑</button>
+        <button class="fd-task-save-btn" onclick="saveFdTaskEdit()">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Ansprechpartner-Modal ─────────────────────────── -->
+  <div id="fd-ap-modal" onclick="if(event.target===this)closeApModal()">
+    <div class="fd-ap-sheet">
+      <div class="fd-ap-sh-hd">
+        <div class="fd-ap-sh-title" id="fd-ap-sh-title">Neuer Ansprechpartner</div>
+        <button class="fd-ap-sh-close" onclick="closeApModal()">✕</button>
+      </div>
+      <div class="fd-ap-sh-body">
+        <div class="fd-task-field">
+          <div class="fd-task-label">Name *</div>
+          <input class="fd-task-input" id="fdap-name" type="text" placeholder="Vor- und Nachname">
+        </div>
+        <div class="fd-task-field">
+          <div class="fd-task-label">Position</div>
+          <input class="fd-task-input" id="fdap-position" type="text" placeholder="Bereichsleiter, IT, …">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="fd-task-field">
+            <div class="fd-task-label">E-Mail</div>
+            <input class="fd-task-input" id="fdap-email" type="email" placeholder="mail@firma.de">
+          </div>
+          <div class="fd-task-field">
+            <div class="fd-task-label">Telefon</div>
+            <input class="fd-task-input" id="fdap-telefon" type="tel" placeholder="+49 …">
+          </div>
+        </div>
+        <div class="fd-task-field">
+          <div class="fd-task-label">Notiz</div>
+          <textarea class="fd-task-textarea" id="fdap-notiz" placeholder="Optionale Notiz…" style="min-height:64px"></textarea>
+        </div>
+      </div>
+      <div class="fd-ap-sh-footer">
+        <button class="fd-task-del-btn" id="fdap-del-btn" onclick="deleteAp()" style="display:none">🗑</button>
+        <button class="fd-task-save-btn" onclick="saveAp()">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Termine-Listen-Modal ─────────────────────────── -->
+  <div id="fd-term-modal" onclick="if(event.target===this)closeTermineModal()">
+    <div class="fd-term-sheet">
+      <div class="fd-term-sh-hd">
+        <div class="fd-term-sh-title">Termine</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button style="padding:6px 12px;border-radius:10px;border:none;background:var(--acc);color:white;font-size:12px;font-weight:700;cursor:pointer" onclick="openTerminEdit(null)">+ Neu</button>
+          <button class="fd-term-sh-close" onclick="closeTermineModal()">✕</button>
+        </div>
+      </div>
+      <div class="fd-term-sh-body" id="fd-term-sh-body"></div>
+    </div>
+  </div>
+
+  <!-- ── Termin-Edit-Modal ──────────────────────────────── -->
+  <div id="fd-termin-edit-modal" onclick="if(event.target===this)closeTerminEdit()">
+    <div class="fd-termin-edit-sheet">
+      <div class="fd-termin-edit-hd">
+        <div class="fd-termin-edit-title" id="fd-termin-edit-title">Termin bearbeiten</div>
+        <button class="fd-termin-edit-close" onclick="closeTerminEdit()">✕</button>
+      </div>
+      <div class="fd-termin-edit-body">
+        <div class="fd-task-field">
+          <div class="fd-task-label">Art</div>
+          <select class="fd-task-select" id="fdte-art">
+            <option>📍 Vor-Ort-Termin</option>
+            <option>📞 Call</option>
+            <option>🎥 Video-Call</option>
+            <option>🤝 Messe / Event</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div class="fd-task-field" style="grid-column:1/3">
+            <div class="fd-task-label">Datum *</div>
+            <input class="fd-task-input" id="fdte-datum" type="date">
+          </div>
+          <div class="fd-task-field">
+            <div class="fd-task-label">Von</div>
+            <input class="fd-task-input" id="fdte-uhrzeit-von" type="time">
+          </div>
+        </div>
+        <div class="fd-task-field">
+          <div class="fd-task-label">Betreff</div>
+          <input class="fd-task-input" id="fdte-betreff" type="text" placeholder="z.B. Produktdemo OAS">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="fd-task-field">
+            <div class="fd-task-label">Kontakt Name</div>
+            <input class="fd-task-input" id="fdte-kontakt-name" type="text" placeholder="Name">
+          </div>
+          <div class="fd-task-field">
+            <div class="fd-task-label">Kontakt Telefon</div>
+            <input class="fd-task-input" id="fdte-kontakt-telefon" type="tel" placeholder="+49 …">
+          </div>
+        </div>
+        <div class="fd-task-field">
+          <div class="fd-task-label">Notiz / Ergebnis</div>
+          <textarea class="fd-task-textarea" id="fdte-notiz" placeholder="Gesprächsinhalte, Ergebnisse…" style="min-height:80px"></textarea>
+        </div>
+        <div class="fd-task-field">
+          <div class="fd-task-label">Nächster Schritt</div>
+          <input class="fd-task-input" id="fdte-naechster-schritt" type="text" placeholder="z.B. Angebot senden bis …">
+        </div>
+      </div>
+      <div class="fd-termin-edit-footer">
+        <button class="fd-task-del-btn" id="fdte-del-btn" onclick="deleteTerminFd()" style="display:none">🗑</button>
+        <button class="fd-task-save-btn" onclick="saveTerminFd()">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM TABS -->
+  <div id="tab-bar">
+    <button class="tab on" data-v="heute"   onclick="navTo('heute')">
+      <div class="t-wrap"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <span class="t-lbl">Heute</span>
+    </button>
+    <button class="tab" data-v="firmen" onclick="navTo('firmen')">
+      <div class="t-wrap"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div>
+      <span class="t-lbl">Firmen</span>
+    </button>
+    <button class="tab" data-v="tasks" onclick="navTo('tasks')">
+      <div class="t-wrap">
+        <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span class="t-dot" id="t-dot-tasks"></span>
+      </div>
+      <span class="t-lbl">Aufgaben</span>
+    </button>
+    <button class="tab" data-v="termine" onclick="navTo('termine')">
+      <div class="t-wrap">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="t-dot" id="t-dot-term"></span>
+      </div>
+      <span class="t-lbl">Termine</span>
+    </button>
+    <button class="tab" data-v="mehr" onclick="navTo('mehr')">
+      <div class="t-wrap"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+      <span class="t-lbl">Mehr</span>
+    </button>
+  </div>
+</div><!-- /app -->
+
+<!-- FAB -->
+<button id="fab" onclick="openCapture()" title="Schnell erfassen (⌘K)">
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+<!-- COMPANY PANEL -->
+<div id="cpanel">
+  <div id="cp-bg" onclick="closePanel()"></div>
+  <div id="cp-sheet">
+    <div class="cp-head">
+      <button class="cp-close" onclick="closePanel()">✕</button>
+      <div class="cp-av" id="cp-av">?</div>
+      <div class="cp-name" id="cp-name">–</div>
+    </div>
+    <div class="cp-hero" id="cp-hero">
+      <div class="cp-stat-row" id="cp-stats"></div>
+      <div class="cp-quick-btns">
+        <button class="cp-qbtn" onclick="openCapture(_pid,'notiz')"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4z"/></svg>Notiz</button>
+        <button class="cp-qbtn" onclick="openCapture(_pid,'task')"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Aufgabe</button>
+        <button class="cp-qbtn" onclick="openCapture(_pid,'termin')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Termin</button>
+        <button class="cp-qbtn" id="cp-call-btn" onclick="callCompany()"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.33 10.5a19.79 19.79 0 01-3.07-8.67A2 2 0 013.44 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.91 7.91a16 16 0 006.18 6.18l.79-.79a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>Anrufen</button>
+      </div>
+    </div>
+    <div class="cp-tabs">
+      <button class="cp-tab on" data-tab="timeline" onclick="showCpTab(this)">Timeline</button>
+      <button class="cp-tab"    data-tab="tasks"    onclick="showCpTab(this)">Aufgaben</button>
+      <button class="cp-tab"    data-tab="termine"  onclick="showCpTab(this)">Termine</button>
+      <button class="cp-tab"    data-tab="info"     onclick="showCpTab(this)">Info</button>
+    </div>
+    <div id="cp-body"></div>
+  </div>
+</div>
+
+<!-- QUICK CAPTURE -->
+<div id="capture">
+  <div id="cap-bg" onclick="closeCapture()"></div>
+  <div id="cap-body">
+    <div class="cap-handle"></div>
+    <div class="cap-header">
+      <div class="cap-title">Schnell erfassen</div>
+      <button class="cap-x" onclick="closeCapture()">×</button>
+    </div>
+    <div class="cap-types">
+      <div class="cap-type on" data-t="notiz"  onclick="setCapT(this)">📝 Notiz</div>
+      <div class="cap-type"    data-t="task"   onclick="setCapT(this)">✅ Aufgabe</div>
+      <div class="cap-type"    data-t="termin" onclick="setCapT(this)">📅 Termin</div>
+    </div>
+    <input type="text"   class="cap-f" id="cap-txt" placeholder="Was möchtest du erfassen?">
+    <div class="cap-row">
+      <input type="date"   class="cap-f" id="cap-date" style="display:none">
+      <input type="time"   class="cap-f" id="cap-time" style="display:none" value="09:00">
+    </div>
+    <select class="cap-f" id="cap-co" style="font-family:inherit"><option value="">Kein Unternehmen</option></select>
+    <button class="cap-save" onclick="saveCapture()">Speichern</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// HELPERS (defined first — used at top-level during parse)
+// ══════════════════════════════════════════════════════════
+const qi   = id => document.getElementById(id);
+const qAll = s  => document.querySelectorAll(s);
+
+// ══════════════════════════════════════════════════════════
+// SUPABASE
+// ══════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://wygatihnwdujgjccmlst.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5Z2F0aWhud2R1amdqY2NtbHN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjczMzIsImV4cCI6MjA4NzUwMzMzMn0.NaUdgw_033J1bY40E4ZFWwHjB-kzUN-bsZjTJn9YCj4';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let _user   = null;
+let _view   = 'heute';
+let _firms  = [];   // cache
+let _ff     = 'all';          // firmen filter
+let _tf     = 'open';         // task filter
+let _termf  = 'upcoming';     // termin filter
+let _pid    = null;           // panel company id (legacy – now delegates to firma-detail)
+let _ptab   = 'timeline';     // panel tab
+let _ctype  = 'notiz';        // capture type
+let _pfirma = null;           // panel company data (legacy)
+let _fsort  = 'name';         // firmen sort: 'name' | 'mrr' | 'status'
+// ── Firma Detail (full-page) ──────────────────────────────
+let _fdId          = null;    // currently viewed firma id
+let _fdTab         = 'overview'; // active section
+let _fdFirma       = null;    // loaded firma data
+let _fdNotes       = [];      // notes cache
+let _prevView      = 'firmen';// view to return to on back
+// ── Note editing ──────────────────────────────────────────
+let _fdEditNoteId  = null;    // null = new note, string = existing note id
+let _fdEditIsNew   = false;   // is this a brand new unsaved note?
+let _fdEditType    = '📝 Notiz'; // currently selected note type
+let _fdSaveTimer   = null;    // debounce timer for autosave
+let _fdNoteChanged = false;   // has unsaved changes
+
+// ══════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════
+async function init() {
+  try {
+    const { data } = await db.auth.getSession();
+    if (data?.session?.user) {
+      startApp(data.session.user);
+      // Handle Google OAuth callback (redirect back from Google)
+      if (new URLSearchParams(window.location.search).get('google_callback')) {
+        handleGoogleCallback();
+      }
+    }
+  } catch(e) {}
+}
+
+async function doLogin() {
+  const email = qi('a-em').value.trim(), pw = qi('a-pw').value;
+  const err = qi('auth-err'), btn = qi('a-btn');
+  err.textContent = ''; btn.textContent = 'Lädt…'; btn.disabled = true;
+  const { data, error } = await db.auth.signInWithPassword({ email, password: pw });
+  if (error) { err.textContent = error.message; btn.textContent = 'Anmelden'; btn.disabled = false; return; }
+  startApp(data.user);
+}
+
+async function doLogout() {
+  await db.auth.signOut();
+  _user = null; _firms = [];
+  qi('app').classList.remove('on');
+  qi('auth').style.display = 'flex';
+}
+
+function startApp(user) {
+  _user = user;
+  const nm = user.email.split('@')[0];
+  qi('m-av').textContent = nm[0].toUpperCase();
+  qi('m-name').textContent = nm;
+  qi('m-email').textContent = user.email;
+  qi('sb-name').textContent = nm;
+  qi('sb-email').textContent = user.email;
+  qi('auth').style.display = 'none';
+  qi('app').classList.add('on');
+  const h = location.hash.replace('#','');
+  const valid = ['heute','firmen','tasks','termine','pipeline','mehr'];
+  navTo(valid.includes(h) ? h : 'heute'); // firma-detail not in valid → always start from heute
+  loadBadges();
+}
+
+qi('a-pw').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+qi('a-em').addEventListener('keydown', e => { if(e.key==='Enter') qi('a-pw').focus(); });
+
+// ══════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════
+function navTo(page) {
+  _view = page;
+  location.hash = page;
+  qAll('.view').forEach(v => v.classList.remove('on'));
+  const el = document.getElementById('view-' + page);
+  if (el) el.classList.add('on');
+  qAll('#tab-bar .tab').forEach(t => t.classList.toggle('on', t.dataset.v === page));
+  qAll('#sb-nav .sb-i').forEach(t => t.classList.toggle('on', t.dataset.v === page));
+  loadView(page);
+}
+
+function loadView(p) {
+  if (p === 'firma-detail') { if (_fdId) loadFdSection(_fdTab); return; }
+  ({ heute:loadHeute, firmen:loadFirmen, tasks:loadTasks, termine:loadTermine, pipeline:loadPipeline })[p]?.();
+}
+
+// ══════════════════════════════════════════════════════════
+// HEUTE — Unified daily command center
+// ══════════════════════════════════════════════════════════
+async function loadHeute() {
+  const now = new Date();
+  const DAYS   = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+  const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  const h = now.getHours();
+  qi('h-gr').textContent = h<11?'Guten Morgen 👋':h<17?'Guten Tag 👋':'Guten Abend 👋';
+  qi('h-dt').textContent = `${DAYS[now.getDay()]}, ${now.getDate()}. ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+  const today = now.toISOString().slice(0,10);
+
+  const [kR, tR, termR, nR] = await Promise.all([
+    db.from('kunden').select('id,name,status,umsatz').eq('status','Aktiv'),
+    db.from('tasks').select('id,titel,faellig,erledigt,kunde_id,kunden(name)').eq('erledigt',false).order('faellig',{ascending:true}).limit(60),
+    db.from('termine').select('id,art,datum,uhrzeit_von,betreff,kunde_id,kunden(name)').eq('datum',today).order('uhrzeit_von',{ascending:true}),
+    db.from('notizen').select('id,typ,titel,erstellt,kunde_id,kunden(name)').order('erstellt',{ascending:false}).limit(12),
+  ]);
+
+  const kunden  = kR.data  || [];
+  const tasks   = tR.data  || [];
+  const termine = termR.data || [];
+  const notizen = nR.data  || [];
+  const mrr = kunden.reduce((s,k)=>s+(parseFloat(k.umsatz)||0),0);
+  const due = tasks.filter(t=>t.faellig&&t.faellig<=today);
+
+  qi('h-kpi').innerHTML = `
+    <div class="kpi"><div class="kpi-ico">💰</div><div class="kpi-val">${mrr?fmtMrr(mrr):kunden.length}</div><div class="kpi-lbl">${mrr?'Umsatz':'Aktive Kunden'}</div></div>
+    <div class="kpi"><div class="kpi-ico">🏢</div><div class="kpi-val">${kunden.length}</div><div class="kpi-lbl">Aktive Kunden</div></div>
+    <div class="kpi"><div class="kpi-ico">✅</div><div class="kpi-val">${tasks.length}</div><div class="kpi-lbl">Offene Tasks</div></div>
+    <div class="kpi"><div class="kpi-ico">📅</div><div class="kpi-val">${termine.length}</div><div class="kpi-lbl">Heute</div></div>`;
+
+  // Unified timeline: merge termine + due tasks sorted by time
+  // Note: termine.art and notizen.typ already contain emojis in the DB values
+  const timeItems = [];
+
+  termine.forEach(t => timeItems.push({
+    time: t.uhrzeit_von ? t.uhrzeit_von.slice(0,5) : '–',
+    sort: t.uhrzeit_von || '00:00',
+    icon: '',  // art already has emoji
+    color: '#EDE9FE',
+    dot: 'var(--acc)',
+    title: (t.betreff || t.art) + (t.kunden?.name ? ` — ${t.kunden.name}` : ''),
+    sub: (t.uhrzeit_von ? t.uhrzeit_von.slice(0,5)+' Uhr · ' : 'Ganztags · ') + t.art,
+    action: t.kunde_id ? `openPanel('${t.kunde_id}')` : '',
+    type: 'termin'
+  }));
+
+  due.slice(0,5).forEach(t => timeItems.push({
+    time: t.faellig < today ? 'Überfällig' : 'Heute',
+    sort: '23:59',
+    icon: '✅',
+    color: t.faellig < today ? '#FEE2E2' : '#DCFCE7',
+    dot: t.faellig < today ? 'var(--red)' : 'var(--green)',
+    title: t.titel,
+    sub: (t.kunden?.name||'') + (t.faellig < today ? ' · Überfällig' : ' · Fällig heute'),
+    action: t.kunde_id ? `openPanel('${t.kunde_id}')` : `navTo('tasks')`,
+    id: t.id,
+    type: 'task'
+  }));
+
+  timeItems.sort((a,b) => a.sort.localeCompare(b.sort));
+
+  qi('h-timeline').innerHTML = timeItems.length ? timeItems.map((item, i) => `
+    <div class="timeline-item" onclick="${item.action}">
+      <div class="tl-time">${item.time}</div>
+      <div class="tl-dot-col">
+        <div class="tl-dot" style="background:${item.dot}"></div>
+        ${i < timeItems.length-1 ? '<div class="tl-line"></div>' : ''}
+      </div>
+      <div class="tl-body">
+        <div class="tl-title">${item.icon} ${item.title}</div>
+        <div class="tl-sub">${item.sub}</div>
+      </div>
+    </div>`).join('')
+    : '<div class="empty" style="padding:28px"><div class="empty-ico">🎉</div><div class="empty-msg">Alles erledigt für heute</div></div>';
+
+  // Recent activity — typ field already contains emoji+label e.g. "📞 Anruf"
+  qi('h-activity').innerHTML = notizen.length
+    ? notizen.map(n=>`<div class="row" onclick="${n.kunde_id?`openPanel('${n.kunde_id}')`:``}">
+        <div class="row-icon" style="background:#F2F2F7;font-size:17px">${(n.typ||'').split(' ')[0]||'✏️'}</div>
+        <div class="row-body"><div class="row-title">${n.titel||n.typ||'Notiz'}</div><div class="row-sub">${n.kunden?.name||''}</div></div>
+        <div style="font-size:11.5px;color:var(--muted)">${timeAgo(n.erstellt)}</div>
+      </div>`).join('')
+    : '<div class="empty" style="padding:24px"><div class="empty-ico">💬</div><div class="empty-msg">Noch keine Aktivitäten</div></div>';
+}
+
+// ══════════════════════════════════════════════════════════
+// FIRMEN
+// ══════════════════════════════════════════════════════════
+async function loadFirmen() {
+  if (_firms.length) { renderFirmen(); return; }
+
+  // Show skeleton while loading
+  qi('f-stats').innerHTML = '';
+  qi('f-list').innerHTML = `<div class="grp">${skRows(5)}</div>`;
+
+  const { data, error } = await db
+    .from('kunden')
+    .select('id,name,status,umsatz,typ,ort,telefon,zustaendig,kundennr,logo')
+    .order('name', {ascending: true});
+
+  if (error) {
+    console.error('[CRM] loadFirmen error:', error);
+    qi('f-list').innerHTML = `
+      <div class="empty">
+        <div class="empty-ico">⚠️</div>
+        <div class="empty-msg">Laden fehlgeschlagen</div>
+        <div class="empty-sub" style="max-width:240px;margin-top:4px">${error.message}</div>
+        <button onclick="_firms=[];loadFirmen()" style="margin-top:16px;padding:10px 24px;background:var(--acc);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Nochmal versuchen</button>
+      </div>`;
+    return;
+  }
+
+  _firms = data || [];
+  console.log('[CRM] loadFirmen: geladen', _firms.length, 'Einträge');
+
+  if (!_firms.length) {
+    qi('f-list').innerHTML = `
+      <div class="empty">
+        <div class="empty-ico">🏢</div>
+        <div class="empty-msg">Noch keine Unternehmen</div>
+        <div class="empty-sub">Füge dein erstes Unternehmen hinzu</div>
+      </div>`;
+    return;
+  }
+
+  // Populate capture dropdown
+  qi('cap-co').innerHTML = '<option value="">Kein Unternehmen</option>' +
+    _firms.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+
+  renderFirmen();
+}
+
+function renderFirmen() {
+  const q = (qi('f-q')?.value || '').toLowerCase();
+  let list = [..._firms];
+
+  // Status filter
+  if (_ff !== 'all') list = list.filter(f => f.status === _ff);
+
+  // Search filter
+  if (q) list = list.filter(f =>
+    f.name.toLowerCase().includes(q) ||
+    (f.typ || '').toLowerCase().includes(q) ||
+    (f.ort || '').toLowerCase().includes(q) ||
+    (f.email || '').toLowerCase().includes(q)
+  );
+
+  // Sort
+  if (_fsort === 'mrr') {
+    list.sort((a, b) => (parseFloat(b.umsatz) || 0) - (parseFloat(a.umsatz) || 0));
+  } else if (_fsort === 'status') {
+    const ord = {aktiv:0, lead:1, inaktiv:2, churned:3};
+    list.sort((a, b) => (ord[a.status] ?? 9) - (ord[b.status] ?? 9) || a.name.localeCompare(b.name, 'de'));
+  } else {
+    list.sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  }
+
+  // Stats strip
+  const aktCount  = list.filter(f => f.status === 'Aktiv').length;
+  const leadCount = list.filter(f => f.status === 'Lead').length;
+  const totalMrr  = list.filter(f => f.status === 'Aktiv').reduce((s, f) => s + (parseFloat(f.umsatz) || 0), 0);
+  qi('f-stats').innerHTML = list.length ? `
+    <div class="stats-strip">
+      <div class="stat-pill">
+        <div class="stat-pill-val">${list.length}</div>
+        <div class="stat-pill-lbl">Gesamt</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-val" style="color:var(--green)">${aktCount}</div>
+        <div class="stat-pill-lbl">Aktiv</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-val" style="color:var(--blue)">${leadCount}</div>
+        <div class="stat-pill-lbl">Leads</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-val" style="color:var(--acc)">${fmtMrr(totalMrr)}</div>
+        <div class="stat-pill-lbl">MRR</div>
+      </div>
+    </div>` : '';
+
+  qi('firmen-count').textContent = list.length
+    ? `${list.length} Firma${list.length !== 1 ? 'en' : ''}`
+    : '';
+
+  if (!list.length) {
+    qi('f-list').innerHTML = '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-msg">Keine Ergebnisse</div><div class="empty-sub">Suchbegriff oder Filter anpassen</div></div>';
+    return;
+  }
+
+  const SM = {'Aktiv':{c:'b-g',l:'Aktiv'}, 'Lead':{c:'b-b',l:'Lead'}, 'Inaktiv':{c:'b-x',l:'Inaktiv'}, 'Churned':{c:'b-r',l:'Churned'}};
+
+  qi('f-list').innerHTML = `<div class="grp">${list.map(f => {
+    const s = SM[f.status] || {c:'b-x', l: f.status || '–'};
+    const initials = f.name.trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
+    const meta = [f.typ, f.ort].filter(Boolean).join(' · ') || '–';
+    const avContent = f.logo
+      ? `<img src="${f.logo}" style="width:100%;height:100%;object-fit:contain;border-radius:9px;display:block;" />`
+      : initials;
+    const avStyle = f.logo ? 'style="background:var(--bg);font-size:0"' : '';
+    return `
+      <div class="co-card" onclick="openPanel('${f.id}')">
+        <div class="co-av" ${avStyle}>${avContent}</div>
+        <div style="flex:1;min-width:0">
+          <div class="co-name">${f.name}</div>
+          <div class="co-meta">${meta}</div>
+          <div class="co-bottom">
+            <span class="badge ${s.c}">${s.l}</span>
+            ${f.umsatz ? `<span class="co-mrr-tag">${f.umsatz}</span>` : ''}
+            ${f.zustaendig ? `<span class="co-mrr-tag">👤 ${f.zustaendig}</span>` : ''}
+          </div>
+        </div>
+        ${f.telefon
+          ? `<button class="co-act-btn co-call-btn" title="Anrufen" onclick="event.stopPropagation();window.location.href='tel:${f.telefon}'">
+               <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.33 10.5a19.79 19.79 0 01-3.07-8.67A2 2 0 013.44 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.91 7.91a16 16 0 006.18 6.18l.79-.79a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+             </button>`
+          : '<div style="width:38px;flex-shrink:0"></div>'}
+      </div>`;
+  }).join('')}</div>`;
+}
+
+function setFF(el) {
+  _ff = el.dataset.f;
+  qAll('#f-chips .chip').forEach(c => c.classList.toggle('on', c === el));
+  renderFirmen();
+}
+
+function setFSort(el) {
+  _fsort = el.dataset.s;
+  qAll('.sort-chip').forEach(c => c.classList.toggle('on', c === el));
+  renderFirmen();
+}
+
+// ══════════════════════════════════════════════════════════
+// AUFGABEN
+// ══════════════════════════════════════════════════════════
+async function loadTasks() {
+  const today = new Date().toISOString().slice(0,10);
+  const el = qi('t-content');
+  el.innerHTML = skGrp();
+
+  let q = db.from('tasks').select('id,titel,faellig,erledigt,kunde_id,kunden(name)');
+  if (_tf === 'done')    q = q.eq('erledigt',true).order('faellig',{ascending:false}).limit(50);
+  else if (_tf === 'overdue') q = q.eq('erledigt',false).lt('faellig',today).order('faellig',{ascending:true});
+  else if (_tf === 'today')   q = q.eq('erledigt',false).eq('faellig',today).order('faellig',{ascending:true});
+  else                        q = q.eq('erledigt',false).order('faellig',{ascending:true}).limit(150);
+
+  const { data, error } = await q;
+  if (error || !data?.length) { el.innerHTML = '<div class="empty"><div class="empty-ico">🎉</div><div class="empty-msg">Keine Aufgaben hier</div></div>'; return; }
+
+  if (_tf === 'open') {
+    // Group by urgency
+    const groups = [
+      {label:'Überfällig', color:'var(--red)',    items:data.filter(t=>t.faellig&&t.faellig<today)},
+      {label:'Heute',      color:'var(--orange)', items:data.filter(t=>t.faellig===today)},
+      {label:'Diese Woche',color:'var(--text)',   items:data.filter(t=>t.faellig>today&&t.faellig<=addDays(today,7))},
+      {label:'Später',     color:'var(--muted)',  items:data.filter(t=>!t.faellig||t.faellig>addDays(today,7))},
+    ].filter(g=>g.items.length);
+    el.innerHTML = groups.map(g=>`
+      <div class="sec-title" style="color:${g.color}">${g.label} <span style="opacity:.5;font-weight:400">${g.items.length}</span></div>
+      <div class="grp">${g.items.map(t=>taskRow(t,today)).join('')}</div>`).join('');
+  } else {
+    el.innerHTML = `<div class="grp">${data.map(t=>taskRow(t,today)).join('')}</div>`;
+  }
+}
+
+function taskRow(t, today) {
+  return `<div class="t-row" id="tr-${t.id}">
+    <div class="t-check ${t.erledigt?'done':''}" onclick="${!t.erledigt?`doneTask('${t.id}','tr-${t.id}')`:``}">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="t-body" onclick="${t.kunde_id?`openPanel('${t.kunde_id}')`:``}">
+      <div class="t-name ${t.erledigt?'done':''}">${t.titel}</div>
+      <div class="t-meta">${t.kunden?.name||''}${t.faellig?' · '+fmtDate(t.faellig):''}</div>
+    </div>
+  </div>`;
+}
+
+async function doneTask(id, rowId) {
+  const chk = document.querySelector(`#${rowId} .t-check`);
+  if (chk) chk.classList.add('done');
+  const { error } = await db.from('tasks').update({erledigt:true}).eq('id',id);
+  if (!error) { setTimeout(()=>document.getElementById(rowId)?.remove(), 400); showToast('Aufgabe erledigt ✓'); }
+  else { if(chk) chk.classList.remove('done'); showToast('Fehler beim Speichern', true); }
+}
+
+function setTF(el) {
+  _tf = el.dataset.tf;
+  qAll('#t-chips .chip').forEach(c => c.classList.toggle('on', c===el));
+  loadTasks();
+}
+
+// ══════════════════════════════════════════════════════════
+// TERMINE
+// ══════════════════════════════════════════════════════════
+async function loadTermine() {
+  const today = new Date().toISOString().slice(0,10);
+  const el = qi('term-content');
+  el.innerHTML = skGrp();
+
+  let q = db.from('termine').select('id,art,betreff,datum,uhrzeit_von,uhrzeit_bis,notiz,kunde_id,kunden(name)');
+  if (_termf === 'today')    q = q.eq('datum',today);
+  else if (_termf === 'week') q = q.gte('datum',today).lte('datum',addDays(today,7));
+  else if (_termf === 'past') q = q.lt('datum',today).order('datum',{ascending:false}).limit(50);
+  else                        q = q.gte('datum',today).order('datum',{ascending:true}).order('uhrzeit_von',{ascending:true}).limit(100);
+
+  if (_termf !== 'past') q = q.order('datum',{ascending:true}).order('uhrzeit_von',{ascending:true});
+
+  const { data, error } = await q;
+  if (error || !data?.length) { el.innerHTML = '<div class="empty"><div class="empty-ico">📅</div><div class="empty-msg">Keine Termine</div></div>'; return; }
+
+  const byDate = {};
+  for (const t of data) (byDate[t.datum] = byDate[t.datum]||[]).push(t);
+  // art already contains emoji: "📞 Anruf", "🎥 Video-Call" etc.
+  const getEmoji = s => s ? (s.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['📅'])[0] : '📅';
+
+  el.innerHTML = Object.entries(byDate).map(([date,items])=>`
+    <div class="sec-title">${fmtDateLong(date,today)}</div>
+    ${items.map(t=>`
+      <div class="appt-card" onclick="${t.kunde_id?`openPanel('${t.kunde_id}')`:``}">
+        <div class="appt-top">
+          <div class="appt-icon" style="background:#F5F3FF;font-size:19px">${getEmoji(t.art)}</div>
+          <div style="flex:1">
+            <div class="appt-time">${t.uhrzeit_von?t.uhrzeit_von.slice(0,5)+(t.uhrzeit_bis?' – '+t.uhrzeit_bis.slice(0,5):''):' Ganztags'} Uhr</div>
+            <div class="appt-type">${t.betreff||t.art}</div>
+            ${t.kunden?.name?`<div class="appt-co">${t.kunden.name}</div>`:''}
+          </div>
+          ${t.datum===today?'<span class="badge b-p">Heute</span>':''}
+        </div>
+      </div>`).join('')}`).join('');
+}
+
+function setTermFilter(el) {
+  _termf = el.dataset.tf;
+  qAll('#term-chips .chip').forEach(c => c.classList.toggle('on', c===el));
+  loadTermine();
+}
+
+// ══════════════════════════════════════════════════════════
+// PIPELINE
+// ══════════════════════════════════════════════════════════
+async function loadPipeline() {
+  const board = qi('pipe-board');
+  // Pipeline table doesn't exist — show kunden grouped by status as a simple board
+  const { data, error } = await db.from('kunden')
+    .select('id,name,status,umsatz,typ')
+    .order('name', {ascending:true});
+
+  if (error || !data?.length) {
+    board.innerHTML = '<div class="empty"><div class="empty-ico">⚡</div><div class="empty-msg">Keine Daten verfügbar</div></div>';
+    return;
+  }
+
+  // Group by status
+  const groups = {};
+  data.forEach(k => { (groups[k.status] = groups[k.status]||[]).push(k); });
+  const statusColors = {'Aktiv':'#16A34A','Lead':'#2563EB','Inaktiv':'#6B7280','Churned':'#DC2626'};
+
+  board.innerHTML = Object.entries(groups).map(([status, items]) => `
+    <div class="k-col">
+      <div class="k-head">
+        <span style="color:${statusColors[status]||'#555'}">${status}</span>
+        <span class="k-cnt">${items.length}</span>
+      </div>
+      ${items.map(k=>`<div class="k-card" onclick="openPanel('${k.id}')">
+        <div class="k-name">${k.name}</div>
+        <div class="k-sub">${k.typ||'–'}${k.umsatz?' · '+k.umsatz:''}</div>
+      </div>`).join('')}
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// COMPANY PANEL → redirect to full-page detail
+// ══════════════════════════════════════════════════════════
+function openPanel(id) {
+  openFirmaDetail(id);
+}
+
+async function _openPanelLegacy(id) {
+  _pid = id; _ptab = 'timeline';
+  qi('cpanel').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  qi('cp-av').textContent = '…';
+  qi('cp-name').textContent = 'Lädt…';
+  qi('cp-stats').innerHTML = '';
+  qi('cp-body').innerHTML = skRows(3);
+  qAll('.cp-tab').forEach(t => t.classList.toggle('on', t.dataset.tab==='timeline'));
+
+  const { data: f } = await db.from('kunden').select('*').eq('id',id).single();
+  if (!f) { closePanel(); return; }
+  _pfirma = f;
+
+  // Avatar: 2-letter initials + status-based color
+  const avatarInitials = f.name.trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
+  const statusAv = {
+    aktiv:   {bg:'#DCFCE7', color:'#16A34A'},
+    lead:    {bg:'#DBEAFE', color:'#2563EB'},
+    inaktiv: {bg:'#F3F4F6', color:'#6B7280'},
+    churned: {bg:'#FEE2E2', color:'#DC2626'},
+  };
+  const avc = statusAv[f.status] || {bg:'#EDE9FE', color:'#7C3AED'};
+  const avEl = qi('cp-av');
+  avEl.textContent = avatarInitials;
+  avEl.style.background = avc.bg;
+  avEl.style.color = avc.color;
+
+  qi('cp-name').textContent = f.name;
+
+  // Status + Umsatz + Typ chips (real column names)
+  const SM = {'Aktiv':{c:'b-g',l:'Aktiv'},'Lead':{c:'b-b',l:'Lead'},'Inaktiv':{c:'b-x',l:'Inaktiv'},'Churned':{c:'b-r',l:'Churned'}};
+  const s = SM[f.status]||{c:'b-x',l:f.status||'–'};
+  qi('cp-stats').innerHTML =
+    `<span class="badge ${s.c}">${s.l}</span>` +
+    (f.umsatz  ? `<span class="badge b-x">💰 ${f.umsatz}</span>` : '') +
+    (f.typ     ? `<span class="badge b-x">${f.typ}</span>` : '') +
+    (f.ort     ? `<span class="badge b-x">📍 ${f.ort}</span>` : '');
+
+  // Show/hide call button
+  qi('cp-call-btn').style.display = f.telefon ? '' : 'none';
+
+  loadCpTab('timeline');
+}
+
+function callCompany() {
+  if (_pfirma?.telefon) window.location.href = 'tel:' + _pfirma.telefon;
+}
+
+function closePanel() {
+  qi('cpanel').classList.remove('on');
+  document.body.style.overflow = '';
+}
+
+function showCpTab(el) {
+  _ptab = el.dataset.tab;
+  qAll('.cp-tab').forEach(t => t.classList.toggle('on', t===el));
+  loadCpTab(_ptab);
+}
+
+async function loadCpTab(tab) {
+  const el = qi('cp-body');
+  el.innerHTML = skRows(2);
+
+  if (tab === 'timeline') {
+    // Load notes AND upcoming/recent tasks AND termine in parallel for full activity picture
+    const [nR, tR, termR] = await Promise.all([
+      db.from('notizen').select('id,typ,titel,text,erstellt').eq('kunde_id',_pid).order('erstellt',{ascending:false}).limit(30),
+      db.from('tasks').select('id,titel,faellig,erledigt').eq('kunde_id',_pid).eq('erledigt',false).order('faellig',{ascending:true}).limit(5),
+      db.from('termine').select('id,art,datum,uhrzeit_von').eq('kunde_id',_pid).gte('datum',new Date().toISOString().slice(0,10)).order('datum',{ascending:true}).limit(3),
+    ]);
+
+    const notes   = nR.data   || [];
+    const tasks   = tR.data   || [];
+    const termine = termR.data || [];
+    const today   = new Date().toISOString().slice(0,10);
+
+    // typ/art already contain emoji in DB: "📞 Anruf", "🎥 Video-Call" etc.
+    const getEmoji = s => s ? (s.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['✏️'])[0] : '✏️';
+
+    // Upcoming tasks block
+    const tasksHtml = tasks.length ? `
+      <div class="sec-title" style="padding-top:4px">Offene Aufgaben</div>
+      <div class="grp">${tasks.map(t => `
+        <div class="t-row" id="cpt2-${t.id}">
+          <div class="t-check" onclick="doneTask('${t.id}','cpt2-${t.id}')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="t-body">
+            <div class="t-name">${t.titel}</div>
+            ${t.faellig ? `<div class="t-meta" style="color:${t.faellig<today?'var(--red)':t.faellig===today?'var(--orange)':'var(--muted)'}">${t.faellig<today?'Überfällig: ':''}${fmtDate(t.faellig)}</div>` : ''}
+          </div>
+        </div>`).join('')}</div>` : '';
+
+    // Upcoming termine block — art already has emoji
+    const termineHtml = termine.length ? `
+      <div class="sec-title" style="padding-top:4px">Nächste Termine</div>
+      <div class="grp">${termine.map(t => `
+        <div class="row">
+          <div class="row-icon" style="background:var(--acc-s);font-size:16px">${getEmoji(t.art)}</div>
+          <div class="row-body">
+            <div class="row-title">${t.betreff||t.art}</div>
+            <div class="row-sub">${t.art} · ${fmtDateLong(t.datum,today)}${t.uhrzeit_von?' · '+t.uhrzeit_von.slice(0,5):''}</div>
+          </div>
+          ${t.datum===today?'<span class="badge b-p">Heute</span>':''}
+        </div>`).join('')}</div>` : '';
+
+    // Notes timeline — typ already has emoji
+    const notesHtml = notes.length
+      ? `<div class="sec-title" style="padding-top:4px">Aktivitäten</div>
+         <div class="grp">${notes.map(n => `
+           <div class="row">
+             <div class="row-icon" style="background:#F2F2F7;font-size:16px">${getEmoji(n.typ)}</div>
+             <div class="row-body">
+               <div class="row-title">${n.titel||n.typ||'Notiz'}</div>
+               ${n.text ? `<div class="row-sub">${n.text.slice(0,90)}${n.text.length>90?'…':''}</div>` : ''}
+             </div>
+             <div style="font-size:11px;color:var(--muted);flex-shrink:0;padding-top:2px">${timeAgo(n.erstellt)}</div>
+           </div>`).join('')}</div>`
+      : (!tasks.length && !termine.length
+          ? '<div class="empty"><div class="empty-ico">💬</div><div class="empty-msg">Noch keine Aktivitäten</div><div class="empty-sub">Füge die erste Notiz hinzu</div></div>'
+          : '');
+
+    el.innerHTML = `
+      <div class="qn-wrap">
+        <input class="qn-inp" id="qn-inp" placeholder="Schnellnotiz eingeben…" onkeydown="if(event.key==='Enter')saveQuickNote()">
+        <button class="qn-btn" onclick="saveQuickNote()">Speichern</button>
+      </div>
+      ${tasksHtml}${termineHtml}${notesHtml}`;
+  }
+
+  if (tab === 'tasks') {
+    const { data } = await db.from('tasks').select('id,titel,faellig,erledigt').eq('kunde_id',_pid).order('erledigt',{ascending:true}).order('faellig',{ascending:true});
+    const today = new Date().toISOString().slice(0,10);
+    el.innerHTML = data?.length
+      ? `<div class="grp">${data.map(t=>`<div class="t-row" id="cpt-${t.id}" style="${t.erledigt?'opacity:.4':''}">
+          <div class="t-check ${t.erledigt?'done':''}" onclick="${!t.erledigt?`doneTask('${t.id}','cpt-${t.id}')`:``}"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="t-body"><div class="t-name ${t.erledigt?'done':''}">${t.titel}</div>${t.faellig?`<div class="t-meta">${fmtDate(t.faellig)}</div>`:''}</div>
+        </div>`).join('')}</div>`
+      : '<div class="empty"><div class="empty-ico">✅</div><div class="empty-msg">Keine Aufgaben</div></div>';
+  }
+
+  if (tab === 'termine') {
+    const today = new Date().toISOString().slice(0,10);
+    const { data } = await db.from('termine').select('id,art,betreff,datum,uhrzeit_von,notiz').eq('kunde_id',_pid).order('datum',{ascending:false}).limit(20);
+    const getEmoji = s => s ? (s.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['📅'])[0] : '📅';
+    el.innerHTML = data?.length
+      ? `<div class="grp">${data.map(t=>`<div class="row">
+          <div class="row-icon" style="background:var(--acc-s);font-size:16px">${getEmoji(t.art)}</div>
+          <div class="row-body">
+            <div class="row-title">${t.betreff||t.art}</div>
+            <div class="row-sub">${t.art} · ${fmtDateLong(t.datum,today)}${t.uhrzeit_von?' · '+t.uhrzeit_von.slice(0,5):''}</div>
+          </div>
+          ${t.datum>=today?'<span class="badge b-b">Bevorstehend</span>':''}
+        </div>`).join('')}</div>`
+      : '<div class="empty"><div class="empty-ico">📅</div><div class="empty-msg">Keine Termine</div></div>';
+  }
+
+  if (tab === 'info') {
+    const f = _pfirma;
+    if (!f) return;
+    const SM = {aktiv:{c:'b-g',l:'Aktiv'},lead:{c:'b-b',l:'Lead'},inaktiv:{c:'b-x',l:'Inaktiv'},churned:{c:'b-r',l:'Churned'}};
+    const s = SM[f.status]||{c:'b-x',l:f.status||'–'};
+    const rows = [
+      ['Status',        `<span class="badge ${s.c}">${s.l}</span>`],
+      f.kundennr     && ['Kundennr.',     f.kundennr],
+      f.typ          && ['Typ',           f.typ],
+      f.umsatz       && ['Umsatz',        f.umsatz],
+      f.zustaendig   && ['Zuständig',     f.zustaendig],
+      f.ansprechpartner && ['Ansprechp.', f.ansprechpartner],
+      (f.strasse||f.plz||f.ort) && ['Adresse', [f.strasse, [f.plz,f.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ')],
+      f.telefon      && ['Telefon',       `<a href="tel:${f.telefon}" style="color:var(--acc)">${f.telefon}</a>`],
+      f.email        && ['E-Mail',        `<a href="mailto:${f.email}" style="color:var(--acc)">${f.email}</a>`],
+      f.region       && ['Region',        f.region],
+    ].filter(Boolean);
+    el.innerHTML = `<div class="info-tbl">${rows.map(([k,v])=>`<div class="info-row"><span class="info-k">${k}</span><span class="info-v">${v}</span></div>`).join('')}</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// FIRMA DETAIL — Full-page, app-within-app
+// ══════════════════════════════════════════════════════════
+const NOTE_TYPES = ['📝 Notiz','📞 Anruf','✉️ E-Mail','🤝 Meeting','📄 Dokument'];
+
+function openFirmaDetail(id) {
+  _prevView = _view || 'firmen';
+  _fdId          = id;
+  _fdTab         = 'overview';
+  _fdFirma       = null;
+  _fdNotes       = [];
+  _fdEditNoteId  = null;
+  _fdEditIsNew   = false;
+  _fdNoteChanged = false;
+
+  // Hide main chrome, show firma view
+  qi('app').classList.add('fd-mode');
+  _view = 'firma-detail';
+  location.hash = 'firma-detail';
+  qAll('.view').forEach(v => v.classList.remove('on'));
+  qi('view-firma-detail').classList.add('on');
+
+  // Reset all sections
+  qAll('.fd-sec').forEach(s => s.classList.remove('on'));
+  qAll('.fd-tb[data-fdt]').forEach(b => b.classList.toggle('on', b.dataset.fdt === 'overview'));
+  qi('fds-overview').classList.add('on');
+  qi('fds-overview').innerHTML = `<div style="padding:40px 20px;text-align:center;color:var(--muted)">${skRows(3)}</div>`;
+  qi('fd-nl-title').textContent = 'Notizen';
+
+  // Close note editor (ensure fresh state)
+  const ne = qi('fd-ne');
+  if (ne) ne.classList.remove('open');
+
+  _loadFirmaDetailData(id);
+}
+
+async function _loadFirmaDetailData(id) {
+  const { data: f } = await db.from('kunden').select('*').eq('id', id).single();
+  if (!f) { closeFirmaDetail(); return; }
+  _fdFirma = f;
+
+  // Load overview immediately
+  loadFdOverview();
+  // Prefetch note count for badge (non-blocking)
+  db.from('notizen').select('id',{count:'exact',head:true}).eq('kunde_id',id).then(r => {
+    const el = qi('fd-nl-title');
+    if (el && r.count) el.textContent = `Notizen (${r.count})`;
+  });
+}
+
+// ── Lizenz-Modal ─────────────────────────────────────────
+const _LICO = {'baustellen':'🏗️','zutritt':'🔑','oas':'🛡️','fläche':'📐','flaeche':'📐','nu':'📄','einweisung':'📋','entsorg':'♻️','dokumenten':'📄','zeiterfas':'⏱️','monitoring':'📡'};
+function _getLIco(name){
+  const n=name.toLowerCase();
+  for(const[k,v]of Object.entries(_LICO)) if(n.includes(k)) return v;
+  return '📦';
+}
+function _cleanMN(n){ return n.replace(/^Softwaremodul\s*/i,'').replace(/^Software\s*/i,'').trim(); }
+function _fmtMonth(ym){ // "2026-02" → "Feb. 2026"
+  const [y,m]=ym.split('-');
+  return new Date(+y,+m-1,1).toLocaleDateString('de-DE',{month:'short',year:'numeric'});
+}
+function _fmtEur(v){ return Number(v||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
+
+async function openLizenzModal(kundeId) {
+  const modal = qi('fd-liz-modal');
+  const body  = qi('fd-liz-sh-body');
+  if(!modal||!body) return;
+  modal.classList.add('on');
+  body.innerHTML = `<div style="padding:40px 0;text-align:center">${skRows(3)}</div>`;
+
+  // Fetch all months for this customer
+  const { data, error } = await db.from('lizenz_monatsplan')
+    .select('monat,modul_name,anzahl,umsatz,rabatt_abs,orig_preis')
+    .eq('kunde_id', kundeId)
+    .order('monat',{ascending:false});
+
+  if (error || !data || !data.length) {
+    body.innerHTML = '<div class="empty" style="padding:40px 20px"><div class="empty-ico">📭</div><div class="empty-msg">Keine Lizenzdaten gefunden</div></div>';
+    return;
+  }
+
+  // All unique months sorted descending
+  const allMonths = [...new Set(data.map(r=>r.monat))].sort().reverse();
+  let _selMonth = allMonths[0]; // default = most recent
+
+  function renderModal() {
+    const rows = data.filter(r=>r.monat===_selMonth);
+    const totalMrr = rows.reduce((s,r)=>s+(r.umsatz||0),0);
+    const totalRab = rows.reduce((s,r)=>s+(r.rabatt_abs||0),0);
+    const totalOrig = rows.reduce((s,r)=>s+(r.orig_preis||0),0);
+    const rabPct = totalOrig>0 ? Math.round(totalRab/totalOrig*100) : 0;
+
+    // Sort modules by umsatz desc
+    const sorted = [...rows].sort((a,b)=>(b.umsatz||0)-(a.umsatz||0));
+
+    const monthChips = allMonths.map(m=>`
+      <button class="fd-liz-mchip${m===_selMonth?' on':''}" onclick="_fdLizSelMonth('${m}')">${_fmtMonth(m)}</button>`).join('');
+
+    const modCards = sorted.map(r=>`
+      <div class="fd-liz-mod-card">
+        <div class="fd-liz-mod-icon">${_getLIco(r.modul_name)}</div>
+        <div class="fd-liz-mod-info">
+          <div class="fd-liz-mod-name">${escHtml(_cleanMN(r.modul_name))}</div>
+          <div class="fd-liz-mod-sub">${r.anzahl||0} ${r.anzahl===1?'Lizenz':'Lizenzen'}${r.rabatt_abs>0?' · Rabatt: '+_fmtEur(r.rabatt_abs):''}</div>
+        </div>
+        <div class="fd-liz-mod-right">
+          <div class="fd-liz-mod-eur">${_fmtEur(r.umsatz)}</div>
+          ${r.orig_preis&&r.orig_preis>r.umsatz?`<div class="fd-liz-mod-cnt" style="text-decoration:line-through;color:var(--muted)">${_fmtEur(r.orig_preis)}</div>`:''}
+        </div>
+      </div>`).join('');
+
+    body.innerHTML = `
+      <div class="fd-liz-stats">
+        <div class="fd-liz-stat">
+          <div class="fd-liz-stat-v" style="color:var(--acc)">${_fmtEur(totalMrr)}</div>
+          <div class="fd-liz-stat-l">MRR netto</div>
+        </div>
+        <div class="fd-liz-stat">
+          <div class="fd-liz-stat-v">${sorted.length}</div>
+          <div class="fd-liz-stat-l">Module aktiv</div>
+        </div>
+        ${rabPct>0?`<div class="fd-liz-stat">
+          <div class="fd-liz-stat-v" style="color:var(--green)">-${rabPct}%</div>
+          <div class="fd-liz-stat-l">Ø Rabatt</div>
+        </div>`:''}
+      </div>
+      <div class="fd-liz-months">${monthChips}</div>
+      <div class="fd-liz-mod-list">${modCards||'<div class="empty" style="padding:20px 0"><div class="empty-msg">Keine Daten für diesen Monat</div></div>'}</div>
+      ${totalRab>0?`<div class="fd-liz-divider"></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:0 2px">
+        <span>Gesamtrabatt ${_fmtMonth(_selMonth)}</span>
+        <span style="font-weight:700;color:var(--text)">-${_fmtEur(totalRab)}</span>
+      </div>`:''}`;
+  }
+
+  window._fdLizSelMonth = function(m){ _selMonth=m; renderModal(); };
+  renderModal();
+}
+
+function closeLizenzModal() {
+  const modal = qi('fd-liz-modal');
+  if(modal) modal.classList.remove('on');
+}
+
+// ── Baustellen-Modal ─────────────────────────────────────
+const _BS_MOD_LABELS = {zutritt:'🔐 Zutrittskontrolle',oas:'🏗️ Baulogistik',flaeche:'📐 Fläche',nu:'📋 Dokumente',entsorg:'♻️ Entsorgung'};
+
+function _bsStatusLabel(s){
+  return {aktiv:'Aktiv',geplant:'Geplant',abgeschlossen:'Abgeschlossen'}[s]||s;
+}
+function _bsFmtDate(d){
+  if(!d) return null;
+  const dt = new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+async function openBaustellenModal(kundeId) {
+  const modal = qi('fd-bs-modal');
+  const body  = qi('fd-bs-sh-body');
+  if(!modal||!body) return;
+  modal.classList.add('on');
+  body.innerHTML = `<div style="padding:40px 0;text-align:center">${skRows(3)}</div>`;
+
+  const { data, error } = await db.from('kunde_baustellen')
+    .select('id,name,ort,status,startdatum,enddatum,module,notiz')
+    .eq('kunde_id', kundeId)
+    .order('startdatum',{ascending:false});
+
+  if (error || !data || !data.length) {
+    body.innerHTML = '<div class="empty" style="padding:40px 20px"><div class="empty-ico">🏗️</div><div class="empty-msg">Keine Baustellen gefunden</div></div>';
+    return;
+  }
+
+  let _bsFilt = 'alle';
+
+  function renderBsModal() {
+    const shown = _bsFilt==='alle' ? data : data.filter(b=>b.status===_bsFilt);
+    const cntAkt = data.filter(b=>b.status==='aktiv').length;
+    const cntGep = data.filter(b=>b.status==='geplant').length;
+    const cntAbs = data.filter(b=>b.status==='abgeschlossen').length;
+
+    const filters = [
+      {k:'alle',   l:`Alle (${data.length})`},
+      {k:'aktiv',  l:`Aktiv (${cntAkt})`},
+      {k:'geplant',l:`Geplant (${cntGep})`},
+      {k:'abgeschlossen',l:`Abgeschlossen (${cntAbs})`},
+    ].filter(f=>f.k==='alle'||data.some(b=>b.status===f.k))
+     .map(f=>`<button class="fd-bs-fchip${_bsFilt===f.k?' on':''}" onclick="_fdBsFilt('${f.k}')">${f.l}</button>`).join('');
+
+    const cards = shown.map(b=>{
+      const mods = (b.module||[]).map(m=>_BS_MOD_LABELS[m]
+        ? `<span class="fd-bs-mod-tag">${_BS_MOD_LABELS[m]}</span>`
+        : `<span class="fd-bs-mod-tag">📦 ${escHtml(m)}</span>`).join('');
+      const start = _bsFmtDate(b.startdatum);
+      const end   = _bsFmtDate(b.enddatum);
+      const dateStr = start && end ? `${start} → ${end}` : start ? `ab ${start}` : end ? `bis ${end}` : null;
+      return `
+        <div class="fd-bs-mc">
+          <div class="fd-bs-mc-top">
+            <div>
+              <div class="fd-bs-mc-name">${escHtml(b.name)}</div>
+              <div class="fd-bs-mc-meta">${[b.ort?escHtml(b.ort):null, dateStr].filter(Boolean).join(' · ')||'–'}</div>
+            </div>
+            <span class="fd-bs-sbadge ${b.status||'aktiv'}">${_bsStatusLabel(b.status)}</span>
+          </div>
+          ${mods?`<div class="fd-bs-mods">${mods}</div>`:''}
+          ${b.notiz?`<div class="fd-bs-notiz">${escHtml(b.notiz)}</div>`:''}
+        </div>`;
+    }).join('');
+
+    body.innerHTML = `
+      <div class="fd-bs-filters">${filters}</div>
+      ${cards||'<div class="empty" style="padding:20px 0"><div class="empty-msg">Keine Baustellen in dieser Kategorie</div></div>'}`;
+  }
+
+  window._fdBsFilt = function(f){ _bsFilt=f; renderBsModal(); };
+  renderBsModal();
+}
+
+function closeBaustellenModal() {
+  const modal = qi('fd-bs-modal');
+  if(modal) modal.classList.remove('on');
+}
+
+// ── Task-Edit-Modal ───────────────────────────────────────
+let _fdtId = null;
+
+async function openTaskEditModal(id) {
+  _fdtId = id;
+  const modal = qi('fd-task-modal');
+  if (!modal) return;
+  modal.classList.add('on');
+
+  // Reset form
+  qi('fdt-titel').value = '';
+  qi('fdt-beschreibung').value = '';
+  qi('fdt-faellig').value = '';
+  qi('fdt-zustaendig').value = '';
+  setFdtPrio('mittel');
+
+  const titleEl  = modal.querySelector('.fd-task-sh-title');
+  const doneBtn  = qi('fdt-done-btn');
+  const delBtn   = modal.querySelector('.fd-task-del-btn');
+
+  if (id === null) {
+    // New task mode
+    if (titleEl) titleEl.textContent = 'Neue Aufgabe';
+    if (doneBtn) doneBtn.style.display = 'none';
+    if (delBtn)  delBtn.style.display  = 'none';
+    return;
+  }
+
+  // Existing task mode
+  if (titleEl) titleEl.textContent = 'Aufgabe bearbeiten';
+  if (doneBtn) doneBtn.style.display = '';
+  if (delBtn)  delBtn.style.display  = '';
+
+  // Fetch full task
+  const { data: t } = await db.from('tasks')
+    .select('id,titel,beschreibung,prio,faellig,zustaendig,erledigt')
+    .eq('id', id).single();
+  if (!t) return;
+
+  qi('fdt-titel').value        = t.titel || '';
+  qi('fdt-beschreibung').value = t.beschreibung || '';
+  qi('fdt-faellig').value      = t.faellig || '';
+  qi('fdt-zustaendig').value   = t.zustaendig || '';
+  setFdtPrio(t.prio || 'mittel');
+
+  // Done button state
+  if (doneBtn) {
+    doneBtn.textContent = t.erledigt ? '↩ Wiedereröffnen' : '✓ Als erledigt markieren';
+    doneBtn.dataset.erledigt = t.erledigt ? '1' : '0';
+  }
+}
+
+function setFdtPrio(prio) {
+  qAll('.fd-task-prio-btn').forEach(b => {
+    b.className = 'fd-task-prio-btn' + (b.dataset.prio === prio ? ` on-${prio}` : '');
+  });
+}
+
+async function saveFdTaskEdit() {
+  const titel = qi('fdt-titel').value.trim();
+  if (!titel) { qi('fdt-titel').focus(); return; }
+
+  const prio = document.querySelector('.fd-task-prio-btn[class*="on-"]')?.dataset.prio || 'mittel';
+  const saveBtn = document.querySelector('.fd-task-save-btn');
+  if (saveBtn) { saveBtn.textContent = '···'; saveBtn.disabled = true; }
+
+  let error;
+  if (_fdtId === null) {
+    // New task — INSERT
+    const kundeId = _fdFirma?.id;
+    if (!kundeId) { if (saveBtn) { saveBtn.textContent = 'Speichern'; saveBtn.disabled = false; } return; }
+    ({ error } = await db.from('tasks').insert({
+      titel,
+      beschreibung: qi('fdt-beschreibung').value.trim() || null,
+      faellig:      qi('fdt-faellig').value     || null,
+      zustaendig:   qi('fdt-zustaendig').value.trim() || null,
+      prio,
+      erledigt:     false,
+      kunde_id:     kundeId,
+      erstellt:     new Date().toISOString(),
+      geaendert:    new Date().toISOString(),
+    }));
+  } else {
+    // Existing task — UPDATE
+    ({ error } = await db.from('tasks').update({
+      titel,
+      beschreibung: qi('fdt-beschreibung').value.trim() || null,
+      faellig:      qi('fdt-faellig').value     || null,
+      zustaendig:   qi('fdt-zustaendig').value.trim() || null,
+      prio,
+      geaendert:    new Date().toISOString(),
+    }).eq('id', _fdtId));
+  }
+
+  if (saveBtn) { saveBtn.textContent = 'Speichern'; saveBtn.disabled = false; }
+  if (!error) {
+    closeTaskEditModal();
+    if (_fdFirma) loadFdOverview();
+  }
+}
+
+async function markFdTaskDone() {
+  if (!_fdtId) return;
+  const doneBtn = qi('fdt-done-btn');
+  const nowDone = doneBtn?.dataset.erledigt !== '1';
+  await db.from('tasks').update({ erledigt: nowDone, geaendert: new Date().toISOString() }).eq('id', _fdtId);
+  closeTaskEditModal();
+  if (_fdFirma) loadFdOverview();
+}
+
+async function deleteFdTask() {
+  if (!_fdtId) return;
+  if (!confirm('Aufgabe wirklich löschen?')) return;
+  await db.from('tasks').delete().eq('id', _fdtId);
+  closeTaskEditModal();
+  if (_fdFirma) loadFdOverview();
+}
+
+function closeTaskEditModal() {
+  const modal = qi('fd-task-modal');
+  if (modal) modal.classList.remove('on');
+  _fdtId = null;
+}
+
+// ── Stammdaten Inline-Edit ────────────────────────────────
+async function saveSdField(el) {
+  const field = el.dataset.field;
+  if (!field || !_fdFirma) return;
+  const val = el.value.trim() || null;
+  // Optimistic local cache update
+  _fdFirma[field] = val;
+  const fi = _firms.findIndex(f => f.id === _fdFirma.id);
+  if (fi >= 0) _firms[fi][field] = val;
+  // Persist
+  const { error } = await db.from('kunden').update({ [field]: val }).eq('id', _fdFirma.id);
+  if (error) { console.error('[SD]', error); return; }
+  // Green flash feedback
+  el.classList.add('sd-saved');
+  setTimeout(() => el.classList.remove('sd-saved'), 900);
+  // Sync brand header live
+  if (field === 'name') {
+    const n = document.querySelector('.fd-brand-name');
+    if (n) n.textContent = val || '';
+    // also update initials in logo if no logo image
+    const logoEl = document.querySelector('.fd-brand-logo');
+    if (logoEl && !logoEl.querySelector('img')) {
+      logoEl.textContent = (val||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
+    }
+  }
+  if (field === 'typ' || field === 'status') {
+    const t = document.querySelector('.fd-brand-typ');
+    if (t) t.textContent = _fdFirma.typ || _fdFirma.status || '';
+  }
+}
+
+function toggleSdBlock(hd) {
+  const body = hd.nextElementSibling;
+  const chevron = hd.querySelector('.sd-toggle-chevron');
+  const open = body.classList.toggle('open');
+  chevron.classList.toggle('open', open);
+  if (open) {
+    const ta = body.querySelector('[data-field="notiz"]');
+    if (ta) autoResizeTA(ta);
+  }
+}
+
+// ── Ansprechpartner-Modal ─────────────────────────────────
+let _fdApId = null;   // null = new, string = existing id
+
+function openApModal(id) {
+  _fdApId = id;
+  const modal = qi('fd-ap-modal');
+  if (!modal) return;
+  // Reset
+  qi('fdap-name').value     = '';
+  qi('fdap-position').value = '';
+  qi('fdap-email').value    = '';
+  qi('fdap-telefon').value  = '';
+  qi('fdap-notiz').value    = '';
+  qi('fd-ap-sh-title').textContent = id ? 'Ansprechpartner bearbeiten' : 'Neuer Ansprechpartner';
+  qi('fdap-del-btn').style.display = id ? 'inline-flex' : 'none';
+  modal.classList.add('on');
+
+  if (id) {
+    // Load existing data
+    db.from('kunde_ansprechpartner')
+      .select('name,position,email,telefon,notiz').eq('id',id).single()
+      .then(({data:ap}) => {
+        if (!ap) return;
+        qi('fdap-name').value     = ap.name     || '';
+        qi('fdap-position').value = ap.position || '';
+        qi('fdap-email').value    = ap.email    || '';
+        qi('fdap-telefon').value  = ap.telefon  || '';
+        qi('fdap-notiz').value    = ap.notiz    || '';
+      });
+  } else {
+    setTimeout(() => qi('fdap-name').focus(), 80);
+  }
+}
+
+async function saveAp() {
+  const name = qi('fdap-name').value.trim();
+  if (!name) { qi('fdap-name').focus(); return; }
+
+  const payload = {
+    name,
+    position : qi('fdap-position').value.trim() || null,
+    email    : qi('fdap-email').value.trim()    || null,
+    telefon  : qi('fdap-telefon').value.trim()  || null,
+    notiz    : qi('fdap-notiz').value.trim()    || null,
+  };
+
+  const saveBtn = document.querySelector('#fd-ap-modal .fd-task-save-btn');
+  if (saveBtn) { saveBtn.textContent = '···'; saveBtn.disabled = true; }
+
+  let error;
+  if (_fdApId) {
+    ({ error } = await db.from('kunde_ansprechpartner').update(payload).eq('id', _fdApId));
+  } else {
+    ({ error } = await db.from('kunde_ansprechpartner').insert({ ...payload, kunde_id: _fdId || _fdFirma?.id }));
+  }
+
+  if (saveBtn) { saveBtn.textContent = 'Speichern'; saveBtn.disabled = false; }
+  if (!error) { closeApModal(); if (_fdFirma) loadFdOverview(); }
+}
+
+async function deleteAp() {
+  if (!_fdApId) return;
+  if (!confirm('Ansprechpartner wirklich löschen?')) return;
+  await db.from('kunde_ansprechpartner').delete().eq('id', _fdApId);
+  closeApModal();
+  if (_fdFirma) loadFdOverview();
+}
+
+function closeApModal() {
+  const modal = qi('fd-ap-modal');
+  if (modal) modal.classList.remove('on');
+  _fdApId = null;
+}
+
+// ── Leads / Pipeline-Navigation ──────────────────────────
+function openDealFromOverview(dealId) {
+  closeFirmaDetail();
+  setTimeout(() => navTo('pipeline'), 60);
+}
+
+// ── Termine-Listen-Modal ──────────────────────────────────
+async function openTermineModal(kundeId) {
+  const modal = qi('fd-term-modal');
+  const body  = qi('fd-term-sh-body');
+  if (!modal || !body) return;
+  modal.classList.add('on');
+  body.innerHTML = `<div style="padding:40px 0;text-align:center">${skRows(3)}</div>`;
+
+  const { data } = await db.from('termine')
+    .select('id,art,datum,uhrzeit_von,uhrzeit_bis,betreff,notiz,kontakt_name')
+    .eq('kunde_id', kundeId)
+    .order('datum', {ascending:false});
+
+  const all = data || [];
+  let _tf = 'bevorstehend';
+  const tod = new Date().toISOString().slice(0,10);
+
+  function renderTermList() {
+    const shown = _tf === 'bevorstehend' ? all.filter(t=>t.datum>=tod)
+                : _tf === 'vergangen'    ? all.filter(t=>t.datum<tod)
+                : all;
+    const bev = all.filter(t=>t.datum>=tod).length;
+    const verg= all.filter(t=>t.datum<tod).length;
+    const chips = [
+      {k:'bevorstehend',l:`Bevorstehend (${bev})`},
+      {k:'vergangen',   l:`Vergangen (${verg})`},
+      {k:'alle',        l:`Alle (${all.length})`},
+    ].map(c=>`<button class="fd-term-fchip${_tf===c.k?' on':''}" onclick="_fdTermFilt('${c.k}')">${c.l}</button>`).join('');
+
+    const items = shown.map(t => {
+      const ico = _tGetIco(t.art);
+      const metaParts = [fmtDate(t.datum), t.uhrzeit_von?t.uhrzeit_von.slice(0,5):null, t.art].filter(Boolean);
+      return `<div class="fd-term-item" onclick="openTerminEdit('${t.id}')">
+        <div class="fd-term-item-ico">${ico}</div>
+        <div class="fd-term-item-body">
+          <div class="fd-term-item-betreff">${escHtml(t.betreff||t.art||'Termin')}</div>
+          <div class="fd-term-item-meta">${escHtml(metaParts.join(' · '))}${t.kontakt_name?' · '+escHtml(t.kontakt_name):''}</div>
+          ${t.notiz?`<div class="fd-term-item-notiz">${escHtml(t.notiz.slice(0,120))}${t.notiz.length>120?'…':''}</div>`:''}
+        </div>
+        <div class="fd-term-item-arr">›</div>
+      </div>`;
+    }).join('') || `<div class="empty" style="padding:20px 0"><div class="empty-msg">Keine Termine in dieser Kategorie</div></div>`;
+
+    body.innerHTML = `<div class="fd-term-filters">${chips}</div>${items}`;
+  }
+
+  window._fdTermFilt = f => { _tf=f; renderTermList(); };
+  window._tGetIco = art => art ? (art.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['📅'])[0] : '📅';
+  renderTermList();
+}
+
+function closeTermineModal() {
+  qi('fd-term-modal')?.classList.remove('on');
+}
+
+// ── Termin-Edit-Modal ─────────────────────────────────────
+let _fdteId = null;
+
+async function openTerminEdit(id) {
+  _fdteId = id;
+  const modal = qi('fd-termin-edit-modal');
+  if (!modal) return;
+
+  // Reset
+  const tod = new Date().toISOString().slice(0,10);
+  qi('fdte-art').value              = '📍 Vor-Ort-Termin';
+  qi('fdte-datum').value            = tod;
+  qi('fdte-uhrzeit-von').value      = '';
+  qi('fdte-betreff').value          = '';
+  qi('fdte-kontakt-name').value     = '';
+  qi('fdte-kontakt-telefon').value  = '';
+  qi('fdte-notiz').value            = '';
+  qi('fdte-naechster-schritt').value= '';
+  qi('fd-termin-edit-title').textContent = id ? 'Termin bearbeiten' : 'Neuer Termin';
+  qi('fdte-del-btn').style.display  = id ? 'inline-flex' : 'none';
+  modal.classList.add('on');
+
+  if (id) {
+    const { data:t } = await db.from('termine')
+      .select('art,datum,uhrzeit_von,betreff,kontakt_name,kontakt_telefon,notiz,naechster_schritt')
+      .eq('id',id).single();
+    if (t) {
+      qi('fdte-art').value              = t.art              || '📍 Vor-Ort-Termin';
+      qi('fdte-datum').value            = t.datum            || tod;
+      qi('fdte-uhrzeit-von').value      = t.uhrzeit_von      || '';
+      qi('fdte-betreff').value          = t.betreff          || '';
+      qi('fdte-kontakt-name').value     = t.kontakt_name     || '';
+      qi('fdte-kontakt-telefon').value  = t.kontakt_telefon  || '';
+      qi('fdte-notiz').value            = t.notiz            || '';
+      qi('fdte-naechster-schritt').value= t.naechster_schritt|| '';
+    }
+  } else {
+    setTimeout(()=>qi('fdte-datum').focus(), 80);
+  }
+}
+
+async function saveTerminFd() {
+  const datum = qi('fdte-datum').value;
+  if (!datum) { qi('fdte-datum').focus(); return; }
+
+  const payload = {
+    art:               qi('fdte-art').value,
+    datum,
+    uhrzeit_von:       qi('fdte-uhrzeit-von').value      || null,
+    betreff:           qi('fdte-betreff').value.trim()   || null,
+    kontakt_name:      qi('fdte-kontakt-name').value.trim()    || null,
+    kontakt_telefon:   qi('fdte-kontakt-telefon').value.trim() || null,
+    notiz:             qi('fdte-notiz').value.trim()           || null,
+    naechster_schritt: qi('fdte-naechster-schritt').value.trim()|| null,
+  };
+
+  const saveBtn = document.querySelector('#fd-termin-edit-modal .fd-task-save-btn');
+  if (saveBtn) { saveBtn.textContent='···'; saveBtn.disabled=true; }
+
+  let error;
+  if (_fdteId) {
+    ({ error } = await db.from('termine').update(payload).eq('id', _fdteId));
+  } else {
+    ({ error } = await db.from('termine').insert({ ...payload, kunde_id: _fdId || _fdFirma?.id }));
+  }
+
+  if (saveBtn) { saveBtn.textContent='Speichern'; saveBtn.disabled=false; }
+  if (!error) {
+    closeTerminEdit();
+    if (_fdFirma) loadFdOverview();
+    // Refresh list modal if open
+    if (qi('fd-term-modal')?.classList.contains('on')) openTermineModal(_fdId||_fdFirma?.id);
+  }
+}
+
+async function deleteTerminFd() {
+  if (!_fdteId) return;
+  if (!confirm('Termin wirklich löschen?')) return;
+  await db.from('termine').delete().eq('id', _fdteId);
+  closeTerminEdit();
+  if (_fdFirma) loadFdOverview();
+  if (qi('fd-term-modal')?.classList.contains('on')) openTermineModal(_fdId||_fdFirma?.id);
+}
+
+function closeTerminEdit() {
+  qi('fd-termin-edit-modal')?.classList.remove('on');
+  _fdteId = null;
+}
+
+function closeFirmaDetail() {
+  // Save any pending note edits first
+  if (_fdNoteChanged) saveFdNote();
+  if (_fdSaveTimer) { clearTimeout(_fdSaveTimer); _fdSaveTimer = null; }
+
+  qi('app').classList.remove('fd-mode');
+  navTo(_prevView || 'firmen');
+}
+
+function switchFdTab(el) {
+  const newTab = el.dataset.fdt;
+  // Save pending note if leaving notes tab
+  if (_fdTab === 'notizen' && newTab !== 'notizen') {
+    if (_fdNoteChanged) saveFdNote();
+  }
+  _fdTab = newTab;
+  qAll('.fd-tb[data-fdt]').forEach(b => b.classList.toggle('on', b === el));
+  qAll('.fd-sec').forEach(s => s.classList.remove('on'));
+  const sec = qi('fds-' + newTab);
+  if (sec) sec.classList.add('on');
+  loadFdSection(newTab);
+}
+
+function loadFdSection(tab) {
+  if (!_fdFirma) return;
+  if (tab === 'overview')  loadFdOverview();
+  else if (tab === 'notizen')  loadFdNotizen();
+  else if (tab === 'mails')    loadFdMails();
+}
+
+// ── ÜBERSICHT ────────────────────────────────────────────
+async function loadFdOverview() {
+  const el = qi('fds-overview');
+  const f  = _fdFirma;
+  if (!el || !f) return;
+
+  const SM    = {'Aktiv':{c:'b-g',l:'Aktiv'},'Lead':{c:'b-b',l:'Lead'},'Inaktiv':{c:'b-x',l:'Inaktiv'},'Churned':{c:'b-r',l:'Churned'}};
+  const s     = SM[f.status] || {c:'b-x', l: f.status||'–'};
+  const initials = f.name.trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?';
+  const scol  = {'Aktiv':{bg:'#DCFCE7',c:'#16A34A'},'Lead':{bg:'#DBEAFE',c:'#2563EB'},'Inaktiv':{bg:'#F3F4F6',c:'#6B7280'},'Churned':{bg:'#FEE2E2',c:'#DC2626'}};
+  const avc   = scol[f.status] || {bg:'#EDE9FE', c:'#7C3AED'};
+
+
+  // Brand header
+  const logoHtml = f.logo
+    ? `<img src="${f.logo}" style="width:100%;height:100%;object-fit:contain;border-radius:13px;display:block;" />`
+    : initials;
+  el.innerHTML = `
+    <div class="fd-brand-hd">
+      <div class="fd-brand-logo" style="${f.logo ? 'background:rgba(255,255,255,.95);font-size:0' : ''}">${logoHtml}</div>
+      <div style="min-width:0;flex:1">
+        <div class="fd-brand-name">${escHtml(f.name)}</div>
+        ${f.typ ? `<div class="fd-brand-typ">${escHtml(f.typ)}</div>` : (f.status ? `<div class="fd-brand-typ">${escHtml(f.status)}</div>` : '')}
+      </div>
+    </div>
+    <div id="fd-ov-body">${skRows(3)}</div>`;
+
+  // Load KPIs + recent data in parallel
+  const today = new Date().toISOString().slice(0,10);
+  // Last completed month (e.g. "2026-02" when today is in March)
+  const _lm = new Date(); _lm.setDate(1); _lm.setMonth(_lm.getMonth()-1);
+  const lastCompletedMonat = _lm.toISOString().slice(0,7);
+  const [nR, tR, lizR, bsR, apR, dealR, termR] = await Promise.all([
+    db.from('notizen').select('id,typ,titel,text,erstellt').eq('kunde_id',f.id).order('erstellt',{ascending:false}).limit(4),
+    db.from('tasks').select('id,titel,faellig,erledigt').eq('kunde_id',f.id).eq('erledigt',false).order('faellig',{ascending:true}).limit(5),
+    db.from('lizenz_monatsplan').select('modul_name,anzahl,umsatz,rabatt_abs').eq('kunde_id',f.id).eq('monat',lastCompletedMonat),
+    db.from('kunde_baustellen').select('id,name,ort,status,startdatum,enddatum,module').eq('kunde_id',f.id).order('startdatum',{ascending:false}),
+    db.from('kunde_ansprechpartner').select('id,name,position,email,telefon').eq('kunde_id',f.id).order('erstellt',{ascending:true}),
+    db.from('pipeline_deals').select('id,titel,stage,volumen').eq('kunde_id',f.id).neq('stage','churned'),
+    db.from('termine').select('id,art,datum,uhrzeit_von,betreff').eq('kunde_id',f.id).gte('datum',today).order('datum',{ascending:true}).limit(10),
+  ]);
+
+  const notes = nR.data || [];
+  const tasks = tR.data || [];
+  const getEmo = s => s ? (s.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['✏️'])[0] : '✏️';
+
+  // Stammdaten — inline editing
+  const sdV = (v) => escHtml(v||'');
+  const sdInp = (field, val, placeholder='') =>
+    `<input class="sd-v-inp" data-field="${field}" value="${sdV(val)}" placeholder="${placeholder}" onblur="saveSdField(this)" onkeydown="if(event.key==='Enter')this.blur()">`;
+  const sdSel = (field, val, opts) =>
+    `<select class="sd-v-sel" data-field="${field}" onchange="saveSdField(this)">${opts.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('')}</select>`;
+
+  const stammdatenHtml = `
+    <div class="sd-toggle-hd" onclick="toggleSdBlock(this)">
+      <span class="sd-toggle-lbl">Stammdaten</span>
+      <svg class="sd-toggle-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="sd-body">
+    <div class="grp sd-grid" style="margin-bottom:14px">
+      <div class="sd-cell"><span class="sd-k">Name</span>${sdInp('name', f.name, 'Firmenname')}</div>
+      <div class="sd-cell"><span class="sd-k">Typ</span>${sdInp('typ', f.typ, 'z.B. GmbH, AG …')}</div>
+      <div class="sd-cell"><span class="sd-k">Kundennr.</span>${sdInp('kundennr', f.kundennr, '–')}</div>
+      <div class="sd-cell"><span class="sd-k">Zuständig</span>${sdInp('zustaendig', f.zustaendig, 'Name …')}</div>
+      <div class="sd-cell"><span class="sd-k">Telefon</span>${sdInp('telefon', f.telefon, '+49 …')}</div>
+      <div class="sd-cell"><span class="sd-k">E-Mail</span>${sdInp('email', f.email, 'info@…')}</div>
+      <div class="sd-cell"><span class="sd-k">Straße</span>${sdInp('strasse', f.strasse, 'Musterstraße 1')}</div>
+      <div class="sd-cell"><span class="sd-k">PLZ</span>${sdInp('plz', f.plz, '10115')}</div>
+      <div class="sd-cell"><span class="sd-k">Ort</span>${sdInp('ort', f.ort, 'Berlin')}</div>
+      <div class="sd-cell"><span class="sd-k">Land</span>${sdInp('region', f.region, 'Deutschland')}</div>
+      <div class="sd-cell sd-full"><span class="sd-k">Interne Notiz</span><textarea class="sd-v-ta" data-field="notiz" placeholder="Notiz …" oninput="autoResizeTA(this)" onblur="saveSdField(this)">${sdV(f.notiz)}</textarea></div>
+    </div>
+    </div>`;
+
+  const tasksHtml = `
+    <div class="sec-title" style="padding-left:30px;display:flex;align-items:center;justify-content:space-between;padding-right:30px">
+      <span>Offene Aufgaben</span>
+      <button class="fd-ap-add" onclick="openTaskEditModal(null)" title="Neue Aufgabe"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    </div>
+    <div class="grp" style="margin-bottom:14px">
+      ${tasks.length ? tasks.map(t=>`<div class="t-row" id="fdo-${t.id}" onclick="openTaskEditModal('${t.id}')" style="cursor:pointer">
+        <div class="t-check" onclick="event.stopPropagation();doneTask('${t.id}','fdo-${t.id}')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="t-body">
+          <div class="t-name">${escHtml(t.titel)}</div>
+          ${t.faellig?`<div class="t-meta" style="color:${t.faellig<today?'var(--red)':t.faellig===today?'var(--orange)':'var(--muted)'}">${fmtDate(t.faellig)}</div>`:''}
+        </div>
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`).join('') : '<div class="row" style="pointer-events:none"><span style="color:var(--muted);font-size:13px;padding:2px 0">Keine offenen Aufgaben</span></div>'}
+    </div>`;
+
+  const notesHtml = notes.length ? `
+    <div class="sec-title" style="padding-left:14px;display:flex;align-items:center;justify-content:space-between;padding-right:14px">
+      <span>Letzte Notizen</span>
+      <button onclick="switchFdTab(document.querySelector('[data-fdt=notizen]'))" style="background:none;border:none;color:var(--acc);font-size:13px;font-weight:600;cursor:pointer;padding:0">Alle ›</button>
+    </div>
+    <div class="grp" style="margin-bottom:14px">
+      ${notes.map(n=>`<div class="row" onclick="switchFdTab(document.querySelector('[data-fdt=notizen]'));setTimeout(()=>openFdNote('${n.id}'),120)">
+        <div class="row-icon" style="background:#F2F2F7;font-size:16px">${getEmo(n.typ)}</div>
+        <div class="row-body">
+          <div class="row-title">${escHtml(n.titel||n.typ||'Notiz')}</div>
+          ${n.text?`<div class="row-sub">${escHtml(n.text.slice(0,80))}${n.text.length>80?'…':''}</div>`:''}
+        </div>
+        <div style="font-size:11px;color:var(--muted);flex-shrink:0;padding-top:2px">${timeAgo(n.erstellt)}</div>
+      </div>`).join('')}
+    </div>` : '';
+
+  // ── Lizenz-Kachel ──
+  const lizRows = lizR.data || [];
+  let lizCardHtml = '';
+  if (lizRows.length) {
+    // Aggregate by module
+    const modMap = {};
+    lizRows.forEach(r => {
+      const k = r.modul_name || 'Unbekannt';
+      if (!modMap[k]) modMap[k] = { anzahl:0, umsatz:0 };
+      modMap[k].anzahl += (r.anzahl||0);
+      modMap[k].umsatz += (r.umsatz||0);
+    });
+    const totalMrr = lizRows.reduce((s,r)=>s+(r.umsatz||0),0);
+    const monthLabel = _lm.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+    const LICO = {'Baustellen':'🏗️','Zutritt':'🔑','OAS':'🛡️','Fläche':'📐','NU':'📄','Einweisung':'📋','Entsorgung':'♻️','Dokumentenverwaltung':'📄','Zeiterfassung':'⏱️'};
+    const getLIco = n => {
+      for(const[k,v]of Object.entries(LICO)) if(n.toLowerCase().includes(k.toLowerCase())) return v;
+      return '📦';
+    };
+    const cleanMN = n => n.replace(/^Softwaremodul\s*/i,'').replace(/^Software\s*/i,'').trim();
+    const modRows = Object.entries(modMap)
+      .sort((a,b)=>b[1].umsatz-a[1].umsatz)
+      .map(([name,d])=>`
+        <div class="fd-liz-row">
+          <div class="fd-liz-ico">${getLIco(name)}</div>
+          <div class="fd-liz-name">${escHtml(cleanMN(name))}</div>
+          <div class="fd-liz-cnt">${d.anzahl>0?d.anzahl+' Liz.':''}</div>
+          <div class="fd-liz-val">${d.umsatz.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})} €</div>
+        </div>`).join('');
+    lizCardHtml = `
+      <div class="fd-liz-card" onclick="openLizenzModal('${f.id}')">
+        <div class="fd-liz-hd">
+          <div>
+            <div class="fd-liz-title">Software-Lizenzen</div>
+            <div class="fd-liz-period">${monthLabel}</div>
+          </div>
+          <div class="fd-liz-mrr">${totalMrr.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})} €</div>
+        </div>
+        <div class="fd-liz-body">${modRows}</div>
+        <div class="fd-liz-footer">
+          <span class="fd-liz-hint">Details &amp; Verlauf</span>
+          <span class="fd-liz-arr">›</span>
+        </div>
+      </div>`;
+  }
+
+  // ── Baustellen-Kachel ──
+  const bsAll  = bsR.data || [];
+  const bsAkt  = bsAll.filter(b=>b.status==='aktiv');
+  const bsGep  = bsAll.filter(b=>b.status==='geplant');
+  let bsCardHtml = '';
+  if (bsAll.length) {
+    const bsShow = bsAkt.length ? bsAkt : bsGep.length ? bsGep : bsAll.slice(0,5);
+    const bsCountLabel = bsAkt.length
+      ? `${bsAkt.length} aktiv${bsGep.length ? ` · ${bsGep.length} geplant` : ''}`
+      : bsGep.length ? `${bsGep.length} geplant` : `${bsAll.length} gesamt`;
+    const bsCountNum = bsAkt.length || bsGep.length || bsAll.length;
+    const _BS_MOD = {zutritt:'🔐 Zutrittskontrolle',oas:'🏗️ Baulogistik',flaeche:'📐 Fläche',nu:'📋 Dokumente',entsorg:'♻️ Entsorgung'};
+    const bsRows = bsShow.slice(0,5).map(b=>`
+      <div class="fd-bs-row">
+        <div class="fd-bs-dot ${b.status||'aktiv'}"></div>
+        <div class="fd-bs-name">${escHtml(b.name)}</div>
+        ${b.ort?`<div class="fd-bs-ort">${escHtml(b.ort)}</div>`:''}
+      </div>`).join('');
+    const moreHint = bsAll.length > 5 ? `<div style="padding:4px 16px 6px;font-size:12px;color:var(--muted)">+${bsAll.length-5} weitere</div>` : '';
+    bsCardHtml = `
+      <div class="fd-bs-card" onclick="openBaustellenModal('${f.id}')">
+        <div class="fd-bs-hd">
+          <div>
+            <div class="fd-bs-title">Baustellen</div>
+            <div class="fd-bs-count-lbl">${bsCountLabel}</div>
+          </div>
+          <div class="fd-bs-count">${bsCountNum}</div>
+        </div>
+        <div class="fd-bs-body">${bsRows}${moreHint}</div>
+        <div class="fd-bs-footer">
+          <span class="fd-bs-hint">Alle Baustellen</span>
+          <span class="fd-bs-arr">›</span>
+        </div>
+      </div>`;
+  }
+
+  // ── Ansprechpartner-Kachel (immer sichtbar) ──
+  const apList = apR.data || [];
+  const _apColors = ['#7c3aed','#2563eb','#059669','#d97706','#dc2626'];
+  const _apAv = name => {
+    const ini = name.trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
+    const col = _apColors[(name.charCodeAt(0)||0) % _apColors.length];
+    return `<div class="fd-ap-av" style="background:${col}22;color:${col}">${ini}</div>`;
+  };
+  const apRowsHtml = apList.length
+    ? apList.map(ap=>`
+        <div class="fd-ap-row" onclick="openApModal('${ap.id}')">
+          ${_apAv(ap.name)}
+          <div class="fd-ap-info">
+            <div class="fd-ap-name">${escHtml(ap.name)}</div>
+            ${ap.position?`<div class="fd-ap-pos">${escHtml(ap.position)}</div>`:''}
+          </div>
+          <svg class="fd-ap-arr" viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>`).join('')
+    : `<div class="fd-ap-empty">Noch kein Ansprechpartner hinterlegt</div>`;
+  const apCardHtml = `
+    <div class="fd-ap-card">
+      <div class="fd-ap-hd">
+        <div class="fd-ap-title">Ansprechpartner</div>
+        <button class="fd-ap-add" onclick="openApModal(null)" title="Neu">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      ${apRowsHtml}
+    </div>`;
+
+  // ── Leads-Kachel (nur wenn Deals vorhanden) ──
+  const _PIPE_STAGES = {demo_angefragt:{l:'Demo angefragt',c:'#5c9ee0'},demo_gehalten:{l:'Demo gehalten',c:'#a78bfa'},pilot_angebot:{l:'Pilotangebot',c:'#e09a5c'},pilot_aktiv:{l:'Pilot aktiv',c:'#e8d5a3'},rollout:{l:'Gewonnen',c:'#4caf7d'}};
+  const dealList = dealR.data || [];
+  let leadCardHtml = '';
+  if (dealList.length) {
+    const dealRows = dealList.map(d => {
+      const st = _PIPE_STAGES[d.stage] || {l:d.stage,c:'#888'};
+      const vol = d.volumen ? Number(d.volumen).toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0})+' €' : '';
+      return `<div class="fd-lead-row" onclick="openDealFromOverview('${d.id}')">
+        <span class="fd-lead-stage" style="background:${st.c}22;color:${st.c}">${st.l}</span>
+        <div class="fd-lead-name">${escHtml(d.titel||'Deal')}</div>
+        ${vol?`<div class="fd-lead-vol">${vol}</div>`:''}
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`;
+    }).join('');
+    leadCardHtml = `
+      <div class="fd-lead-card">
+        <div class="fd-lead-hd">
+          <div class="fd-lead-title">Leads &amp; Pipeline</div>
+          <div class="fd-lead-count">${dealList.length}</div>
+        </div>
+        ${dealRows}
+        <div class="fd-lead-footer">
+          <span class="fd-lead-hint" onclick="openDealFromOverview(null)" style="cursor:pointer">In Pipeline ansehen ›</span>
+        </div>
+      </div>`;
+  }
+
+  // ── Termine-Kachel ──
+  const termList = termR.data || [];
+  const _tGetIco = art => art ? (art.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['📅'])[0] : '📅';
+  let termCardHtml = '';
+  {
+    const showRows = termList.slice(0,4).map(t => {
+      const isToday = t.datum === today;
+      const metaParts = [
+        isToday ? 'Heute' : fmtDate(t.datum),
+        t.uhrzeit_von ? t.uhrzeit_von.slice(0,5) : null,
+      ].filter(Boolean);
+      return `<div class="fd-term-row" onclick="openTerminEdit('${t.id}')">
+        <div class="fd-term-ico">${_tGetIco(t.art)}</div>
+        <div class="fd-term-info">
+          <div class="fd-term-betreff">${escHtml(t.betreff||t.art||'Termin')}</div>
+          <div class="fd-term-meta">${escHtml(metaParts.join(' · '))}</div>
+        </div>
+        ${isToday ? '<span class="fd-term-badge soon">Heute</span>' : ''}
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`;
+    }).join('');
+    const emptyRow = `<div style="padding:12px 16px;font-size:13px;color:var(--muted)">Keine bevorstehenden Termine</div>`;
+    termCardHtml = `
+      <div class="fd-term-card">
+        <div class="fd-term-hd">
+          <div class="fd-term-title">Bevorstehende Termine</div>
+          <button class="fd-term-add" onclick="openTerminEdit(null)" title="Neu">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+        ${showRows || emptyRow}
+        <div class="fd-term-footer">
+          <span class="fd-term-hint" onclick="openTermineModal('${f.id}')">Alle Termine ›</span>
+        </div>
+      </div>`;
+  }
+
+  const bodyEl = qi('fd-ov-body');
+  if (bodyEl) {
+    bodyEl.innerHTML = `${lizCardHtml}${tasksHtml}${termCardHtml}${apCardHtml}${bsCardHtml}${leadCardHtml}${stammdatenHtml}${notesHtml}`;
+    const notizTa = bodyEl.querySelector('[data-field="notiz"]');
+    if (notizTa) autoResizeTA(notizTa);
+  }
+}
+
+// ── NOTIZEN — Apple Notes with inline editing ─────────────
+async function loadFdNotizen() {
+  const listEl = qi('fd-nl-list');
+  if (!listEl) return;
+  listEl.innerHTML = skRows(4);
+
+  const { data } = await db.from('notizen')
+    .select('id,typ,titel,text,erstellt,user_name')
+    .eq('kunde_id', _fdId)
+    .order('erstellt', {ascending:false})
+    .limit(200);
+  _fdNotes = data || [];
+
+  const countEl = qi('fd-nl-title');
+  if (countEl) countEl.textContent = _fdNotes.length ? `Notizen (${_fdNotes.length})` : 'Notizen';
+
+  _renderNoteList();
+
+  // On desktop, auto-open first note or blank editor
+  if (_fdNotes.length && window.innerWidth >= 768 && !_fdEditNoteId) {
+    openFdNote(_fdNotes[0].id);
+  } else if (!_fdNotes.length) {
+    // No notes: open blank new-note editor (also fixes the + button on mobile)
+    openFdNote(null);
+  }
+}
+
+function _renderNoteList() {
+  const listEl = qi('fd-nl-list');
+  if (!listEl) return;
+  const getEmo = s => s ? (s.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['📝'])[0] : '📝';
+
+  if (!_fdNotes.length) {
+    listEl.innerHTML = `<div style="padding:36px 20px;text-align:center;color:#8A8070">
+      <div style="font-size:36px;opacity:.4;margin-bottom:10px">📝</div>
+      <div style="font-size:14px;font-weight:500">Noch keine Notizen</div>
+      <div style="font-size:12px;margin-top:4px">Tippe auf + um zu starten</div></div>`;
+    return;
+  }
+
+  listEl.innerHTML = _fdNotes.map(n => `
+    <div class="fd-ni ${String(n.id)===String(_fdEditNoteId)?'on':''}" id="fdn-${n.id}" onclick="openFdNote('${n.id}')">
+      <div class="fd-ni-top">
+        <span class="fd-ni-emo">${getEmo(n.typ)}</span>
+        <span class="fd-ni-typ">${escHtml(n.typ||'Notiz')}</span>
+        <span class="fd-ni-dt">${fmtDate(n.erstellt)}</span>
+      </div>
+      <div class="fd-ni-ttl">${escHtml(n.titel||'Ohne Titel')}</div>
+      ${n.text ? `<div class="fd-ni-prv">${escHtml(n.text.replace(/<[^>]+>/g,'').slice(0,70))}</div>` : ''}
+    </div>`).join('');
+}
+
+function openFdNote(id) {
+  // Save current edit if there are changes
+  if (_fdNoteChanged) saveFdNote();
+
+  const ne  = qi('fd-ne');
+  const ttl = qi('fd-ne-ttl');
+  const txt = qi('fd-ne-txt');
+  const st  = qi('fd-ne-st');
+  if (!ne || !ttl || !txt) return;
+
+  const delBtn = qi('fd-ne-del-btn');
+
+  if (id === null || id === undefined) {
+    // New blank note
+    _fdEditNoteId = null;
+    _fdEditIsNew  = true;
+    _fdEditType   = '📝 Notiz';
+    _fdNoteChanged = false;
+    ttl.value = '';
+    txt.value = '';
+    if (st) st.textContent = '';
+    if (delBtn) delBtn.style.display = 'none';
+  } else {
+    // Existing note
+    const note = _fdNotes.find(n => String(n.id) === String(id));
+    if (!note) return;
+    _fdEditNoteId = note.id;
+    _fdEditIsNew  = false;
+    _fdEditType   = note.typ || '📝 Notiz';
+    _fdNoteChanged = false;
+    ttl.value = note.titel || '';
+    txt.value = note.text  || '';
+    if (st) st.textContent = '';
+    if (delBtn) delBtn.style.display = '';
+    autoResizeTA(ttl);
+  }
+
+  // Render type chips
+  const typesEl = qi('fd-ne-types');
+  if (typesEl) typesEl.innerHTML = NOTE_TYPES.map(t => `
+    <button class="fd-ne-tc ${t===_fdEditType?'on':''}" onclick="setFdNoteType('${t}')">${t}</button>`).join('');
+
+  // Highlight selected note in list
+  qAll('.fd-ni').forEach(el => el.classList.remove('on'));
+  if (id !== null && id !== undefined) {
+    const listItem = document.getElementById('fdn-' + id);
+    if (listItem) listItem.classList.add('on');
+  }
+
+  // Show edit panel
+  ne.classList.add('open');
+
+  // Focus
+  setTimeout(() => {
+    if (id === null) ttl.focus();
+    else if (!ttl.value) ttl.focus();
+    else txt.focus();
+  }, 300);
+}
+
+function closeFdNote() {
+  if (_fdNoteChanged) saveFdNote();
+  const ne = qi('fd-ne');
+  if (ne) ne.classList.remove('open');
+}
+
+async function deleteFdNote() {
+  if (!_fdEditNoteId) return;
+  if (!confirm('Notiz wirklich löschen?')) return;
+  if (_fdSaveTimer) { clearTimeout(_fdSaveTimer); _fdSaveTimer = null; }
+  const id = _fdEditNoteId;
+  await db.from('notizen').delete().eq('id', id);
+  _fdNotes = _fdNotes.filter(n => String(n.id) !== String(id));
+  _fdEditNoteId  = null;
+  _fdEditIsNew   = false;
+  _fdNoteChanged = false;
+  const countEl = qi('fd-nl-title');
+  if (countEl) countEl.textContent = _fdNotes.length ? `Notizen (${_fdNotes.length})` : 'Notizen';
+  _renderNoteList();
+  // Open next note or blank editor
+  if (_fdNotes.length) openFdNote(_fdNotes[0].id);
+  else openFdNote(null);
+}
+
+function setFdNoteType(typ) {
+  _fdEditType = typ;
+  _fdNoteChanged = true;
+  qAll('.fd-ne-tc').forEach(el => el.classList.toggle('on', el.textContent === typ));
+  scheduleFdNoteSave();
+}
+
+function onFdNoteInput() {
+  _fdNoteChanged = true;
+  const st = qi('fd-ne-st');
+  if (st) st.textContent = '···';
+  scheduleFdNoteSave();
+}
+
+function scheduleFdNoteSave() {
+  if (_fdSaveTimer) clearTimeout(_fdSaveTimer);
+  _fdSaveTimer = setTimeout(saveFdNote, 1600);
+}
+
+async function saveFdNote() {
+  if (_fdSaveTimer) { clearTimeout(_fdSaveTimer); _fdSaveTimer = null; }
+  const ttl = qi('fd-ne-ttl');
+  const txt = qi('fd-ne-txt');
+  const st  = qi('fd-ne-st');
+  if (!ttl || !txt) return;
+
+  const titel = ttl.value.trim();
+  const text  = txt.value.trim();
+  if (!titel && !text) { _fdNoteChanged = false; return; } // nothing to save
+
+  if (st) st.textContent = '···';
+
+  if (_fdEditIsNew) {
+    // INSERT
+    const { data, error } = await db.from('notizen').insert({
+      typ: _fdEditType, titel: titel||null, text: text||null,
+      kunde_id: _fdId, erstellt: new Date().toISOString()
+    }).select().single();
+    if (!error && data) {
+      _fdEditNoteId = data.id;
+      _fdEditIsNew  = false;
+      // Prepend to local cache
+      _fdNotes.unshift(data);
+      const countEl = qi('fd-nl-title');
+      if (countEl) countEl.textContent = `Notizen (${_fdNotes.length})`;
+      _renderNoteList();
+      // Re-highlight
+      qAll('.fd-ni').forEach(el => el.classList.remove('on'));
+      const li = document.getElementById('fdn-' + data.id);
+      if (li) li.classList.add('on');
+    }
+  } else if (_fdEditNoteId) {
+    // UPDATE
+    const { error } = await db.from('notizen').update({
+      typ: _fdEditType, titel: titel||null, text: text||null,
+      geaendert: new Date().toISOString()
+    }).eq('id', _fdEditNoteId);
+    if (!error) {
+      // Update local cache
+      const idx = _fdNotes.findIndex(n => String(n.id) === String(_fdEditNoteId));
+      if (idx >= 0) {
+        _fdNotes[idx] = {..._fdNotes[idx], typ:_fdEditType, titel:titel, text:text};
+        // Update list item preview (lightweight DOM update)
+        const li = document.getElementById('fdn-' + _fdEditNoteId);
+        if (li) {
+          const getEmo = s => s ? (s.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['📝'])[0] : '📝';
+          li.querySelector('.fd-ni-emo').textContent = getEmo(_fdEditType);
+          li.querySelector('.fd-ni-typ').textContent = _fdEditType||'Notiz';
+          li.querySelector('.fd-ni-ttl').textContent = titel||'Ohne Titel';
+          const prv = li.querySelector('.fd-ni-prv');
+          if (prv) prv.textContent = text.slice(0,70); else if(text) li.insertAdjacentHTML('beforeend',`<div class="fd-ni-prv">${escHtml(text.slice(0,70))}</div>`);
+        }
+      }
+    }
+  }
+
+  _fdNoteChanged = false;
+  if (st) {
+    st.textContent = '✓';
+    setTimeout(() => { if(st) st.textContent = ''; }, 1800);
+  }
+}
+
+function autoResizeTA(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+// ── AUFGABEN ──────────────────────────────────────────────
+async function loadFdAufgaben() {
+  const el = qi('fds-aufgaben');
+  if (!el) return;
+  el.innerHTML = skRows(3);
+  const today = new Date().toISOString().slice(0,10);
+  const { data } = await db.from('tasks')
+    .select('id,titel,faellig,erledigt,beschreibung')
+    .eq('kunde_id', _fdId)
+    .order('erledigt', {ascending:true})
+    .order('faellig',  {ascending:true});
+
+  el.innerHTML = data?.length
+    ? `<div class="v-head" style="padding-top:14px"><div class="v-title" style="font-size:22px">${escHtml(_fdFirma?.name||'')}</div><div class="v-sub">Aufgaben</div></div>
+       <div class="grp">${data.map(t=>`
+        <div class="t-row" id="fdt-${t.id}" style="${t.erledigt?'opacity:.45':''}">
+          <div class="t-check ${t.erledigt?'done':''}" onclick="${!t.erledigt?`doneTask('${t.id}','fdt-${t.id}')`:``}">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="t-body">
+            <div class="t-name ${t.erledigt?'done':''}">${escHtml(t.titel)}</div>
+            ${t.faellig?`<div class="t-meta" style="color:${t.faellig<today&&!t.erledigt?'var(--red)':t.faellig===today&&!t.erledigt?'var(--orange)':'var(--muted)'}">${fmtDate(t.faellig)}</div>`:''}
+          </div>
+        </div>`).join('')}</div>`
+    : `<div class="v-head" style="padding-top:14px"><div class="v-title" style="font-size:22px">${escHtml(_fdFirma?.name||'')}</div></div>
+       <div class="empty"><div class="empty-ico">✅</div><div class="empty-msg">Keine Aufgaben</div><div class="empty-sub">+ Aufgabe über Übersicht hinzufügen</div></div>`;
+}
+
+// ── TERMINE ───────────────────────────────────────────────
+async function loadFdTermine() {
+  const el = qi('fds-termine');
+  if (!el) return;
+  el.innerHTML = skRows(3);
+  const today = new Date().toISOString().slice(0,10);
+  const { data } = await db.from('termine')
+    .select('id,art,betreff,datum,uhrzeit_von,uhrzeit_bis,notiz,naechster_schritt,teilnehmer')
+    .eq('kunde_id', _fdId)
+    .order('datum', {ascending:false})
+    .limit(30);
+
+  const getEmo = s => s ? (s.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['📅'])[0] : '📅';
+  el.innerHTML = `<div class="v-head" style="padding-top:14px"><div class="v-title" style="font-size:22px">${escHtml(_fdFirma?.name||'')}</div><div class="v-sub">Termine</div></div>`
+    + (data?.length
+      ? data.map(t=>`
+        <div class="appt-card">
+          <div class="appt-top">
+            <div class="appt-icon" style="background:#F5F3FF;font-size:18px">${getEmo(t.art)}</div>
+            <div style="flex:1">
+              <div class="appt-time">${fmtDateLong(t.datum,today)}${t.uhrzeit_von?' · '+t.uhrzeit_von.slice(0,5)+(t.uhrzeit_bis?' – '+t.uhrzeit_bis.slice(0,5):''):''}</div>
+              <div class="appt-type">${escHtml(t.betreff||t.art)}</div>
+              <div class="appt-type" style="color:var(--muted)">${escHtml(t.art)}</div>
+            </div>
+            ${t.datum>=today ? '<span class="badge b-b">Bevorstehend</span>' : ''}
+          </div>
+          ${t.notiz ? `<div style="padding:0 14px 10px;font-size:13px;color:var(--sub);line-height:1.5">${escHtml(t.notiz)}</div>` : ''}
+          ${t.naechster_schritt ? `<div style="padding:0 14px 10px;font-size:13px;color:var(--acc);font-weight:600">→ ${escHtml(t.naechster_schritt)}</div>` : ''}
+          ${t.teilnehmer ? `<div style="padding:0 14px 10px;font-size:12.5px;color:var(--muted)">👥 ${escHtml(t.teilnehmer)}</div>` : ''}
+        </div>`).join('')
+      : '<div class="empty"><div class="empty-ico">📅</div><div class="empty-msg">Keine Termine</div></div>');
+}
+
+// ── INFO ──────────────────────────────────────────────────
+function loadFdInfo() {
+  const el = qi('fds-info');
+  if (!el) return;
+  const f  = _fdFirma;
+  if (!f)  return;
+
+  const SM = {'Aktiv':{c:'b-g',l:'Aktiv'},'Lead':{c:'b-b',l:'Lead'},'Inaktiv':{c:'b-x',l:'Inaktiv'},'Churned':{c:'b-r',l:'Churned'}};
+  const s  = SM[f.status] || {c:'b-x', l: f.status||'–'};
+
+  const sections = [
+    { title:'Allgemein', rows:[
+      ['Status',     `<span class="badge ${s.c}">${s.l}</span>`],
+      f.kundennr   && ['Kundennr.',  escHtml(f.kundennr)],
+      f.typ        && ['Typ',        escHtml(f.typ)],
+      f.region     && ['Region',     escHtml(f.region)],
+      f.zustaendig && ['Zuständig',  escHtml(f.zustaendig)],
+    ].filter(Boolean)},
+    { title:'Ansprechpartner', rows:[
+      f.ansprechpartner && ['Name',     escHtml(f.ansprechpartner)],
+      f.position        && ['Position', escHtml(f.position)],
+      f.telefon         && ['Telefon',  `<a href="tel:${f.telefon}" style="color:var(--acc)">${f.telefon}</a>`],
+      f.email           && ['E-Mail',   `<a href="mailto:${f.email}" style="color:var(--acc)">${escHtml(f.email)}</a>`],
+      f.mail_domain     && ['Domain',   escHtml(f.mail_domain)],
+    ].filter(Boolean)},
+    { title:'Adresse', rows:[
+      f.strasse && ['Straße', escHtml(f.strasse)],
+      f.plz     && ['PLZ',    escHtml(f.plz)],
+      f.ort     && ['Ort',    escHtml(f.ort)],
+    ].filter(Boolean)},
+    { title:'Finanzen', rows:[
+      f.umsatz && ['Umsatz', escHtml(f.umsatz)],
+    ].filter(Boolean)},
+    { title:'Sonstiges', rows:[
+      f.notiz     && ['Interne Notiz', `<span style="color:var(--sub)">${escHtml(f.notiz)}</span>`],
+      f.erstellt  && ['Erstellt',      fmtDate(f.erstellt)],
+      f.geaendert && ['Geändert',      fmtDate(f.geaendert)],
+    ].filter(Boolean)},
+  ].filter(sec => sec.rows.length);
+
+  el.innerHTML = `<div class="v-head" style="padding-top:14px"><div class="v-title" style="font-size:22px">${escHtml(f.name)}</div><div class="v-sub">Stammdaten</div></div>`
+    + (sections.map(sec => `
+    <div class="sec-title">${sec.title}</div>
+    <div class="grp" style="margin-bottom:10px">
+      ${sec.rows.map(([k,v])=>`<div class="info-row"><span class="info-k">${k}</span><span class="info-v">${v}</span></div>`).join('')}
+    </div>`).join('')
+    || '<div class="empty"><div class="empty-ico">ℹ️</div><div class="empty-msg">Keine Informationen</div></div>');
+}
+
+// ══════════════════════════════════════════════════════════
+// QUICK NOTE (panel inline)
+// ══════════════════════════════════════════════════════════
+async function saveQuickNote() {
+  const inp = qi('qn-inp');
+  if (!inp) return;
+  const text = inp.value.trim();
+  if (!text) { inp.focus(); return; }
+  const btn = inp.nextElementSibling;
+  inp.disabled = true; if(btn) { btn.textContent = '…'; btn.disabled = true; }
+  const { error } = await db.from('notizen').insert({
+    typ: 'Notiz', titel: text,
+    kunde_id: _pid,
+    erstellt: new Date().toISOString()
+  });
+  inp.disabled = false; if(btn) { btn.textContent = 'Speichern'; btn.disabled = false; }
+  if (error) { showToast('Fehler: ' + error.message, true); return; }
+  inp.value = '';
+  showToast('Notiz gespeichert ✓');
+  loadCpTab('timeline');  // refresh timeline
+}
+
+// ══════════════════════════════════════════════════════════
+// QUICK CAPTURE
+// ══════════════════════════════════════════════════════════
+function openCapture(kundeId=null, type=null) {
+  qi('capture').classList.add('on');
+  qi('cap-txt').value = '';
+  qi('cap-date').value = new Date().toISOString().slice(0,10);
+  qi('cap-time').value = '09:00';
+  if (kundeId && qi('cap-co')) qi('cap-co').value = kundeId;
+
+  const t = type || _ctype;
+  _ctype = t;
+  qAll('.cap-type').forEach(el => el.classList.toggle('on', el.dataset.t === t));
+  updateCapFields();
+  setTimeout(()=>qi('cap-txt').focus(), 320);
+}
+
+function closeCapture() { qi('capture').classList.remove('on'); }
+
+function setCapT(el) {
+  _ctype = el.dataset.t;
+  qAll('.cap-type').forEach(c => c.classList.toggle('on', c===el));
+  updateCapFields();
+}
+
+function updateCapFields() {
+  const isNote = _ctype === 'notiz';
+  const isTerm = _ctype === 'termin';
+  qi('cap-date').style.display = isNote ? 'none' : '';
+  qi('cap-time').style.display = isTerm ? '' : 'none';
+  qi('cap-txt').placeholder = isNote ? 'Was möchtest du notieren?' : _ctype==='task' ? 'Aufgabe beschreiben…' : 'Termin Bezeichnung…';
+}
+
+async function saveCapture() {
+  const text  = qi('cap-txt').value.trim();
+  const date  = qi('cap-date').value;
+  const time  = qi('cap-time').value;
+  const kunde = qi('cap-co').value || null;
+  if (!text) { showToast('Bitte Text eingeben', true); return; }
+  const btn = qi('capture').querySelector('.cap-save');
+  btn.textContent='Speichert…'; btn.disabled=true;
+
+  let error;
+  if      (_ctype==='notiz')  ({ error } = await db.from('notizen').insert({typ:'Notiz',titel:text,kunde_id:kunde,erstellt:new Date().toISOString()}));
+  else if (_ctype==='task')   ({ error } = await db.from('tasks').insert({titel:text,faellig:date||null,erledigt:false,kunde_id:kunde}));
+  else                        ({ error } = await db.from('termine').insert({art:'Telefonat',datum:date,uhrzeit_von:time||null,notiz:text,kunde_id:kunde}));
+
+  btn.textContent='Speichern'; btn.disabled=false;
+  if (error) { showToast('Fehler: '+error.message, true); return; }
+  closeCapture();
+  showToast('Gespeichert ✓');
+  if (_view === 'firma-detail') {
+    // Refresh the current tab of the detail view
+    if (_fdId) loadFdSection(_fdTab);
+  } else {
+    loadView(_view);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// BADGES
+// ══════════════════════════════════════════════════════════
+async function loadBadges() {
+  const today = new Date().toISOString().slice(0,10);
+  const [{ count: tc }, { count: termc }] = await Promise.all([
+    db.from('tasks').select('id',{count:'exact',head:true}).eq('erledigt',false).lte('faellig',today),
+    db.from('termine').select('id',{count:'exact',head:true}).eq('datum',today),
+  ]);
+  if (tc) {
+    const d = qi('t-dot-tasks'); if(d) d.classList.add('on');
+    const b = qi('sb-bt'); if(b) { b.textContent=tc; b.classList.add('on'); }
+  }
+  if (termc) {
+    const d = qi('t-dot-term'); if(d) d.classList.add('on');
+    const b = qi('sb-bterm'); if(b) { b.textContent=termc; b.classList.add('on'); }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════
+function escHtml(s) { if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function addDays(d, n) { const dt=new Date(d+'T00:00:00'); dt.setDate(dt.getDate()+n); return dt.toISOString().slice(0,10); }
+function fmtDate(d) { if(!d) return ''; return new Date(d.slice(0,10)+'T00:00:00').toLocaleDateString('de-DE',{day:'numeric',month:'short'}); }
+function fmtDateLong(d, today) {
+  if(!d) return '';
+  if(today&&d===today) return 'Heute';
+  if(today&&d===addDays(today,1)) return 'Morgen';
+  return new Date(d+'T00:00:00').toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+}
+function fmtMrr(v) {
+  if(!v) return '0€';
+  return v>=1000?(v/1000).toFixed(1).replace('.',',')+' k€':v.toLocaleString('de-DE')+'€';
+}
+function timeAgo(iso) {
+  if(!iso) return '';
+  const s = Math.floor((Date.now()-new Date(iso))/1000);
+  if(s<60) return 'gerade'; if(s<3600) return Math.floor(s/60)+'m'; if(s<86400) return Math.floor(s/3600)+'h'; return Math.floor(s/86400)+'d';
+}
+function skGrp() { return `<div class="grp">${skRows(3)}</div>`; }
+function skRows(n) {
+  return Array(n).fill(0).map(()=>`<div class="row"><div class="sk" style="width:36px;height:36px;border-radius:9px;flex-shrink:0"> </div><div style="flex:1"><div class="sk" style="width:58%;height:14px;border-radius:4px;margin-bottom:6px"> </div><div class="sk" style="width:38%;height:11px;border-radius:4px"> </div></div></div>`).join('');
+}
+function showToast(msg, isErr=false) {
+  const el = qi('toast');
+  el.textContent = msg;
+  el.style.background = isErr ? 'var(--red)' : '#1C1C1E';
+  el.classList.add('on');
+  setTimeout(()=>el.classList.remove('on'), 2500);
+}
+
+// Global keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (!_user) return;
+  if (e.key === 'Escape') {
+    if (qi('capture').classList.contains('on')) { closeCapture(); return; }
+    if (qi('fd-liz-modal')?.classList.contains('on')) { closeLizenzModal(); return; }
+    if (qi('fd-bs-modal')?.classList.contains('on'))   { closeBaustellenModal(); return; }
+    if (qi('fd-task-modal')?.classList.contains('on')) { closeTaskEditModal(); return; }
+    if (qi('fd-ap-modal')?.classList.contains('on'))          { closeApModal(); return; }
+    if (qi('fd-termin-edit-modal')?.classList.contains('on')) { closeTerminEdit(); return; }
+    if (qi('fd-term-modal')?.classList.contains('on'))        { closeTermineModal(); return; }
+    if (_view === 'google-settings') { closeGoogleSettings(); return; }
+    if (_view === 'firma-detail') { closeFirmaDetail(); return; }
+    closePanel();
+  }
+  if ((e.metaKey||e.ctrlKey) && e.key==='k') { e.preventDefault(); openCapture(); }
+});
+
+// ══════════════════════════════════════════════════════════
+// GOOGLE INTEGRATION
+// ══════════════════════════════════════════════════════════
+
+const GOOGLE_EDGE = 'https://wygatihnwdujgjccmlst.supabase.co/functions/v1/google-oauth';
+
+async function googleEdge(path, opts = {}) {
+  const { data: { session } } = await db.auth.getSession();
+  const token = session?.access_token;
+  if (!token) { console.error('googleEdge: kein Auth-Token'); return { error: 'Nicht eingeloggt' }; }
+  const [action, qs] = path.split('?');
+  const url = `${GOOGLE_EDGE}?action=${action}${qs ? '&' + qs : ''}`;
+  try {
+    const res = await fetch(url, {
+      method: opts.method || 'GET',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    });
+    const text = await res.text();
+    try { return JSON.parse(text); } catch { return { error: `Ungültige Antwort (${res.status}): ${text.slice(0, 100)}` }; }
+  } catch(e) {
+    console.error('googleEdge fetch error:', e);
+    return { error: e.message };
+  }
+}
+
+async function getValidToken(account) {
+  const expiresAt = new Date(account.expires_at).getTime();
+  if (Date.now() > expiresAt - 5 * 60 * 1000) {
+    const refreshed = await googleEdge('refresh', { method: 'POST', body: { account_id: account.id } });
+    if (refreshed.error) throw new Error('Token refresh failed: ' + refreshed.error);
+    account.access_token = refreshed.access_token;
+    account.expires_at   = refreshed.expires_at;
+  }
+  return account.access_token;
+}
+
+async function loadGoogleAccountsFromDB() {
+  const { data } = await db.from('google_accounts')
+    .select('id, google_email, access_token, refresh_token, expires_at, scope, erstellt, user_id')
+    .order('erstellt');
+  if (!data) return [];
+  const { data: profiles } = await db.from('user_profiles').select('id, name');
+  const nameMap = Object.fromEntries((profiles || []).map(p => [p.id, p.name]));
+  return data.map(a => ({ ...a, verbunden_von: nameMap[a.user_id] || a.google_email }));
+}
+
+// ── Google Settings View ─────────────────────────────────
+
+function openGoogleSettings() {
+  qi('app').classList.add('gs-mode');
+  _view = 'google-settings';
+  qAll('.view').forEach(v => v.classList.remove('on'));
+  qi('view-google-settings').classList.add('on');
+  loadGoogleAccountsUI();
+}
+
+function closeGoogleSettings() {
+  qi('app').classList.remove('gs-mode');
+  navTo('mehr');
+}
+
+async function loadGoogleAccountsUI() {
+  const el = qi('gs-accounts-list');
+  if (!el) return;
+  el.innerHTML = `<div style="padding:24px 20px;text-align:center;color:var(--muted);font-size:13px">Lädt…</div>`;
+  const accounts = await loadGoogleAccountsFromDB();
+  if (!accounts.length) {
+    el.innerHTML = `<div style="padding:32px 20px;text-align:center;color:var(--muted);font-size:13px">
+      <div style="font-size:28px;margin-bottom:10px">🔗</div>
+      Noch keine Accounts verbunden
+    </div>`;
+    return;
+  }
+  el.innerHTML = accounts.map(a => {
+    const valid = new Date(a.expires_at) > new Date();
+    const badge = valid
+      ? `<span class="gs-badge-ok">✓ Aktiv</span>`
+      : `<span class="gs-badge-err">Token abgelaufen</span>`;
+    const since = new Date(a.erstellt).toLocaleDateString('de-DE', { day:'numeric', month:'short', year:'numeric' });
+    return `<div class="gs-acct-row">
+      <div class="gs-acct-av">G</div>
+      <div class="gs-acct-body">
+        <div class="gs-acct-email">${escHtml(a.google_email)}</div>
+        <div class="gs-acct-meta">
+          ${badge}
+          <span>Verbunden von <strong>${escHtml(a.verbunden_von)}</strong></span>
+          <span>${since}</span>
+        </div>
+      </div>
+      <button class="gs-revoke-btn" onclick="revokeGoogleAccount('${a.id}')">Trennen</button>
+    </div>`;
+  }).join('');
+}
+
+// ── OAuth flow ───────────────────────────────────────────
+
+async function startGoogleOAuth() {
+  const btn = qi('gs-connect-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Bitte warten…'; }
+  const redirectUri = window.location.origin + window.location.pathname + '?google_callback=1';
+  const result = await googleEdge(`auth-url?redirect_uri=${encodeURIComponent(redirectUri)}`);
+  if (result.error || !result.url) {
+    showToast('Fehler: ' + (result.error || 'Keine Auth-URL erhalten'), true);
+    if (btn) { btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Verbinden'; }
+    return;
+  }
+  sessionStorage.setItem('google_oauth_back', 'google-settings');
+  window.location.href = result.url;
+}
+
+async function handleGoogleCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (!code) return;
+  window.history.replaceState({}, '', window.location.pathname);
+  showToast('Google-Account wird verbunden…');
+  const redirectUri = window.location.origin + window.location.pathname + '?google_callback=1';
+  const result = await googleEdge('exchange', { method: 'POST', body: { code, redirect_uri: redirectUri } });
+  if (result.error) { showToast('Fehler: ' + result.error, true); return; }
+  showToast('✓ ' + (result.email || 'Account') + ' verbunden');
+  sessionStorage.removeItem('google_oauth_back');
+  openGoogleSettings();
+}
+
+async function revokeGoogleAccount(accountId) {
+  if (!confirm('Google-Account trennen?')) return;
+  const result = await googleEdge('revoke', { method: 'DELETE', body: { account_id: accountId } });
+  if (result.error) { showToast('Fehler: ' + result.error, true); return; }
+  showToast('Account getrennt ✓');
+  loadGoogleAccountsUI();
+}
+
+// ══════════════════════════════════════════════════════════
+// START
+// ══════════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
