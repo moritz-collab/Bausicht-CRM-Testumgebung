@@ -540,6 +540,46 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
   #fd-tab-bar { left:14px; right:14px; }
 }
 
+/* ── LEAD DETAIL — full-screen app-within-app ──────────── */
+#view-lead-detail { overflow:hidden; background:var(--bg); }
+#app.ld-mode #tab-bar { display:none !important; }
+#app.ld-mode #fab     { display:none !important; }
+
+#ld-content {
+  position:absolute; inset:0;
+  bottom:calc(58px + var(--safe-b) + 24px);
+  overflow:hidden;
+}
+.ld-sec {
+  position:absolute; inset:0;
+  overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  display:none;
+  padding-bottom:16px;
+}
+.ld-sec.on { display:block; }
+.ld-sec.fd-notes-sec.on { display:flex; flex-direction:row; }
+
+#ld-tab-bar {
+  position:absolute;
+  bottom:calc(var(--safe-b) + 12px);
+  left:14px; right:14px;
+  height:58px;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(24px) saturate(1.6);
+  -webkit-backdrop-filter:blur(24px) saturate(1.6);
+  border-radius:22px;
+  box-shadow:0 4px 24px rgba(0,0,0,.13), 0 1px 4px rgba(0,0,0,.08);
+  display:flex; z-index:100;
+  overflow:hidden;
+}
+@media (min-width:768px) {
+  #app.ld-mode #sidebar { display:flex !important; }
+  #app.ld-mode #views   { margin-left:220px !important; }
+  #ld-tab-bar { left:14px; right:14px; }
+}
+
 /* ── Lizenz-Kachel (Übersicht) ────────────────────────── */
 .fd-liz-card {
   margin:0 14px 14px;
@@ -1371,6 +1411,64 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         <button class="fd-tb" data-fdt="mails" onclick="switchFdTab(this)">
           <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           <span>Mails</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── LEAD DETAIL ─────────────────── -->
+    <div class="view" id="view-lead-detail">
+      <div id="ld-content">
+        <div class="ld-sec" id="lds-overview"></div>
+        <div class="ld-sec fd-notes-sec" id="lds-notizen">
+          <!-- Note list panel -->
+          <div class="fd-nl" id="ld-nl">
+            <div class="fd-nl-hd">
+              <div class="fd-nl-title" id="ld-nl-title">Notizen</div>
+              <button class="fd-nl-add" onclick="openLdNote(null)" title="Neue Notiz">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+            <div class="fd-nl-list" id="ld-nl-list">
+              <div style="padding:40px 20px;text-align:center;color:#8A8070">Lädt…</div>
+            </div>
+          </div>
+          <!-- Note edit panel -->
+          <div class="fd-ne" id="ld-ne">
+            <div class="fd-ne-hd">
+              <button class="fd-ne-back" onclick="closeLdNote()">
+                <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                Notizen
+              </button>
+              <span class="fd-ne-st" id="ld-ne-st"></span>
+              <button class="fd-ne-del" id="ld-ne-del-btn" onclick="deleteLdNote()" title="Notiz löschen" style="display:none">
+                <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--red,#FF3B30);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+              </button>
+            </div>
+            <div class="fd-ne-types" id="ld-ne-types"></div>
+            <div class="fd-ne-body">
+              <textarea class="fd-ne-ttl" id="ld-ne-ttl" rows="1"
+                placeholder="Titel"
+                oninput="autoResizeTA(this);onLdNoteInput()"></textarea>
+              <textarea class="fd-ne-txt" id="ld-ne-txt"
+                placeholder="Notiz schreiben…"
+                oninput="onLdNoteInput()"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Bottom tab bar -->
+      <div id="ld-tab-bar">
+        <button class="fd-tb fd-tb-back" onclick="closeLeadDetail()">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          <span>Zurück</span>
+        </button>
+        <button class="fd-tb on" data-ldt="overview" onclick="switchLdTab(this)">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Übersicht</span>
+        </button>
+        <button class="fd-tb" data-ldt="notizen" onclick="switchLdTab(this)">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Notizen</span>
         </button>
       </div>
     </div>
@@ -2279,7 +2377,7 @@ function initPipelineDnD() {
   board.addEventListener('click', e => {
     if (_td?.wasTouch) return; // touch handled separately
     const card = e.target.closest('.k-card[data-deal-id]');
-    if (card) openDealSheet(card.dataset.dealId);
+    if (card) openLeadDetail(card.dataset.dealId);
   });
 
   board.addEventListener('dragstart', e => {
@@ -2375,9 +2473,9 @@ function initPipelineDnD() {
     qAll('#pipe-board .k-body.drag-over').forEach(b => b.classList.remove('drag-over'));
 
     if (!state.active) {
-      // Tap → open sheet (prevent duplicate click event)
+      // Tap → open lead detail (prevent duplicate click event)
       e.preventDefault();
-      openDealSheet(state.id);
+      openLeadDetail(state.id);
       return;
     }
 
@@ -2893,6 +2991,7 @@ function closeBaustellenModal() {
 
 // ── Task-Edit-Modal ───────────────────────────────────────
 let _fdtId = null;
+let _fdtCtxDealId = null; // when set, new tasks use deal_id (lead context)
 
 async function openTaskEditModal(id) {
   _fdtId = id;
@@ -2961,7 +3060,8 @@ async function saveFdTaskEdit() {
   if (_fdtId === null) {
     // New task — INSERT
     const kundeId = _fdFirma?.id;
-    if (!kundeId) { if (saveBtn) { saveBtn.textContent = 'Speichern'; saveBtn.disabled = false; } return; }
+    const dealId  = _fdtCtxDealId;
+    if (!kundeId && !dealId) { if (saveBtn) { saveBtn.textContent = 'Speichern'; saveBtn.disabled = false; } return; }
     ({ error } = await db.from('tasks').insert({
       titel,
       beschreibung: qi('fdt-beschreibung').value.trim() || null,
@@ -2969,7 +3069,8 @@ async function saveFdTaskEdit() {
       zustaendig:   qi('fdt-zustaendig').value.trim() || null,
       prio,
       erledigt:     false,
-      kunde_id:     kundeId,
+      kunde_id:     kundeId || null,
+      deal_id:      dealId  || null,
       erstellt:     new Date().toISOString(),
       geaendert:    new Date().toISOString(),
     }));
@@ -2989,6 +3090,7 @@ async function saveFdTaskEdit() {
   if (!error) {
     closeTaskEditModal();
     if (_fdFirma) loadFdOverview();
+    else if (_ldDeal) loadLdOverview();
   }
 }
 
@@ -2999,6 +3101,7 @@ async function markFdTaskDone() {
   await db.from('tasks').update({ erledigt: nowDone, geaendert: new Date().toISOString() }).eq('id', _fdtId);
   closeTaskEditModal();
   if (_fdFirma) loadFdOverview();
+  else if (_ldDeal) loadLdOverview();
 }
 
 async function deleteFdTask() {
@@ -3007,12 +3110,14 @@ async function deleteFdTask() {
   await db.from('tasks').delete().eq('id', _fdtId);
   closeTaskEditModal();
   if (_fdFirma) loadFdOverview();
+  else if (_ldDeal) loadLdOverview();
 }
 
 function closeTaskEditModal() {
   const modal = qi('fd-task-modal');
   if (modal) modal.classList.remove('on');
   _fdtId = null;
+  _fdtCtxDealId = null;
 }
 
 // ── Stammdaten Inline-Edit ────────────────────────────────
@@ -3135,9 +3240,9 @@ function closeApModal() {
 function openDealFromOverview(dealId) {
   closeFirmaDetail();
   setTimeout(() => {
-    navTo('pipeline');
-    if (dealId) setTimeout(() => openDealSheet(dealId), 150);
-  }, 60);
+    if (dealId) openLeadDetail(dealId);
+    else navTo('pipeline');
+  }, 80);
 }
 
 // ── Termine-Listen-Modal ──────────────────────────────────
@@ -4086,11 +4191,442 @@ document.addEventListener('keydown', e => {
     if (qi('deal-modal')?.classList.contains('on')) { closeDealModal(); return; }
     if (qi('deal-sheet')?.classList.contains('on'))  { closeDealSheet(); return; }
     if (_view === 'google-settings') { closeGoogleSettings(); return; }
+    if (_view === 'lead-detail') { closeLeadDetail(); return; }
     if (_view === 'firma-detail') { closeFirmaDetail(); return; }
     closePanel();
   }
   if ((e.metaKey||e.ctrlKey) && e.key==='k') { e.preventDefault(); openCapture(); }
 });
+
+// ══════════════════════════════════════════════════════════
+// LEAD DETAIL — Full-page deal view (mirrored from firma-detail)
+// ══════════════════════════════════════════════════════════
+
+let _ldDeal        = null;
+let _ldId          = null;
+let _ldTab         = 'overview';
+let _ldPrevView    = 'pipeline';
+let _ldNotes       = [];
+let _ldEditNoteId  = null;
+let _ldEditIsNew   = false;
+let _ldEditType    = '📝 Notiz';
+let _ldNoteChanged = false;
+let _ldSaveTimer   = null;
+
+function openLeadDetail(id) {
+  _ldPrevView    = _view || 'pipeline';
+  _ldId          = id;
+  _ldTab         = 'overview';
+  _ldDeal        = null;
+  _ldNotes       = [];
+  _ldEditNoteId  = null;
+  _ldEditIsNew   = false;
+  _ldNoteChanged = false;
+  _fdtCtxDealId  = null;
+
+  qi('app').classList.add('ld-mode');
+  _view = 'lead-detail';
+  location.hash = 'lead-detail';
+  qAll('.view').forEach(v => v.classList.remove('on'));
+  qi('view-lead-detail').classList.add('on');
+
+  qAll('.ld-sec').forEach(s => s.classList.remove('on'));
+  qAll('.fd-tb[data-ldt]').forEach(b => b.classList.toggle('on', b.dataset.ldt === 'overview'));
+  qi('lds-overview').classList.add('on');
+  qi('lds-overview').innerHTML = `<div style="padding:40px 20px;text-align:center;color:var(--muted)">${skRows(3)}</div>`;
+  qi('ld-nl-title').textContent = 'Notizen';
+  const ne = qi('ld-ne');
+  if (ne) ne.classList.remove('open');
+
+  _loadLeadDetailData(id);
+}
+
+async function _loadLeadDetailData(id) {
+  const { data: d } = await db.from('pipeline_deals')
+    .select('*,kunden(id,name)')
+    .eq('id', id).single();
+  if (!d) { closeLeadDetail(); return; }
+  _ldDeal = d;
+  loadLdOverview();
+  db.from('notizen').select('id',{count:'exact',head:true}).eq('deal_id', id).then(r => {
+    const el = qi('ld-nl-title');
+    if (el && r.count) el.textContent = `Notizen (${r.count})`;
+  });
+}
+
+function closeLeadDetail() {
+  if (_ldNoteChanged) saveLdNote();
+  if (_ldSaveTimer) { clearTimeout(_ldSaveTimer); _ldSaveTimer = null; }
+  qi('app').classList.remove('ld-mode');
+  navTo(_ldPrevView || 'pipeline');
+}
+
+function switchLdTab(el) {
+  const newTab = el.dataset.ldt;
+  if (_ldTab === 'notizen' && newTab !== 'notizen') {
+    if (_ldNoteChanged) saveLdNote();
+  }
+  _ldTab = newTab;
+  qAll('.fd-tb[data-ldt]').forEach(b => b.classList.toggle('on', b === el));
+  qAll('.ld-sec').forEach(s => s.classList.remove('on'));
+  const sec = qi('lds-' + newTab);
+  if (sec) sec.classList.add('on');
+  if (newTab === 'overview')  loadLdOverview();
+  else if (newTab === 'notizen') loadLdNotizen();
+}
+
+async function loadLdOverview() {
+  const el = qi('lds-overview');
+  const d  = _ldDeal;
+  if (!el || !d) return;
+
+  const s          = STAGE_MAP[d.stage] || { label: d.stage||'–', color: '#888' };
+  const stageColor = s.color;
+  const stageName  = s.label;
+  const title      = d.titel || d.kunden?.name || 'Kein Titel';
+  const vol        = d.volumen ? Number(d.volumen).toLocaleString('de-DE') + ' €' : '–';
+  const today      = new Date().toISOString().slice(0,10);
+
+  const stageIcon  = d.stage === 'rollout' ? '🏆' : d.stage === 'churned' ? '❌' : '🎯';
+
+  el.innerHTML = `
+    <div class="fd-brand-hd" style="background:linear-gradient(135deg,${stageColor} 0%,${stageColor}BB 100%);box-shadow:0 4px 18px ${stageColor}55">
+      <div class="fd-brand-logo" style="background:rgba(255,255,255,.18);font-size:26px">${stageIcon}</div>
+      <div style="min-width:0;flex:1">
+        <div class="fd-brand-name">${escHtml(title)}</div>
+        <div class="fd-brand-typ">${escHtml(stageName)}${d.kunden?.name ? ' · ' + escHtml(d.kunden.name) : ''}</div>
+      </div>
+    </div>
+    <div id="ld-ov-body">${skRows(3)}</div>`;
+
+  const [tR, nR] = await Promise.all([
+    db.from('tasks').select('id,titel,faellig,erledigt').eq('deal_id', d.id).eq('erledigt', false).order('faellig',{ascending:true}).limit(5),
+    db.from('notizen').select('id,typ,titel,text,erstellt').eq('deal_id', d.id).order('erstellt',{ascending:false}).limit(4),
+  ]);
+
+  const tasks = tR.data || [];
+  const notes = nR.data || [];
+  const getEmo = ss => ss ? (ss.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['📝'])[0] : '📝';
+
+  // Stammdaten — inline edit
+  const sdV     = v => escHtml(v||'');
+  const sdInpLd = (field, val, placeholder='') =>
+    `<input class="sd-v-inp" data-ld-field="${field}" value="${sdV(val)}" placeholder="${placeholder}" onblur="saveLdField(this)" onkeydown="if(event.key==='Enter')this.blur()">`;
+
+  const stageSelHtml = `<select class="sd-v-sel" data-ld-field="stage" onchange="saveLdStage(this)">
+    ${PIPELINE_STAGES.map(ps => `<option value="${ps.key}" ${d.stage===ps.key?'selected':''}>${ps.label}</option>`).join('')}
+  </select>`;
+
+  const stammdatenHtml = `
+    <div class="sd-toggle-hd" onclick="toggleSdBlock(this)">
+      <span class="sd-toggle-lbl">Deal-Daten</span>
+      <svg class="sd-toggle-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="sd-body">
+    <div class="grp sd-grid" style="margin-bottom:14px">
+      <div class="sd-cell sd-full"><span class="sd-k">Titel</span>${sdInpLd('titel', d.titel, 'Deal-Bezeichnung')}</div>
+      <div class="sd-cell"><span class="sd-k">Phase</span>${stageSelHtml}</div>
+      <div class="sd-cell"><span class="sd-k">Volumen (€)</span>${sdInpLd('volumen', d.volumen, '0')}</div>
+      <div class="sd-cell sd-full"><span class="sd-k">Zuständig</span>${sdInpLd('zustaendig', d.zustaendig, 'Name …')}</div>
+      <div class="sd-cell sd-full"><span class="sd-k">Unternehmen</span>
+        ${d.kunden
+          ? `<span class="sd-v-inp" style="cursor:pointer;color:var(--acc);font-weight:600" onclick="closeLeadDetail();setTimeout(()=>openFirmaDetail('${d.kunden.id}'),120)" title="Firma öffnen">${escHtml(d.kunden.name)} ›</span>`
+          : `<span style="font-size:14px;color:var(--muted)">Kein Unternehmen verknüpft</span>`}
+      </div>
+      <div class="sd-cell sd-full"><span class="sd-k">Notiz</span><textarea class="sd-v-ta" data-ld-field="notiz" placeholder="Interne Notiz …" oninput="autoResizeTA(this)" onblur="saveLdField(this)">${sdV(d.notiz)}</textarea></div>
+    </div>
+    </div>`;
+
+  const kpiHtml = `
+    <div class="fd-kpi-row" style="padding:0 14px 12px">
+      <div class="fd-kpi-pill"><div class="fd-kpi-v">${vol}</div><div class="fd-kpi-l">Volumen</div></div>
+      <div class="fd-kpi-pill"><div class="fd-kpi-v" style="color:${stageColor};font-size:13px;letter-spacing:-.2px">${stageName}</div><div class="fd-kpi-l">Phase</div></div>
+      <div class="fd-kpi-pill"><div class="fd-kpi-v">${notes.length}</div><div class="fd-kpi-l">Notizen</div></div>
+      <div class="fd-kpi-pill"><div class="fd-kpi-v">${tasks.length}</div><div class="fd-kpi-l">Aufgaben</div></div>
+    </div>`;
+
+  const statusBox = d.stage === 'churned' && d.churn_datum ? `
+    <div class="grp" style="margin:0 14px 14px;background:#FEE2E2;overflow:visible">
+      <div class="row" style="pointer-events:none">
+        <div class="row-icon" style="background:#FECACA;font-size:17px">❌</div>
+        <div class="row-body">
+          <div class="row-title" style="color:#DC2626">Verloren am ${fmtDate(d.churn_datum)}</div>
+        </div>
+      </div>
+    </div>` : d.stage === 'rollout' && d.gewonnen_datum ? `
+    <div class="grp" style="margin:0 14px 14px;background:#DCFCE7;overflow:visible">
+      <div class="row" style="pointer-events:none">
+        <div class="row-icon" style="background:#BBF7D0;font-size:17px">🏆</div>
+        <div class="row-body">
+          <div class="row-title" style="color:#16A34A">Gewonnen am ${fmtDate(d.gewonnen_datum)}</div>
+        </div>
+      </div>
+    </div>` : '';
+
+  const tasksHtml = `
+    <div class="sec-title" style="padding-left:30px;display:flex;align-items:center;justify-content:space-between;padding-right:30px">
+      <span>Offene Aufgaben</span>
+      <button class="fd-ap-add" onclick="openLdTaskModal()" title="Neue Aufgabe">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="grp" style="margin-bottom:14px">
+      ${tasks.length ? tasks.map(t => `
+        <div class="t-row" id="ldo-${t.id}" onclick="openTaskEditModal('${t.id}')" style="cursor:pointer">
+          <div class="t-check" onclick="event.stopPropagation();ldDoneTask('${t.id}','ldo-${t.id}')">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="t-body">
+            <div class="t-name">${escHtml(t.titel)}</div>
+            ${t.faellig ? `<div class="t-meta" style="color:${t.faellig<today?'var(--red)':t.faellig===today?'var(--orange)':'var(--muted)'}">${fmtDate(t.faellig)}</div>` : ''}
+          </div>
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>`).join('')
+      : '<div class="row" style="pointer-events:none"><span style="color:var(--muted);font-size:13px;padding:2px 0">Keine offenen Aufgaben</span></div>'}
+    </div>`;
+
+  const notesHtml = notes.length ? `
+    <div class="sec-title" style="padding-left:14px;display:flex;align-items:center;justify-content:space-between;padding-right:14px">
+      <span>Letzte Notizen</span>
+      <button onclick="switchLdTab(document.querySelector('[data-ldt=notizen]'))" style="background:none;border:none;color:var(--acc);font-size:13px;font-weight:600;cursor:pointer;padding:0">Alle ›</button>
+    </div>
+    <div class="grp" style="margin-bottom:14px">
+      ${notes.map(n => `
+        <div class="row" onclick="switchLdTab(document.querySelector('[data-ldt=notizen]'));setTimeout(()=>openLdNote('${n.id}'),120)">
+          <div class="row-icon" style="background:#F2F2F7;font-size:16px">${getEmo(n.typ)}</div>
+          <div class="row-body">
+            <div class="row-title">${escHtml(n.titel||n.typ||'Notiz')}</div>
+            ${n.text ? `<div class="row-sub">${escHtml(n.text.slice(0,80))}${n.text.length>80?'…':''}</div>` : ''}
+          </div>
+          <div style="font-size:11px;color:var(--muted);flex-shrink:0;padding-top:2px">${timeAgo(n.erstellt)}</div>
+        </div>`).join('')}
+    </div>` : '';
+
+  const ovBody = qi('ld-ov-body');
+  if (ovBody) ovBody.innerHTML = kpiHtml + statusBox + stammdatenHtml + tasksHtml + notesHtml;
+
+  // Auto-open stammdaten
+  const sdHd = el.querySelector('.sd-toggle-hd');
+  if (sdHd) toggleSdBlock(sdHd);
+}
+
+async function saveLdField(el) {
+  const field = el.dataset.ldField;
+  if (!field || !_ldDeal) return;
+  const val = el.value.trim() || null;
+  _ldDeal[field] = val;
+  const pi = _pipeDeals.findIndex(x => x.id === _ldDeal.id);
+  if (pi >= 0) _pipeDeals[pi][field] = val;
+  const { error } = await db.from('pipeline_deals').update({ [field]: val }).eq('id', _ldDeal.id);
+  if (error) { console.error('[LD-SD]', error); return; }
+  el.classList.add('sd-saved');
+  setTimeout(() => el.classList.remove('sd-saved'), 900);
+  if (field === 'titel') {
+    const hn = document.querySelector('#view-lead-detail .fd-brand-name');
+    if (hn) hn.textContent = val || _ldDeal.kunden?.name || 'Kein Titel';
+  }
+}
+
+async function saveLdStage(el) {
+  if (!_ldDeal) return;
+  const newStage = el.value;
+  const ok = await _moveStage(_ldDeal.id, newStage);
+  if (!ok) { el.value = _ldDeal.stage; return; }
+  _ldDeal.stage = newStage;
+  const s = STAGE_MAP[newStage] || { color: '#888', label: newStage };
+  const hd = document.querySelector('#view-lead-detail .fd-brand-hd');
+  if (hd) hd.style.background = `linear-gradient(135deg,${s.color} 0%,${s.color}BB 100%)`;
+  const typ = document.querySelector('#view-lead-detail .fd-brand-typ');
+  if (typ) typ.textContent = s.label + (_ldDeal.kunden?.name ? ' · ' + _ldDeal.kunden.name : '');
+}
+
+function openLdTaskModal() {
+  _fdtCtxDealId = _ldDeal?.id || null;
+  openTaskEditModal(null);
+}
+
+async function ldDoneTask(id, rowId) {
+  await db.from('tasks').update({ erledigt: true, geaendert: new Date().toISOString() }).eq('id', id);
+  const row = document.getElementById(rowId);
+  if (row) { row.style.opacity='0'; row.style.transition='opacity .3s'; setTimeout(()=>row.remove(),300); }
+}
+
+// ── Lead Notes ────────────────────────────────────────────
+async function loadLdNotizen() {
+  const listEl = qi('ld-nl-list');
+  if (!listEl) return;
+  listEl.innerHTML = skRows(4);
+
+  const { data } = await db.from('notizen')
+    .select('id,typ,titel,text,erstellt,user_name')
+    .eq('deal_id', _ldId)
+    .order('erstellt', {ascending:false})
+    .limit(200);
+  _ldNotes = data || [];
+
+  const countEl = qi('ld-nl-title');
+  if (countEl) countEl.textContent = _ldNotes.length ? `Notizen (${_ldNotes.length})` : 'Notizen';
+
+  _renderLdNoteList();
+  if (_ldNotes.length && window.innerWidth >= 768 && !_ldEditNoteId) openLdNote(_ldNotes[0].id);
+  else if (!_ldNotes.length) openLdNote(null);
+}
+
+function _renderLdNoteList() {
+  const listEl = qi('ld-nl-list');
+  if (!listEl) return;
+  const getEmo = ss => ss ? (ss.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['📝'])[0] : '📝';
+  if (!_ldNotes.length) {
+    listEl.innerHTML = `<div style="padding:36px 20px;text-align:center;color:#8A8070">
+      <div style="font-size:36px;opacity:.4;margin-bottom:10px">📝</div>
+      <div style="font-size:14px;font-weight:500">Noch keine Notizen</div>
+      <div style="font-size:12px;margin-top:4px">Tippe auf + um zu starten</div></div>`;
+    return;
+  }
+  listEl.innerHTML = _ldNotes.map(n => `
+    <div class="fd-ni ${String(n.id)===String(_ldEditNoteId)?'on':''}" id="ldn-${n.id}" onclick="openLdNote('${n.id}')">
+      <div class="fd-ni-top">
+        <span class="fd-ni-emo">${getEmo(n.typ)}</span>
+        <span class="fd-ni-typ">${escHtml(n.typ||'Notiz')}</span>
+        <span class="fd-ni-dt">${fmtDate(n.erstellt)}</span>
+      </div>
+      <div class="fd-ni-ttl">${escHtml(n.titel||'Ohne Titel')}</div>
+      ${n.text ? `<div class="fd-ni-prv">${escHtml(n.text.slice(0,70))}</div>` : ''}
+    </div>`).join('');
+}
+
+function openLdNote(id) {
+  if (_ldNoteChanged) saveLdNote();
+  const ne  = qi('ld-ne');
+  const ttl = qi('ld-ne-ttl');
+  const txt = qi('ld-ne-txt');
+  const st  = qi('ld-ne-st');
+  if (!ne || !ttl || !txt) return;
+  const delBtn = qi('ld-ne-del-btn');
+  if (id === null || id === undefined) {
+    _ldEditNoteId  = null;
+    _ldEditIsNew   = true;
+    _ldEditType    = '📝 Notiz';
+    _ldNoteChanged = false;
+    ttl.value = ''; txt.value = '';
+    if (st) st.textContent = '';
+    if (delBtn) delBtn.style.display = 'none';
+  } else {
+    const note = _ldNotes.find(n => String(n.id) === String(id));
+    if (!note) return;
+    _ldEditNoteId  = note.id;
+    _ldEditIsNew   = false;
+    _ldEditType    = note.typ || '📝 Notiz';
+    _ldNoteChanged = false;
+    ttl.value = note.titel || '';
+    txt.value = note.text  || '';
+    if (st) st.textContent = '';
+    if (delBtn) delBtn.style.display = '';
+    autoResizeTA(ttl);
+  }
+  const typesEl = qi('ld-ne-types');
+  if (typesEl) typesEl.innerHTML = NOTE_TYPES.map(t =>
+    `<button class="fd-ne-tc ${t===_ldEditType?'on':''}" onclick="setLdNoteType('${t}')">${t}</button>`).join('');
+  qAll('#ld-nl-list .fd-ni').forEach(e2 => e2.classList.remove('on'));
+  if (id !== null && id !== undefined) {
+    const li = document.getElementById('ldn-' + id);
+    if (li) li.classList.add('on');
+  }
+  ne.classList.add('open');
+  setTimeout(() => { if (id === null) ttl.focus(); else if (!ttl.value) ttl.focus(); else txt.focus(); }, 300);
+}
+
+function closeLdNote() {
+  if (_ldNoteChanged) saveLdNote();
+  const ne = qi('ld-ne');
+  if (ne) ne.classList.remove('open');
+}
+
+async function deleteLdNote() {
+  if (!_ldEditNoteId) return;
+  if (!confirm('Notiz wirklich löschen?')) return;
+  if (_ldSaveTimer) { clearTimeout(_ldSaveTimer); _ldSaveTimer = null; }
+  const id = _ldEditNoteId;
+  await db.from('notizen').delete().eq('id', id);
+  _ldNotes = _ldNotes.filter(n => String(n.id) !== String(id));
+  _ldEditNoteId = null; _ldEditIsNew = false; _ldNoteChanged = false;
+  const countEl = qi('ld-nl-title');
+  if (countEl) countEl.textContent = _ldNotes.length ? `Notizen (${_ldNotes.length})` : 'Notizen';
+  _renderLdNoteList();
+  if (_ldNotes.length) openLdNote(_ldNotes[0].id);
+  else openLdNote(null);
+}
+
+function setLdNoteType(typ) {
+  _ldEditType    = typ;
+  _ldNoteChanged = true;
+  qAll('#ld-ne-types .fd-ne-tc').forEach(e2 => e2.classList.toggle('on', e2.textContent === typ));
+  scheduleLdNoteSave();
+}
+
+function onLdNoteInput() {
+  _ldNoteChanged = true;
+  const st = qi('ld-ne-st');
+  if (st) st.textContent = '···';
+  scheduleLdNoteSave();
+}
+
+function scheduleLdNoteSave() {
+  if (_ldSaveTimer) clearTimeout(_ldSaveTimer);
+  _ldSaveTimer = setTimeout(saveLdNote, 1600);
+}
+
+async function saveLdNote() {
+  if (_ldSaveTimer) { clearTimeout(_ldSaveTimer); _ldSaveTimer = null; }
+  const ttl = qi('ld-ne-ttl');
+  const txt = qi('ld-ne-txt');
+  const st  = qi('ld-ne-st');
+  if (!ttl || !txt) return;
+  const titel = ttl.value.trim();
+  const text  = txt.value.trim();
+  if (!titel && !text) { _ldNoteChanged = false; return; }
+  if (st) st.textContent = '···';
+  if (_ldEditIsNew) {
+    const { data, error } = await db.from('notizen').insert({
+      typ: _ldEditType, titel: titel||null, text: text||null,
+      deal_id: _ldId, erstellt: new Date().toISOString()
+    }).select().single();
+    if (!error && data) {
+      _ldEditNoteId = data.id;
+      _ldEditIsNew  = false;
+      _ldNotes.unshift(data);
+      const countEl = qi('ld-nl-title');
+      if (countEl) countEl.textContent = `Notizen (${_ldNotes.length})`;
+      _renderLdNoteList();
+      qAll('#ld-nl-list .fd-ni').forEach(e2 => e2.classList.remove('on'));
+      const li = document.getElementById('ldn-' + data.id);
+      if (li) li.classList.add('on');
+    }
+  } else if (_ldEditNoteId) {
+    const { error } = await db.from('notizen').update({
+      typ: _ldEditType, titel: titel||null, text: text||null,
+      geaendert: new Date().toISOString()
+    }).eq('id', _ldEditNoteId);
+    if (!error) {
+      const idx = _ldNotes.findIndex(n => String(n.id) === String(_ldEditNoteId));
+      if (idx >= 0) {
+        _ldNotes[idx] = {..._ldNotes[idx], typ:_ldEditType, titel, text};
+        const li = document.getElementById('ldn-' + _ldEditNoteId);
+        if (li) {
+          const getEmo = ss => ss ? (ss.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['📝'])[0] : '📝';
+          li.querySelector('.fd-ni-emo').textContent = getEmo(_ldEditType);
+          li.querySelector('.fd-ni-typ').textContent = _ldEditType||'Notiz';
+          li.querySelector('.fd-ni-ttl').textContent = titel||'Ohne Titel';
+          const prv = li.querySelector('.fd-ni-prv');
+          if (prv) prv.textContent = text.slice(0,70);
+          else if (text) li.insertAdjacentHTML('beforeend',`<div class="fd-ni-prv">${escHtml(text.slice(0,70))}</div>`);
+        }
+      }
+    }
+  }
+  _ldNoteChanged = false;
+  if (st) { st.textContent = '✓'; setTimeout(() => { if(st) st.textContent=''; }, 1800); }
+}
 
 // ══════════════════════════════════════════════════════════
 // GOOGLE INTEGRATION
