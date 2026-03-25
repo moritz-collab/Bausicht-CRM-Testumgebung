@@ -270,7 +270,7 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 .info-k { font-size:13px; color:var(--muted); flex-shrink:0; }
 .info-v { font-size:14px; font-weight:500; text-align:right; max-width:62%; word-break:break-word; }
 .sd-toggle-hd { display:flex; align-items:center; justify-content:space-between;
-  padding:14px 18px 10px; cursor:pointer; -webkit-tap-highlight-color:transparent; user-select:none; }
+  padding:14px 30px 10px; cursor:pointer; -webkit-tap-highlight-color:transparent; user-select:none; }
 .sd-toggle-hd .sd-toggle-lbl { font-size:11px; font-weight:700; text-transform:uppercase;
   letter-spacing:.6px; color:var(--muted); }
 .sd-toggle-chevron { width:16px; height:16px; stroke:var(--muted); fill:none; stroke-width:2.5;
@@ -780,7 +780,7 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 .fd-bs-notiz { font-size:12px; color:var(--muted); margin-top:8px; line-height:1.5; }
 
 /* ── Task-Edit-Modal ──────────────────────────────────── */
-#fd-task-modal {
+#fd-task-modal, #ld-anf-modal {
   display:none;
   position:fixed; inset:0; z-index:9999;
   background:rgba(0,0,0,.45);
@@ -791,7 +791,66 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
   padding:56px 12px 0;
   box-sizing:border-box;
 }
-#fd-task-modal.on { display:flex; }
+#fd-task-modal.on, #ld-anf-modal.on { display:flex; }
+
+/* ── Verlauf-Tab ─────────────────────────────────────── */
+#lds-verlauf { padding:20px 16px 16px; }
+.vl-timeline { list-style:none; margin:0; padding:0; position:relative; }
+.vl-timeline::before {
+  content:''; position:absolute; left:15px; top:6px; bottom:6px;
+  width:2px; background:var(--border);
+}
+.vl-item {
+  display:flex; gap:14px; align-items:flex-start;
+  padding:0 0 22px 0; position:relative;
+}
+.vl-dot {
+  width:12px; height:12px; border-radius:50%; flex-shrink:0;
+  margin-top:4px; margin-left:9px;
+  background:var(--acc); border:2px solid var(--surf);
+  box-shadow:0 0 0 2px var(--acc);
+  position:relative; z-index:1;
+}
+.vl-dot.vl-dot-create { background:#16A34A; box-shadow:0 0 0 2px #16A34A; }
+.vl-dot.vl-dot-stage  { background:#2563EB; box-shadow:0 0 0 2px #2563EB; }
+.vl-body { flex:1; min-width:0; }
+.vl-text { font-size:14px; font-weight:600; color:var(--text); line-height:1.35; }
+.vl-date { font-size:12px; color:var(--muted); margin-top:2px; }
+.vl-empty { text-align:center; padding:48px 20px; color:var(--muted); font-size:14px; }
+
+/* ── Kontakt-Art Popup ───────────────────────────────── */
+#kontakt-art-popup {
+  display:none; position:fixed; inset:0; z-index:10000;
+  background:rgba(0,0,0,.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  align-items:flex-end; justify-content:center;
+}
+#kontakt-art-popup.on { display:flex; }
+#kap-sheet {
+  width:100%; max-width:480px;
+  background:var(--surf);
+  border-radius:22px 22px 0 0;
+  padding:20px 16px calc(20px + var(--safe-b));
+  animation: sheetDrop .22s cubic-bezier(.32,0,.25,1);
+}
+.kap-title {
+  font-size:17px; font-weight:800; letter-spacing:-.3px;
+  text-align:center; margin-bottom:18px; color:var(--text);
+}
+.kap-options { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+.kap-btn {
+  width:100%; padding:14px 18px;
+  background:var(--bg); border:.5px solid var(--border);
+  border-radius:14px; font-size:15px; font-weight:600;
+  color:var(--text); cursor:pointer; text-align:left;
+  transition:background .12s, transform .08s;
+}
+.kap-btn:active { background:var(--border); transform:scale(.98); }
+.kap-cancel {
+  width:100%; padding:13px; background:transparent;
+  border:none; border-radius:14px; font-size:15px; font-weight:600;
+  color:var(--muted); cursor:pointer; transition:background .12s;
+}
+.kap-cancel:hover { background:var(--bg); }
 .fd-task-sheet {
   width:100%; max-width:520px;
   max-height:calc(100vh - 76px);
@@ -1215,11 +1274,6 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
           </button>
         </div>
       </div>
-      <div class="pipe-stats" id="pipe-stats">
-        <div class="pipe-stat"><div class="pipe-stat-v" id="ps-open">–</div><div class="pipe-stat-l">Offene Deals</div></div>
-        <div class="pipe-stat"><div class="pipe-stat-v" id="ps-vol">–</div><div class="pipe-stat-l">Pipeline-Volumen</div></div>
-        <div class="pipe-stat"><div class="pipe-stat-v" id="ps-won">–</div><div class="pipe-stat-l">Gewonnen (30d)</div></div>
-      </div>
       <div class="kanban" id="pipe-board">
         <div class="k-col"><div class="k-body"><div class="k-card sk" style="height:72px"> </div><div class="k-card sk" style="height:72px"> </div></div></div>
         <div class="k-col"><div class="k-body"><div class="k-card sk" style="height:72px"> </div></div></div>
@@ -1268,9 +1322,8 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
             <label class="dm-lbl">Phase</label>
             <select class="dm-sel" id="dm-stage"></select>
           </div>
-          <div>
-            <label class="dm-lbl">Volumen (€)</label>
-            <input class="dm-inp" id="dm-vol" type="number" placeholder="0" min="0">
+          <div style="display:none">
+            <input id="dm-vol" type="hidden">
           </div>
           <div>
             <label class="dm-lbl">Zuständig</label>
@@ -1455,6 +1508,9 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
             </div>
           </div>
         </div>
+        <div class="ld-sec" id="lds-verlauf">
+          <div id="ld-verlauf-list"></div>
+        </div>
       </div>
       <!-- Bottom tab bar -->
       <div id="ld-tab-bar">
@@ -1469,6 +1525,10 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         <button class="fd-tb" data-ldt="notizen" onclick="switchLdTab(this)">
           <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span>Notizen</span>
+        </button>
+        <button class="fd-tb" data-ldt="verlauf" onclick="switchLdTab(this)">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Verlauf</span>
         </button>
       </div>
     </div>
@@ -1646,6 +1706,86 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         <button class="fd-task-del-btn" id="fdte-del-btn" onclick="deleteTerminFd()" style="display:none">🗑</button>
         <button class="fd-task-save-btn" onclick="saveTerminFd()">Speichern</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ── Lead Anforderungen Modal ─────────────────────── -->
+  <div id="ld-anf-modal" onclick="if(event.target===this)closeLdAnfModal()">
+    <div class="fd-task-sheet">
+      <div class="fd-task-sh-hd">
+        <div class="fd-task-sh-title" id="ld-anf-title">Anforderung</div>
+        <button class="fd-task-sh-close" onclick="closeLdAnfModal()">✕</button>
+      </div>
+      <div class="fd-task-sh-body">
+        <div class="fd-task-field">
+          <div class="fd-task-label">Anforderung</div>
+          <textarea class="fd-task-textarea" id="ldanf-text" placeholder="Beschreibe die Anforderung…" rows="3"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="fd-task-field">
+            <div class="fd-task-label">Kategorie</div>
+            <select class="fd-task-input" id="ldanf-kategorie">
+              <option>Technisch</option>
+              <option>Fachlich</option>
+              <option>Integration</option>
+              <option>Rechtlich</option>
+              <option>Sonstiges</option>
+            </select>
+          </div>
+          <div class="fd-task-field">
+            <div class="fd-task-label">Status</div>
+            <select class="fd-task-input" id="ldanf-erfuellt">
+              <option value="0">Offen</option>
+              <option value="1">Erfüllt ✓</option>
+            </select>
+          </div>
+        </div>
+        <div class="fd-task-field">
+          <div class="fd-task-label">Priorität</div>
+          <div class="fd-task-prio-row" id="ldanf-prio-row">
+            <button class="fd-task-prio-btn" data-prio="hoch"    onclick="setLdAnfPrio('hoch')">🔴 Hoch</button>
+            <button class="fd-task-prio-btn" data-prio="mittel"  onclick="setLdAnfPrio('mittel')">🟡 Mittel</button>
+            <button class="fd-task-prio-btn" data-prio="niedrig" onclick="setLdAnfPrio('niedrig')">🟢 Niedrig</button>
+          </div>
+        </div>
+        <div class="fd-task-field">
+          <div class="fd-task-label">Notiz (optional)</div>
+          <textarea class="fd-task-textarea" id="ldanf-notiz" placeholder="Weitere Details…" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="fd-termin-edit-footer">
+        <button class="fd-task-del-btn" id="ldanf-del-btn" onclick="deleteLdAnf()" style="display:none">🗑</button>
+        <button class="fd-task-save-btn" onclick="saveLdAnf()">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Kontakt-Art Popup ─────────────────────────────── -->
+  <div id="kontakt-art-popup" onclick="if(event.target===this)_resolveKontaktArt(null)">
+    <div id="kap-sheet">
+      <div class="kap-title">Welche Art des Kontakts?</div>
+      <div class="kap-options">
+        <button class="kap-btn" onclick="_resolveKontaktArt('📞 Telefonat')">📞 Telefonat</button>
+        <button class="kap-btn" onclick="_resolveKontaktArt('✉️ Mail')">✉️ Mail</button>
+        <button class="kap-btn" onclick="_resolveKontaktArt('🎥 Video-Call')">🎥 Video-Call</button>
+        <button class="kap-btn" onclick="_resolveKontaktArt('📍 Vor-Ort-Besuch')">📍 Vor-Ort-Besuch</button>
+        <button class="kap-btn" onclick="_resolveKontaktArt('🤝 Messe / Event')">🤝 Messe / Event</button>
+      </div>
+      <button class="kap-cancel" onclick="_resolveKontaktArt(null)">Abbrechen</button>
+    </div>
+  </div>
+
+  <!-- ── Lead Firma-Suche Modal ────────────────────────── -->
+  <div id="ld-firma-modal" onclick="if(event.target===this)closeLdFirmaSearch()" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:flex-start;justify-content:center;padding:56px 12px 0;box-sizing:border-box">
+    <div style="width:100%;max-width:480px;background:var(--surf);border-radius:var(--r-lg);overflow:hidden;animation:sheetDrop .22s cubic-bezier(.32,0,.25,1)">
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:.5px solid var(--border)">
+        <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--muted);fill:none;stroke-width:2;flex-shrink:0;stroke-linecap:round;stroke-linejoin:round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="ld-firma-search-inp" type="text" placeholder="Firma suchen…"
+          oninput="renderLdFirmaResults()"
+          style="flex:1;border:none;outline:none;font-size:15px;font-family:inherit;background:transparent;color:var(--text)">
+        <button onclick="closeLdFirmaSearch()" style="border:none;background:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:0 2px">×</button>
+      </div>
+      <div id="ld-firma-results" style="max-height:320px;overflow-y:auto"></div>
     </div>
   </div>
 
@@ -2196,12 +2336,12 @@ function setTermFilter(el) {
 // ══════════════════════════════════════════════════════════
 
 const PIPELINE_STAGES = [
-  { key: 'demo_angefragt', label: 'Demo angefragt', color: '#2563EB' },
-  { key: 'demo_gehalten',  label: 'Demo gehalten',  color: '#7C3AED' },
-  { key: 'pilot_angebot',  label: 'Pilotangebot',   color: '#D97706' },
-  { key: 'pilot_aktiv',    label: 'Pilot aktiv',    color: '#0891B2' },
-  { key: 'rollout',        label: 'Gewonnen',        color: '#16A34A' },
-  { key: 'churned',        label: 'Verloren',        color: '#DC2626' },
+  { key: 'demo_angefragt',      label: 'Demo angefragt',      color: '#2563EB' },
+  { key: 'kontakt_aufgenommen', label: 'Kontakt aufgenommen', color: '#0891B2' },
+  { key: 'demo_gehalten',       label: 'Demo gehalten',       color: '#7C3AED' },
+  { key: 'pilot_angebot',       label: 'Pilot angeboten',     color: '#C026D3' },
+  { key: 'rollout',             label: 'Gewonnen',             color: '#16A34A' },
+  { key: 'churned',             label: 'Verloren',             color: '#DC2626' },
 ];
 const STAGE_MAP = Object.fromEntries(PIPELINE_STAGES.map(s => [s.key, s]));
 
@@ -2229,15 +2369,7 @@ async function loadPipeline() {
 }
 
 function renderPipelineStats() {
-  const open = _pipeDeals.filter(d => d.stage !== 'churned');
-  const vol  = open.reduce((s, d) => s + (Number(d.volumen) || 0), 0);
-  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
-  const won  = _pipeDeals.filter(d => d.stage === 'rollout' && new Date(d.gewonnen_datum || d.erstellt) >= cutoff).length;
-  qi('ps-open').textContent = open.length;
-  qi('ps-vol').textContent  = vol >= 1000000 ? (vol/1000000).toFixed(1).replace('.',',')+' M€'
-                              : vol >= 1000   ? (vol/1000).toFixed(0)+' k€'
-                              : vol.toLocaleString('de-DE')+'€';
-  qi('ps-won').textContent  = won;
+  // KPI-Leiste entfernt — keine DOM-Updates nötig
 }
 
 function renderPipelineBoard() {
@@ -2343,15 +2475,50 @@ async function dshDelete() {
   loadPipeline();
 }
 
+// ── Kontakt-Art Popup ─────────────────────────────────────
+let _kontaktArtResolve = null;
+
+function _askKontaktArt() {
+  return new Promise(resolve => {
+    _kontaktArtResolve = resolve;
+    qi('kontakt-art-popup').classList.add('on');
+  });
+}
+
+function _resolveKontaktArt(art) {
+  qi('kontakt-art-popup').classList.remove('on');
+  if (_kontaktArtResolve) { _kontaktArtResolve(art); _kontaktArtResolve = null; }
+}
+
 async function _moveStage(id, newStage) {
   const d = _pipeDeals.find(x => x.id === id);
   if (!d || d.stage === newStage) return false;
+
+  // Ask for contact type when moving to "Kontakt aufgenommen"
+  if (newStage === 'kontakt_aufgenommen') {
+    const art = await _askKontaktArt();
+    if (art === null) return false; // user cancelled
+    // Save a note recording the contact type
+    const today = new Date().toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+    await db.from('notizen').insert({
+      deal_id: id,
+      typ: art,
+      titel: art,
+      text: `Kontakt aufgenommen am ${today}`,
+      erstellt: new Date().toISOString(),
+    });
+  }
+
   const payload = { stage: newStage };
   if (newStage === 'rollout' && !d.gewonnen_datum) payload.gewonnen_datum = new Date().toISOString().slice(0,10);
   if (newStage === 'churned' && !d.churn_datum)    payload.churn_datum    = new Date().toISOString().slice(0,10);
+  const fromLabel = STAGE_MAP[d.stage]?.label || d.stage;
+  const toLabel   = STAGE_MAP[newStage]?.label  || newStage;
   const { error } = await db.from('pipeline_deals').update(payload).eq('id', id);
   if (error) { showToast('Fehler: ' + error.message, true); return false; }
   Object.assign(d, payload);
+  // Verlaufseintrag
+  await db.from('deal_verlauf').insert({ deal_id: id, text: `${fromLabel} → ${toLabel}` });
   showToast('Phase geändert ✓');
   renderPipelineStats();
   renderPipelineBoard();
@@ -2560,7 +2727,11 @@ async function saveDeal() {
     payload.erstellt = new Date().toISOString();
     const { data: nd, error: e } = await db.from('pipeline_deals').insert(payload).select('id,titel,stage,volumen,zustaendig,erstellt,gewonnen_datum,churn_datum,kunde_id,kunden(id,name)').single();
     error = e;
-    if (!error && nd) _pipeDeals.unshift(nd);
+    if (!error && nd) {
+      _pipeDeals.unshift(nd);
+      const startStage = STAGE_MAP[nd.stage]?.label || nd.stage;
+      await db.from('deal_verlauf').insert({ deal_id: nd.id, text: `Lead erstellt in Phase: ${startStage}`, erstellt: nd.erstellt });
+    }
   }
   if (error) { showToast('Fehler: ' + error.message, true); return; }
   showToast(_dmDealId ? 'Deal aktualisiert ✓' : 'Deal erstellt ✓');
@@ -3301,7 +3472,8 @@ function closeTermineModal() {
 }
 
 // ── Termin-Edit-Modal ─────────────────────────────────────
-let _fdteId = null;
+let _fdteId         = null;
+let _fdteCtxDealId  = null; // deal_id context for new termine in lead detail
 
 async function openTerminEdit(id) {
   _fdteId = id;
@@ -3363,13 +3535,17 @@ async function saveTerminFd() {
   if (_fdteId) {
     ({ error } = await db.from('termine').update(payload).eq('id', _fdteId));
   } else {
-    ({ error } = await db.from('termine').insert({ ...payload, kunde_id: _fdId || _fdFirma?.id }));
+    const insertPl = { ...payload };
+    if (_fdteCtxDealId) insertPl.deal_id = _fdteCtxDealId;
+    else insertPl.kunde_id = _fdId || _fdFirma?.id;
+    ({ error } = await db.from('termine').insert(insertPl));
   }
 
   if (saveBtn) { saveBtn.textContent='Speichern'; saveBtn.disabled=false; }
   if (!error) {
     closeTerminEdit();
     if (_fdFirma) loadFdOverview();
+    else if (_ldDeal) loadLdOverview();
     // Refresh list modal if open
     if (qi('fd-term-modal')?.classList.contains('on')) openTermineModal(_fdId||_fdFirma?.id);
   }
@@ -3381,12 +3557,14 @@ async function deleteTerminFd() {
   await db.from('termine').delete().eq('id', _fdteId);
   closeTerminEdit();
   if (_fdFirma) loadFdOverview();
+  else if (_ldDeal) loadLdOverview();
   if (qi('fd-term-modal')?.classList.contains('on')) openTermineModal(_fdId||_fdFirma?.id);
 }
 
 function closeTerminEdit() {
   qi('fd-termin-edit-modal')?.classList.remove('on');
   _fdteId = null;
+  _fdteCtxDealId = null;
 }
 
 function closeFirmaDetail() {
@@ -4182,9 +4360,12 @@ document.addEventListener('keydown', e => {
   if (!_user) return;
   if (e.key === 'Escape') {
     if (qi('capture').classList.contains('on')) { closeCapture(); return; }
+    if (qi('kontakt-art-popup')?.classList.contains('on')) { _resolveKontaktArt(null); return; }
     if (qi('fd-liz-modal')?.classList.contains('on')) { closeLizenzModal(); return; }
     if (qi('fd-bs-modal')?.classList.contains('on'))   { closeBaustellenModal(); return; }
     if (qi('fd-task-modal')?.classList.contains('on')) { closeTaskEditModal(); return; }
+    if (qi('ld-anf-modal')?.classList.contains('on'))  { closeLdAnfModal(); return; }
+    if (qi('ld-firma-modal')?.style.display === 'flex') { closeLdFirmaSearch(); return; }
     if (qi('fd-ap-modal')?.classList.contains('on'))          { closeApModal(); return; }
     if (qi('fd-termin-edit-modal')?.classList.contains('on')) { closeTerminEdit(); return; }
     if (qi('fd-term-modal')?.classList.contains('on'))        { closeTermineModal(); return; }
@@ -4272,7 +4453,45 @@ function switchLdTab(el) {
   const sec = qi('lds-' + newTab);
   if (sec) sec.classList.add('on');
   if (newTab === 'overview')  loadLdOverview();
-  else if (newTab === 'notizen') loadLdNotizen();
+  else if (newTab === 'notizen')  loadLdNotizen();
+  else if (newTab === 'verlauf')  loadLdVerlauf();
+}
+
+async function loadLdVerlauf() {
+  const el = qi('ld-verlauf-list');
+  if (!el || !_ldDeal) return;
+  el.innerHTML = `<div style="padding:40px 20px;text-align:center;color:var(--muted)">${skRows(3)}</div>`;
+
+  const { data, error } = await db
+    .from('deal_verlauf')
+    .select('id,text,erstellt')
+    .eq('deal_id', _ldDeal.id)
+    .order('erstellt', { ascending: true });
+
+  if (error || !data?.length) {
+    el.innerHTML = `<div class="vl-empty">Noch keine Verlaufseinträge vorhanden.</div>`;
+    return;
+  }
+
+  const fmtDate = iso => {
+    const d = new Date(iso);
+    return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+  };
+
+  const items = data.map(e => {
+    const isCreate = e.text.startsWith('Lead erstellt');
+    const dotCls   = isCreate ? 'vl-dot vl-dot-create' : 'vl-dot vl-dot-stage';
+    return `
+      <li class="vl-item">
+        <span class="${dotCls}"></span>
+        <div class="vl-body">
+          <div class="vl-text">${escHtml(e.text)}</div>
+          <div class="vl-date">${fmtDate(e.erstellt)}</div>
+        </div>
+      </li>`;
+  }).join('');
+
+  el.innerHTML = `<ul class="vl-timeline">${items}</ul>`;
 }
 
 async function loadLdOverview() {
@@ -4299,13 +4518,17 @@ async function loadLdOverview() {
     </div>
     <div id="ld-ov-body">${skRows(3)}</div>`;
 
-  const [tR, nR] = await Promise.all([
+  const [tR, nR, anfR, termR] = await Promise.all([
     db.from('tasks').select('id,titel,faellig,erledigt').eq('deal_id', d.id).eq('erledigt', false).order('faellig',{ascending:true}).limit(5),
     db.from('notizen').select('id,typ,titel,text,erstellt').eq('deal_id', d.id).order('erstellt',{ascending:false}).limit(4),
+    db.from('aus_anforderungen').select('id,anforderung,erfuellt,prioritaet,kategorie,notiz').eq('deal_id', d.id).order('prioritaet').order('erstellt'),
+    db.from('termine').select('id,art,datum,uhrzeit_von,betreff').eq('deal_id', d.id).gte('datum', today).order('datum',{ascending:true}).limit(5),
   ]);
 
   const tasks = tR.data || [];
   const notes = nR.data || [];
+  const anfs  = anfR.data || [];
+  const terms = termR.data || [];
   const getEmo = ss => ss ? (ss.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['📝'])[0] : '📝';
 
   // Stammdaten — inline edit
@@ -4326,24 +4549,25 @@ async function loadLdOverview() {
     <div class="grp sd-grid" style="margin-bottom:14px">
       <div class="sd-cell sd-full"><span class="sd-k">Titel</span>${sdInpLd('titel', d.titel, 'Deal-Bezeichnung')}</div>
       <div class="sd-cell"><span class="sd-k">Phase</span>${stageSelHtml}</div>
-      <div class="sd-cell"><span class="sd-k">Volumen (€)</span>${sdInpLd('volumen', d.volumen, '0')}</div>
-      <div class="sd-cell sd-full"><span class="sd-k">Zuständig</span>${sdInpLd('zustaendig', d.zustaendig, 'Name …')}</div>
+      <div class="sd-cell"><span class="sd-k">Zuständig</span>${sdInpLd('zustaendig', d.zustaendig, 'Name …')}</div>
       <div class="sd-cell sd-full"><span class="sd-k">Unternehmen</span>
         ${d.kunden
-          ? `<span class="sd-v-inp" style="cursor:pointer;color:var(--acc);font-weight:600" onclick="closeLeadDetail();setTimeout(()=>openFirmaDetail('${d.kunden.id}'),120)" title="Firma öffnen">${escHtml(d.kunden.name)} ›</span>`
-          : `<span style="font-size:14px;color:var(--muted)">Kein Unternehmen verknüpft</span>`}
+          ? `<div style="display:flex;align-items:center;gap:6px">
+               <span class="sd-v-inp" style="cursor:pointer;color:var(--acc);font-weight:600;flex:1" onclick="closeLeadDetail();setTimeout(()=>openFirmaDetail('${d.kunden.id}'),120)" title="Firma öffnen">${escHtml(d.kunden.name)} ›</span>
+               <button onclick="openLdFirmaSearch()" style="border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer;padding:2px 4px;flex-shrink:0" title="Unternehmen ändern">✎</button>
+             </div>`
+          : `<button onclick="openLdFirmaSearch()" style="border:none;background:none;color:var(--acc);font-size:14px;font-weight:600;cursor:pointer;padding:0;text-align:left">+ Unternehmen verknüpfen</button>`}
       </div>
       <div class="sd-cell sd-full"><span class="sd-k">Notiz</span><textarea class="sd-v-ta" data-ld-field="notiz" placeholder="Interne Notiz …" oninput="autoResizeTA(this)" onblur="saveLdField(this)">${sdV(d.notiz)}</textarea></div>
     </div>
     </div>`;
 
-  const kpiHtml = `
-    <div class="fd-kpi-row" style="padding:0 14px 12px">
-      <div class="fd-kpi-pill"><div class="fd-kpi-v">${vol}</div><div class="fd-kpi-l">Volumen</div></div>
-      <div class="fd-kpi-pill"><div class="fd-kpi-v" style="color:${stageColor};font-size:13px;letter-spacing:-.2px">${stageName}</div><div class="fd-kpi-l">Phase</div></div>
-      <div class="fd-kpi-pill"><div class="fd-kpi-v">${notes.length}</div><div class="fd-kpi-l">Notizen</div></div>
-      <div class="fd-kpi-pill"><div class="fd-kpi-v">${tasks.length}</div><div class="fd-kpi-l">Aufgaben</div></div>
-    </div>`;
+  const anfTotal = anfs.length;
+  const anfDone  = anfs.filter(a => a.erfuellt).length;
+  const anfPct   = anfTotal ? Math.round(anfDone / anfTotal * 100) : 0;
+  const prioIco  = { hoch:'🔴', mittel:'🟡', niedrig:'🟢' };
+
+  // kpiHtml entfernt (nicht mehr angezeigt)
 
   const statusBox = d.stage === 'churned' && d.churn_datum ? `
     <div class="grp" style="margin:0 14px 14px;background:#FEE2E2;overflow:visible">
@@ -4402,12 +4626,85 @@ async function loadLdOverview() {
         </div>`).join('')}
     </div>` : '';
 
-  const ovBody = qi('ld-ov-body');
-  if (ovBody) ovBody.innerHTML = kpiHtml + statusBox + stammdatenHtml + tasksHtml + notesHtml;
+  // ── Anforderungen block ──────────────────────────────────
+  const anforderungenHtml = `
+    <div class="sec-title" style="padding-left:30px;display:flex;align-items:center;justify-content:space-between;padding-right:30px">
+      <span>Anforderungen${anfTotal ? ` (${anfDone}/${anfTotal})` : ''}</span>
+      <button class="fd-ap-add" onclick="openLdAnfModal(null)" title="Neue Anforderung">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="grp" style="margin-bottom:14px">
+      ${anfTotal ? `
+        <div style="padding:10px 14px 8px;display:flex;align-items:center;gap:10px;border-bottom:.5px solid var(--border)">
+          <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${anfPct}%;background:var(--green);transition:width .3s"></div>
+          </div>
+          <span style="font-size:11px;color:var(--muted);flex-shrink:0">${anfDone}/${anfTotal} erfüllt</span>
+        </div>
+        ${anfs.map(a => `
+          <div class="row" style="gap:10px;cursor:pointer" onclick="openLdAnfModal(${JSON.stringify(a).replace(/"/g,'&quot;')})">
+            <div onclick="event.stopPropagation();ldToggleAnf('${a.id}',${!a.erfuellt})" style="width:20px;height:20px;border-radius:5px;border:2px solid ${a.erfuellt?'var(--green)':'var(--border)'};background:${a.erfuellt?'var(--green)':'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s">
+              ${a.erfuellt?'<svg width="11" height="11" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/></svg>':''}
+            </div>
+            <div class="row-body">
+              <div class="row-title" style="${a.erfuellt?'text-decoration:line-through;color:var(--muted)':''}">${escHtml(a.anforderung)}</div>
+              ${a.kategorie ? `<div class="row-sub">${escHtml(a.kategorie)}</div>` : ''}
+            </div>
+            <span style="font-size:14px;flex-shrink:0">${prioIco[a.prioritaet]||'🟡'}</span>
+          </div>`).join('')}` :
+        '<div class="row" style="pointer-events:none"><span style="color:var(--muted);font-size:13px;padding:2px 0">Keine Anforderungen</span></div>'}
+    </div>`;
 
-  // Auto-open stammdaten
+  // ── Termine block ────────────────────────────────────────
+  const termineHtml = `
+    <div class="sec-title" style="padding-left:30px;display:flex;align-items:center;justify-content:space-between;padding-right:30px">
+      <span>Bevorstehende Termine</span>
+      <button class="fd-ap-add" onclick="openLdTerminNew()" title="Neuer Termin">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="grp" style="margin-bottom:14px">
+      ${terms.length ? terms.map(t => {
+        const tIco = t.art ? (t.art.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u)||['📅'])[0] : '📅';
+        const tDt  = t.datum ? new Date(t.datum+'T12:00:00').toLocaleDateString('de-DE',{day:'2-digit',month:'short'}) : '–';
+        return `<div class="row" onclick="openTerminEdit('${t.id}')" style="cursor:pointer">
+          <div class="row-icon" style="background:var(--acc-s);color:var(--acc);font-size:16px">${tIco}</div>
+          <div class="row-body">
+            <div class="row-title">${escHtml(t.betreff||t.art||'Termin')}</div>
+            <div class="row-sub">${tDt}${t.uhrzeit_von?' · '+t.uhrzeit_von.slice(0,5):''}</div>
+          </div>
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>`;
+      }).join('') : '<div class="row" style="pointer-events:none"><span style="color:var(--muted);font-size:13px;padding:2px 0">Keine bevorstehenden Termine</span></div>'}
+    </div>`;
+
+  const ovBody = qi('ld-ov-body');
+  const deleteHtml = `
+    <div style="padding:24px 16px 8px">
+      <button onclick="deleteLdDeal()" style="width:100%;padding:13px;background:none;border:1.5px solid var(--red,#FF3B30);border-radius:14px;color:var(--red,#FF3B30);font-size:15px;font-weight:600;cursor:pointer;transition:background .12s"
+        onmouseover="this.style.background='rgba(255,59,48,.07)'" onmouseout="this.style.background='none'">
+        Lead löschen
+      </button>
+    </div>`;
+  if (ovBody) ovBody.innerHTML = statusBox + tasksHtml + anforderungenHtml + termineHtml + stammdatenHtml + notesHtml + deleteHtml;
+
+  // Auto-open stammdaten + resize Notiz-Textarea
   const sdHd = el.querySelector('.sd-toggle-hd');
   if (sdHd) toggleSdBlock(sdHd);
+  const notizTa = el.querySelector('[data-ld-field="notiz"]');
+  if (notizTa) setTimeout(() => autoResizeTA(notizTa), 0);
+}
+
+async function deleteLdDeal() {
+  if (!_ldDeal || !confirm(`„${_ldDeal.titel || 'Dieser Lead'}" wirklich löschen?`)) return;
+  const { error } = await db.from('pipeline_deals').delete().eq('id', _ldDeal.id);
+  if (error) { showToast('Fehler: ' + error.message, true); return; }
+  _pipeDeals = _pipeDeals.filter(d => d.id !== _ldDeal.id);
+  showToast('Lead gelöscht ✓');
+  closeLeadDetail();
+  renderPipelineStats();
+  renderPipelineBoard();
 }
 
 async function saveLdField(el) {
@@ -4443,6 +4740,138 @@ async function saveLdStage(el) {
 function openLdTaskModal() {
   _fdtCtxDealId = _ldDeal?.id || null;
   openTaskEditModal(null);
+}
+
+// ── Lead Firma-Verknüpfung ────────────────────────────────
+async function openLdFirmaSearch() {
+  const modal = qi('ld-firma-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  // Firmen laden falls noch nicht gecacht
+  if (!_firms.length) {
+    const { data } = await db.from('kunden').select('id,name').order('name');
+    if (data) _firms = data;
+  }
+  const inp = qi('ld-firma-search-inp');
+  if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 80); }
+  renderLdFirmaResults();
+}
+
+function closeLdFirmaSearch() {
+  const modal = qi('ld-firma-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function renderLdFirmaResults() {
+  const q    = (qi('ld-firma-search-inp')?.value || '').toLowerCase().trim();
+  const list = qi('ld-firma-results');
+  if (!list) return;
+  const hits = q
+    ? _firms.filter(f => f.name.toLowerCase().includes(q)).slice(0, 20)
+    : _firms.slice(0, 20);
+  if (!hits.length) {
+    list.innerHTML = `<div style="padding:24px 16px;text-align:center;color:var(--muted);font-size:14px">Keine Treffer</div>`;
+    return;
+  }
+  list.innerHTML = hits.map(f => `
+    <div onclick="linkLdFirma('${f.id}',${JSON.stringify(f.name).replace(/"/g,'&quot;')})"
+      style="padding:13px 16px;border-bottom:.5px solid var(--border);cursor:pointer;font-size:14px;font-weight:500;transition:background .1s"
+      onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
+      ${escHtml(f.name)}
+    </div>`).join('');
+}
+
+async function linkLdFirma(firmaId, firmaName) {
+  if (!_ldDeal) return;
+  const { error } = await db.from('pipeline_deals').update({ kunde_id: firmaId }).eq('id', _ldDeal.id);
+  if (error) { showToast('Fehler: ' + error.message, true); return; }
+  // Cache aktualisieren
+  _ldDeal.kunde_id = firmaId;
+  _ldDeal.kunden   = { id: firmaId, name: firmaName };
+  const pi = _pipeDeals.findIndex(x => x.id === _ldDeal.id);
+  if (pi >= 0) _pipeDeals[pi].kunden = { id: firmaId, name: firmaName };
+  // Brand header aktualisieren
+  const typ = document.querySelector('#view-lead-detail .fd-brand-typ');
+  if (typ) typ.textContent = (STAGE_MAP[_ldDeal.stage]?.label || _ldDeal.stage) + ' · ' + firmaName;
+  closeLdFirmaSearch();
+  showToast('Unternehmen verknüpft ✓');
+  loadLdOverview();
+}
+
+// ── Lead Termine ──────────────────────────────────────────
+function openLdTerminNew() {
+  _fdteCtxDealId = _ldDeal?.id || null;
+  openTerminEdit(null);
+}
+
+// ── Lead Anforderungen Modal ──────────────────────────────
+let _ldAnfId = null;
+
+function openLdAnfModal(a) {
+  _ldAnfId = a?.id || null;
+  const modal = qi('ld-anf-modal');
+  if (!modal) return;
+  qi('ld-anf-title').textContent = a ? 'Anforderung bearbeiten' : 'Neue Anforderung';
+  qi('ldanf-text').value       = a?.anforderung || '';
+  qi('ldanf-kategorie').value  = a?.kategorie   || 'Technisch';
+  qi('ldanf-erfuellt').value   = a?.erfuellt ? '1' : '0';
+  qi('ldanf-notiz').value      = a?.notiz        || '';
+  qi('ldanf-del-btn').style.display = a ? '' : 'none';
+  setLdAnfPrio(a?.prioritaet || 'mittel');
+  modal.classList.add('on');
+  setTimeout(() => qi('ldanf-text').focus(), 80);
+}
+
+function closeLdAnfModal() {
+  qi('ld-anf-modal')?.classList.remove('on');
+  _ldAnfId = null;
+}
+
+function setLdAnfPrio(prio) {
+  qAll('#ldanf-prio-row .fd-task-prio-btn').forEach(b => {
+    b.className = 'fd-task-prio-btn' + (b.dataset.prio === prio ? ` on-${prio}` : '');
+  });
+}
+
+async function saveLdAnf() {
+  const anforderung = qi('ldanf-text').value.trim();
+  if (!anforderung) { qi('ldanf-text').focus(); return; }
+  if (!_ldDeal) return;
+
+  const prio      = document.querySelector('#ldanf-prio-row .fd-task-prio-btn[class*="on-"]')?.dataset.prio || 'mittel';
+  const erfuellt  = qi('ldanf-erfuellt').value === '1';
+  const saveBtn   = document.querySelector('#ld-anf-modal .fd-task-save-btn');
+  if (saveBtn) { saveBtn.textContent = '···'; saveBtn.disabled = true; }
+
+  const payload = {
+    anforderung,
+    kategorie:  qi('ldanf-kategorie').value,
+    prioritaet: prio,
+    erfuellt,
+    notiz:      qi('ldanf-notiz').value.trim() || null,
+  };
+
+  let error;
+  if (_ldAnfId) {
+    ({ error } = await db.from('aus_anforderungen').update(payload).eq('id', _ldAnfId));
+  } else {
+    ({ error } = await db.from('aus_anforderungen').insert({ ...payload, deal_id: _ldDeal.id, erstellt: new Date().toISOString() }));
+  }
+
+  if (saveBtn) { saveBtn.textContent = 'Speichern'; saveBtn.disabled = false; }
+  if (!error) { closeLdAnfModal(); loadLdOverview(); }
+}
+
+async function deleteLdAnf() {
+  if (!_ldAnfId || !confirm('Anforderung wirklich löschen?')) return;
+  await db.from('aus_anforderungen').delete().eq('id', _ldAnfId);
+  closeLdAnfModal();
+  loadLdOverview();
+}
+
+async function ldToggleAnf(id, newVal) {
+  await db.from('aus_anforderungen').update({ erfuellt: newVal }).eq('id', id);
+  loadLdOverview();
 }
 
 async function ldDoneTask(id, rowId) {
