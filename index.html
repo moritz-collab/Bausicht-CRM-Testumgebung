@@ -104,6 +104,235 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 .kpi-lbl { font-size:12px; color:var(--muted); margin-top:4px; font-weight:500; }
 .kpi-ico { font-size:19px; margin-bottom:8px; }
 
+/* ── HEUTE: SEARCH ──────────────────────────────────────── */
+.h-search-wrap {
+  padding:14px 14px 0;
+  display:flex; flex-direction:column; gap:10px;
+  position:relative; z-index:200;
+}
+.h-search-toggle {
+  display:flex; gap:4px;
+  background:var(--bg); border-radius:12px; padding:3px;
+  border:.5px solid var(--border); align-self:flex-start;
+}
+.h-st-btn {
+  padding:6px 14px; border:none; border-radius:9px;
+  font-size:13px; font-weight:600; cursor:pointer;
+  background:transparent; color:var(--muted); transition:all .15s;
+}
+.h-st-btn.on { background:var(--surf); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,.10); }
+.h-search-box-wrap { position:relative; }
+.h-search-box {
+  display:flex; align-items:center; gap:10px;
+  background:var(--surf); border:.5px solid var(--border);
+  border-radius:14px; padding:0 14px; box-shadow:var(--sh);
+  transition:border-color .15s;
+}
+.h-search-box:focus-within { border-color:var(--acc); }
+.h-search-box svg { width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0; }
+.h-search-box input {
+  flex:1; border:none; background:transparent; font-size:15px;
+  padding:12px 0; outline:none; color:var(--text);
+}
+.h-search-clear { border:none;background:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0 2px;line-height:1; }
+.h-search-drop {
+  position:absolute; top:calc(100% + 6px); left:0; right:0;
+  background:var(--surf); border:.5px solid var(--border);
+  border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,.14);
+  max-height:280px; overflow-y:auto; z-index:300;
+}
+.h-drop-item {
+  display:flex; align-items:center; gap:12px;
+  padding:11px 16px; cursor:pointer; transition:background .1s;
+  border-bottom:.5px solid var(--border);
+}
+.h-drop-item:last-child { border-bottom:none; }
+.h-drop-item:hover, .h-drop-item.focused { background:var(--bg); }
+.h-drop-ico {
+  width:34px;height:34px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:14px;color:#fff;
+}
+.h-drop-name { font-size:14.5px;font-weight:600;color:var(--text); }
+.h-drop-sub  { font-size:12px;color:var(--muted);margin-top:1px; }
+.h-drop-empty { padding:20px;text-align:center;color:var(--muted);font-size:14px; }
+
+/* ── HEUTE: GREETING ─────────────────────────────────────── */
+.h-greeting { padding:14px 16px 2px; }
+.h-gr-title { font-size:22px; font-weight:800; letter-spacing:-.4px; }
+.h-gr-sub   { font-size:13px; color:var(--muted); margin-top:2px; }
+
+/* ── HEUTE: SCHNELLAKTIONEN ──────────────────────────────── */
+.h-actions {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:8px; padding:12px 14px 4px;
+}
+.h-action-btn {
+  background:var(--surf); border:.5px solid var(--border);
+  border-radius:14px; padding:12px 6px 10px;
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  cursor:pointer; transition:background .12s, transform .08s;
+  box-shadow:var(--sh);
+}
+.h-action-btn:active { background:var(--bg); transform:scale(.96); }
+.h-action-ico { font-size:22px; line-height:1; }
+.h-action-lbl { font-size:11.5px; font-weight:600; color:var(--text); }
+
+/* ── HEUTE: QUICK PANELS ─────────────────────────────────── */
+.h-quick-panel {
+  margin:8px 14px 4px;
+  background:var(--surf); border:.5px solid var(--border);
+  border-radius:18px; box-shadow:0 4px 20px rgba(0,0,0,.10);
+  overflow:visible; animation:sheetDrop .2s cubic-bezier(.32,0,.25,1);
+}
+.h-qp-hd { border-radius:18px 18px 0 0; }
+.h-qp-footer { border-radius:0 0 18px 18px; }
+.h-qp-hd {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:13px 16px 10px; border-bottom:.5px solid var(--border);
+}
+.h-qp-title { font-size:15px; font-weight:700; }
+.h-qp-close { border:none;background:none;font-size:17px;color:var(--muted);cursor:pointer;padding:0;line-height:1; }
+.h-qp-body  { padding:12px 16px; display:flex; flex-direction:column; gap:10px; }
+.h-qp-footer { padding:0 16px 14px; }
+.h-qp-save {
+  width:100%; padding:12px; border:none; border-radius:12px;
+  background:var(--acc); color:#fff; font-size:15px; font-weight:600;
+  cursor:pointer; transition:opacity .12s;
+}
+.h-qp-save:active { opacity:.8; }
+.h-qp-title-inp, .h-qp-text, .h-qp-entity-inp, .h-qp-date {
+  width:100%; border:.5px solid var(--border); border-radius:10px;
+  background:var(--bg); padding:10px 12px; font-size:14px;
+  font-family:inherit; color:var(--text); outline:none; box-sizing:border-box;
+  transition:border-color .12s;
+}
+.h-qp-title-inp:focus, .h-qp-text:focus,
+.h-qp-entity-inp:focus, .h-qp-date:focus { border-color:var(--acc); }
+.h-qp-text { resize:none; min-height:72px; }
+.h-qp-entity-row { display:flex; flex-direction:column; gap:8px; }
+.h-qp-toggle {
+  display:flex; gap:3px; background:var(--bg);
+  border-radius:9px; padding:2px; border:.5px solid var(--border);
+  align-self:flex-start;
+}
+.h-qp-tb {
+  padding:4px 12px; border:none; border-radius:7px;
+  font-size:12.5px; font-weight:600; cursor:pointer;
+  background:transparent; color:var(--muted); transition:all .12s;
+}
+.h-qp-tb.on { background:var(--surf); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.h-qp-entity-wrap { position:relative; }
+.h-qp-entity-drop {
+  position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:500;
+  background:var(--surf); border:.5px solid var(--border);
+  border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,.12);
+  max-height:200px; overflow-y:auto;
+}
+.h-qp-type-row {
+  display:flex; flex-wrap:wrap; gap:6px;
+}
+.h-qp-type-chip {
+  padding:5px 12px; border-radius:20px; font-size:12.5px; font-weight:600;
+  border:.5px solid var(--border); background:var(--bg); color:var(--text);
+  cursor:pointer; transition:all .12s;
+}
+.h-qp-type-chip.on { background:var(--acc); color:#fff; border-color:var(--acc); }
+.h-qp-row2 { display:flex; gap:8px; align-items:flex-start; }
+.h-qp-date { flex-shrink:0; width:auto; }
+
+/* ── HEUTE: PIPELINE-SNAPSHOT ────────────────────────────── */
+.h-pipe-snap {
+  display:flex; gap:8px; padding:0 14px 4px;
+  overflow-x:auto; scrollbar-width:none;
+}
+.h-pipe-snap::-webkit-scrollbar { display:none; }
+.h-ps-chip {
+  flex-shrink:0; min-width:88px;
+  border-radius:14px; padding:10px 12px;
+  cursor:pointer; transition:transform .1s, box-shadow .1s;
+  border:.5px solid transparent;
+}
+.h-ps-chip:active { transform:scale(.96); }
+.h-ps-count { font-size:22px; font-weight:800; letter-spacing:-.5px; line-height:1; color:#fff; }
+.h-ps-label { font-size:10.5px; font-weight:600; color:rgba(255,255,255,.8); margin-top:3px; letter-spacing:.02em; }
+
+/* ── HEUTE: PIPELINE EXPANDED ────────────────────────────── */
+.h-pipe-toggle {
+  width:28px; height:28px; border-radius:8px; border:.5px solid var(--border);
+  background:var(--surf); cursor:pointer; display:flex; align-items:center;
+  justify-content:center; transition:background .12s;
+}
+.h-pipe-toggle:hover { background:var(--bg); }
+.h-pipe-toggle.open #h-pipe-chevron, #h-pipe-chevron.open { transform:rotate(180deg); }
+.h-pipe-expanded {
+  display:flex; gap:8px; padding:8px 14px 4px;
+  overflow-x:auto; scrollbar-width:none; align-items:flex-start;
+}
+.h-pipe-expanded::-webkit-scrollbar { display:none; }
+.h-pipe-col {
+  flex-shrink:0; width:160px;
+  background:var(--bg); border-radius:14px; overflow:hidden;
+  border:.5px solid var(--border);
+}
+.h-pipe-col-hd {
+  padding:8px 10px 7px; font-size:11px; font-weight:700;
+  letter-spacing:.04em; color:#fff; display:flex;
+  align-items:center; justify-content:space-between;
+}
+.h-pipe-col-hd-count {
+  background:rgba(255,255,255,.25); border-radius:20px;
+  padding:1px 7px; font-size:10.5px; font-weight:700;
+}
+.h-pipe-col-body { padding:6px; display:flex; flex-direction:column; gap:5px; min-height:36px; }
+.h-pl-card {
+  background:var(--surf); border-radius:10px; padding:8px 8px 7px;
+  border:.5px solid var(--border); cursor:pointer;
+  transition:background .1s;
+}
+.h-pl-card:active { background:var(--bg); }
+.h-pl-name { font-size:12.5px; font-weight:600; color:var(--text); line-height:1.3;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.h-pl-sub  { font-size:11px; color:var(--muted); margin-top:2px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.h-pl-move { display:flex; gap:3px; margin-top:6px; }
+.h-pl-mv-btn {
+  flex:1; padding:3px 0; border-radius:6px; border:none;
+  background:var(--bg); color:var(--muted); font-size:12px;
+  cursor:pointer; transition:background .1s; font-weight:600;
+}
+.h-pl-mv-btn:hover { background:var(--border); color:var(--text); }
+.h-pl-mv-btn:disabled { opacity:.25; cursor:default; }
+.h-pipe-empty { font-size:11.5px; color:var(--muted); padding:4px 2px; text-align:center; }
+.h-pl-dragging { opacity:.4; transform:scale(.97); }
+.h-pipe-col.drag-over { outline:2px dashed var(--acc); outline-offset:-3px; }
+.h-pipe-col.drag-over .h-pipe-col-body { background:rgba(99,102,241,.06); border-radius:0 0 14px 14px; }
+
+/* ── HEUTE: STATS ROW ────────────────────────────────────── */
+.h-stats-row {
+  display:flex; gap:8px; padding:10px 14px 4px;
+  overflow-x:auto; scrollbar-width:none;
+}
+.h-stats-row::-webkit-scrollbar { display:none; }
+.h-stat {
+  background:var(--surf); border:.5px solid var(--border);
+  border-radius:12px; padding:10px 14px; flex-shrink:0;
+  box-shadow:var(--sh); min-width:90px;
+}
+.h-stat-v { font-size:22px; font-weight:800; letter-spacing:-.5px; line-height:1; }
+.h-stat-l { font-size:10.5px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.4px; margin-top:3px; }
+
+/* ── HEUTE: SECTION HEADERS ──────────────────────────────── */
+.h-sec-hd {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 16px 8px; font-size:13px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.05em; color:var(--muted);
+}
+.h-sec-more {
+  font-size:13px; font-weight:600; color:var(--acc);
+  background:none; border:none; cursor:pointer; padding:0;
+}
+
 /* ── HEUTE: UNIFIED TIMELINE ────────────────────────────── */
 .timeline-item { display:flex; gap:12px; padding:10px 18px; border-bottom:.5px solid var(--border); cursor:pointer; transition:background .1s; }
 .timeline-item:last-child { border-bottom:none; }
@@ -1167,24 +1396,154 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 
     <!-- ── HEUTE ───────────────────────── -->
     <div class="view on" id="view-heute">
-      <div class="v-head">
-        <div class="v-title" id="h-gr">Guten Tag 👋</div>
-        <div class="v-sub"  id="h-dt"></div>
+
+      <!-- ── Suchleiste ── -->
+      <div class="h-search-wrap">
+        <div class="h-search-toggle">
+          <button class="h-st-btn on" id="hst-firma" onclick="setHeuteSearchMode('firma')">Unternehmen</button>
+          <button class="h-st-btn"    id="hst-lead"  onclick="setHeuteSearchMode('lead')">Leads</button>
+        </div>
+        <div class="h-search-box-wrap">
+          <div class="h-search-box">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="h-search-inp" type="search" placeholder="Unternehmen suchen…"
+              oninput="renderHeuteSearchDrop()"
+              onkeydown="heuteSearchKeydown(event)"
+              autocomplete="off">
+            <button class="h-search-clear" id="h-search-clear" onclick="clearHeuteSearch()" style="display:none">✕</button>
+          </div>
+          <div class="h-search-drop" id="h-search-drop" style="display:none"></div>
+        </div>
       </div>
-      <div class="kpi-grid" id="h-kpi">
-        <div class="kpi"><div class="kpi-ico">💰</div><div class="kpi-val sk" style="width:80px;height:30px;border-radius:5px"> </div><div class="kpi-lbl">MRR</div></div>
-        <div class="kpi"><div class="kpi-ico">🏢</div><div class="kpi-val sk" style="width:55px;height:30px;border-radius:5px"> </div><div class="kpi-lbl">Aktive Kunden</div></div>
-        <div class="kpi"><div class="kpi-ico">✅</div><div class="kpi-val sk" style="width:55px;height:30px;border-radius:5px"> </div><div class="kpi-lbl">Offene Tasks</div></div>
-        <div class="kpi"><div class="kpi-ico">📅</div><div class="kpi-val sk" style="width:55px;height:30px;border-radius:5px"> </div><div class="kpi-lbl">Termine heute</div></div>
+
+      <!-- ── Greeting ── -->
+      <div class="h-greeting">
+        <div class="h-gr-title" id="h-gr">Guten Tag 👋</div>
+        <div class="h-gr-sub"   id="h-dt"></div>
       </div>
-      <div class="sec-title">Heutiger Tag</div>
+
+      <!-- ── Schnellaktionen ── -->
+      <div class="h-actions">
+        <button class="h-action-btn" onclick="openHeuteQuickPanel('note')">
+          <div class="h-action-ico">✏️</div>
+          <div class="h-action-lbl">Notiz</div>
+        </button>
+        <button class="h-action-btn" onclick="openHeuteQuickPanel('task')">
+          <div class="h-action-ico">✅</div>
+          <div class="h-action-lbl">Aufgabe</div>
+        </button>
+        <button class="h-action-btn" onclick="openTerminEdit(null)">
+          <div class="h-action-ico">📅</div>
+          <div class="h-action-lbl">Termin</div>
+        </button>
+        <button class="h-action-btn" onclick="openDealModal(null)">
+          <div class="h-action-ico">🎯</div>
+          <div class="h-action-lbl">Lead</div>
+        </button>
+      </div>
+
+      <!-- ── Quick-Note Panel ── -->
+      <div class="h-quick-panel" id="h-quick-note" style="display:none">
+        <div class="h-qp-hd">
+          <span class="h-qp-title">Schnellnotiz</span>
+          <button class="h-qp-close" onclick="closeHeuteQuickPanel('note')">✕</button>
+        </div>
+        <div class="h-qp-body">
+          <div class="h-qp-entity-row">
+            <div class="h-qp-toggle">
+              <button class="h-qp-tb on" id="qnp-t-firma" onclick="setQnpMode('firma')">Unternehmen</button>
+              <button class="h-qp-tb"    id="qnp-t-lead"  onclick="setQnpMode('lead')">Lead</button>
+            </div>
+            <div class="h-qp-entity-wrap">
+              <input class="h-qp-entity-inp" id="qnp-entity-inp" type="text"
+                placeholder="Unternehmen suchen…"
+                oninput="renderQnpDrop()" autocomplete="off">
+              <div class="h-qp-entity-drop" id="qnp-entity-drop" style="display:none"></div>
+            </div>
+          </div>
+          <div class="h-qp-type-row" id="qnp-types"></div>
+          <input class="h-qp-title-inp" id="qnp-titel" type="text" placeholder="Titel (optional)">
+          <textarea class="h-qp-text" id="qnp-text" placeholder="Notiz…" rows="3" oninput="autoResizeTA(this)"></textarea>
+        </div>
+        <div class="h-qp-footer">
+          <button class="h-qp-save" onclick="saveHeuteQuickNote()">Speichern</button>
+        </div>
+      </div>
+
+      <!-- ── Quick-Task Panel ── -->
+      <div class="h-quick-panel" id="h-quick-task" style="display:none">
+        <div class="h-qp-hd">
+          <span class="h-qp-title">Neue Aufgabe</span>
+          <button class="h-qp-close" onclick="closeHeuteQuickPanel('task')">✕</button>
+        </div>
+        <div class="h-qp-body">
+          <input class="h-qp-title-inp" id="qnt-titel" type="text" placeholder="Was ist zu tun?">
+          <div class="h-qp-row2">
+            <input class="h-qp-date" id="qnt-datum" type="date">
+            <div class="h-qp-entity-wrap" style="flex:1">
+              <input class="h-qp-entity-inp" id="qnt-entity-inp" type="text"
+                placeholder="Firma / Lead (optional)"
+                oninput="renderQntDrop()" autocomplete="off">
+              <div class="h-qp-entity-drop" id="qnt-entity-drop" style="display:none"></div>
+            </div>
+          </div>
+        </div>
+        <div class="h-qp-footer">
+          <button class="h-qp-save" onclick="saveHeuteQuickTask()">Speichern</button>
+        </div>
+      </div>
+
+      <!-- ── Quick Stats ── -->
+      <div class="h-stats-row" id="h-stats">
+        <div class="h-stat sk-wrap"><div class="h-stat-v sk" style="width:40px;height:26px;border-radius:5px"> </div><div class="h-stat-l">Termine</div></div>
+        <div class="h-stat sk-wrap"><div class="h-stat-v sk" style="width:40px;height:26px;border-radius:5px"> </div><div class="h-stat-l">Fällige Tasks</div></div>
+        <div class="h-stat sk-wrap"><div class="h-stat-v sk" style="width:40px;height:26px;border-radius:5px"> </div><div class="h-stat-l">Offene Leads</div></div>
+      </div>
+
+      <!-- ── Pipeline-Snapshot ── -->
+      <div class="h-sec-hd">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span>Pipeline</span>
+          <button class="h-pipe-toggle" id="h-pipe-toggle" onclick="toggleHeutePipeline()" title="Leads anzeigen">
+            <svg id="h-pipe-chevron" viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+        <button onclick="navTo('pipeline')" class="h-sec-more">Öffnen →</button>
+      </div>
+      <div class="h-pipe-snap" id="h-pipe-snap">
+        <div class="h-ps-chip sk" style="width:90px;height:52px;border-radius:14px"> </div>
+        <div class="h-ps-chip sk" style="width:90px;height:52px;border-radius:14px"> </div>
+        <div class="h-ps-chip sk" style="width:90px;height:52px;border-radius:14px"> </div>
+      </div>
+      <!-- Expandierte Lead-Ansicht -->
+      <div class="h-pipe-expanded" id="h-pipe-expanded" style="display:none"></div>
+
+      <!-- ── Termine heute ── -->
+      <div class="h-sec-hd">
+        <span>Termine heute</span>
+        <button onclick="navTo('termine')" class="h-sec-more">Alle →</button>
+      </div>
       <div class="grp" id="h-timeline" style="padding:0">
         <div class="timeline-item"><div class="sk" style="width:100%;height:18px;border-radius:5px"> </div></div>
       </div>
-      <div class="sec-title">Letzte Aktivitäten</div>
+
+      <!-- ── Fällige & überfällige Aufgaben ── -->
+      <div class="h-sec-hd" style="margin-top:18px">
+        <span>Fällige Aufgaben</span>
+        <button onclick="navTo('tasks')" class="h-sec-more">Alle →</button>
+      </div>
+      <div class="grp" id="h-tasks" style="padding:0">
+        <div class="t-row"><div class="sk" style="width:100%;height:17px;border-radius:5px"> </div></div>
+      </div>
+
+      <!-- ── Letzte Aktivitäten ── -->
+      <div class="h-sec-hd" style="margin-top:18px">
+        <span>Letzte Aktivitäten</span>
+      </div>
       <div class="grp" id="h-activity">
         <div class="row"><div class="sk" style="width:100%;height:16px;border-radius:5px"> </div></div>
       </div>
+
     </div>
 
     <!-- ── FIRMEN ──────────────────────── -->
@@ -1991,8 +2350,372 @@ function loadView(p) {
 // ══════════════════════════════════════════════════════════
 // HEUTE — Unified daily command center
 // ══════════════════════════════════════════════════════════
+// ── Helpers ───────────────────────────────────────────────
+function stringToColor(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h},55%,45%)`;
+}
+
+// ── Heute: Search state ───────────────────────────────────
+let _heuteSearchMode = 'firma'; // 'firma' | 'lead'
+let _heuteDropIdx    = -1;      // keyboard focused index
+let _heuteDropData   = [];      // current drop items
+
+function setHeuteSearchMode(mode) {
+  _heuteSearchMode = mode;
+  qi('hst-firma').classList.toggle('on', mode === 'firma');
+  qi('hst-lead').classList.toggle('on',  mode === 'lead');
+  const inp = qi('h-search-inp');
+  inp.placeholder = mode === 'firma' ? 'Unternehmen suchen…' : 'Lead suchen…';
+  inp.value = '';
+  qi('h-search-drop').style.display = 'none';
+  qi('h-search-clear').style.display = 'none';
+  _heuteDropIdx = -1;
+}
+
+function renderHeuteSearchDrop() {
+  const q   = (qi('h-search-inp').value || '').trim().toLowerCase();
+  const drop = qi('h-search-drop');
+  qi('h-search-clear').style.display = q ? 'block' : 'none';
+  if (!q) { drop.style.display = 'none'; _heuteDropIdx = -1; return; }
+
+  let hits = [];
+  if (_heuteSearchMode === 'firma') {
+    if (!_firms.length) {
+      drop.style.display = 'block';
+      drop.innerHTML = `<div class="h-drop-empty">Lädt…</div>`;
+      db.from('kunden').select('id,name,status,umsatz,typ,ort,telefon,zustaendig,kundennr,logo').order('name').then(({ data }) => {
+        if (data) _firms = data;
+        renderHeuteSearchDrop();
+      });
+      return;
+    }
+    hits = _firms.filter(f => f.name.toLowerCase().includes(q)).slice(0, 20);
+    _heuteDropData = hits;
+    drop.innerHTML = hits.length
+      ? hits.map((f, i) => {
+          const initials = f.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+          const color = stringToColor(f.name);
+          return `<div class="h-drop-item" data-idx="${i}" onmousedown="heuteSearchSelect(${i})">
+            <div class="h-drop-ico" style="background:${color}">${initials}</div>
+            <div><div class="h-drop-name">${escHtml(f.name)}</div><div class="h-drop-sub">${f.status||''}</div></div>
+          </div>`;
+        }).join('')
+      : `<div class="h-drop-empty">Kein Unternehmen gefunden</div>`;
+  } else {
+    hits = _pipeDeals.filter(d => (d.titel||'').toLowerCase().includes(q) || (d.kunden?.name||'').toLowerCase().includes(q)).slice(0, 20);
+    _heuteDropData = hits;
+    drop.innerHTML = hits.length
+      ? hits.map((d, i) => {
+          const stage = STAGE_MAP[d.stage]?.label || d.stage || '–';
+          const color = STAGE_MAP[d.stage]?.color || '#888';
+          return `<div class="h-drop-item" data-idx="${i}" onmousedown="heuteSearchSelect(${i})">
+            <div class="h-drop-ico" style="background:${color}">🎯</div>
+            <div><div class="h-drop-name">${escHtml(d.titel||'–')}</div><div class="h-drop-sub">${escHtml(d.kunden?.name||'')} · ${stage}</div></div>
+          </div>`;
+        }).join('')
+      : `<div class="h-drop-empty">Kein Lead gefunden</div>`;
+  }
+  _heuteDropIdx = -1;
+  drop.style.display = 'block';
+}
+
+function heuteSearchKeydown(e) {
+  const drop = qi('h-search-drop');
+  if (drop.style.display === 'none') return;
+  const items = drop.querySelectorAll('.h-drop-item');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _heuteDropIdx = Math.min(_heuteDropIdx + 1, items.length - 1);
+    items.forEach((el,i) => el.classList.toggle('focused', i === _heuteDropIdx));
+    if (items[_heuteDropIdx]) items[_heuteDropIdx].scrollIntoView({ block:'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _heuteDropIdx = Math.max(_heuteDropIdx - 1, 0);
+    items.forEach((el,i) => el.classList.toggle('focused', i === _heuteDropIdx));
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const idx = _heuteDropIdx >= 0 ? _heuteDropIdx : 0;
+    if (_heuteDropData[idx]) heuteSearchSelect(idx);
+  } else if (e.key === 'Escape') {
+    clearHeuteSearch();
+  }
+}
+
+function heuteSearchSelect(idx) {
+  const item = _heuteDropData[idx];
+  if (!item) return;
+  clearHeuteSearch();
+  if (_heuteSearchMode === 'firma') openFirmaDetail(item.id);
+  else openLeadDetail(item.id);
+}
+
+function clearHeuteSearch() {
+  qi('h-search-inp').value = '';
+  qi('h-search-drop').style.display = 'none';
+  qi('h-search-clear').style.display = 'none';
+  _heuteDropIdx = -1;
+}
+
+// ── Pipeline-Expanded (Heute) ─────────────────────────────
+let _heuteLeads       = [];
+let _heutePipeOpen    = false;
+
+function toggleHeutePipeline() {
+  _heutePipeOpen = !_heutePipeOpen;
+  const el  = qi('h-pipe-expanded');
+  const chv = qi('h-pipe-chevron');
+  el.style.display = _heutePipeOpen ? 'flex' : 'none';
+  chv.style.transform = _heutePipeOpen ? 'rotate(180deg)' : '';
+  if (_heutePipeOpen) renderHeutePipeExpanded();
+}
+
+let _hpDragId = null; // currently dragged deal id
+
+function renderHeutePipeExpanded() {
+  const allStages = PIPELINE_STAGES; // all stages incl. Gewonnen + Verloren
+  qi('h-pipe-expanded').innerHTML = allStages.map((s, si) => {
+    const stageLeads = _heuteLeads.filter(d => d.stage === s.key);
+    const canLeft  = si > 0;
+    const canRight = si < allStages.length - 1;
+    const cards = stageLeads.length
+      ? stageLeads.map(d => `
+          <div class="h-pl-card"
+            draggable="true"
+            data-deal-id="${d.id}"
+            ondragstart="hpDragStart(event,'${d.id}')"
+            ondragend="hpDragEnd(event)"
+            onclick="openLeadDetail('${d.id}')">
+            <div class="h-pl-name">${escHtml(d.titel||'–')}</div>
+            ${d.kunden?.name ? `<div class="h-pl-sub">${escHtml(d.kunden.name)}</div>` : ''}
+          </div>`).join('')
+      : `<div class="h-pipe-empty">–</div>`;
+    return `<div class="h-pipe-col"
+        data-stage="${s.key}"
+        ondragover="hpDragOver(event)"
+        ondragleave="hpDragLeave(event)"
+        ondrop="hpDrop(event,'${s.key}')">
+      <div class="h-pipe-col-hd" style="background:${s.color}">
+        <span>${s.label}</span>
+        <span class="h-pipe-col-hd-count">${stageLeads.length}</span>
+      </div>
+      <div class="h-pipe-col-body">${cards}</div>
+    </div>`;
+  }).join('');
+}
+
+function hpDragStart(e, id) {
+  _hpDragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => e.target.classList.add('h-pl-dragging'), 0);
+}
+function hpDragEnd(e) {
+  e.target.classList.remove('h-pl-dragging');
+  document.querySelectorAll('.h-pipe-col.drag-over').forEach(c => c.classList.remove('drag-over'));
+}
+function hpDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.closest('.h-pipe-col')?.classList.add('drag-over');
+}
+function hpDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget))
+    e.currentTarget.closest('.h-pipe-col')?.classList.remove('drag-over');
+}
+function hpDrop(e, newStage) {
+  e.preventDefault();
+  e.currentTarget.closest('.h-pipe-col')?.classList.remove('drag-over');
+  if (_hpDragId) heuteMoveStage(_hpDragId, newStage);
+  _hpDragId = null;
+}
+
+async function heuteMoveStage(dealId, newStage) {
+  const d = _heuteLeads.find(x => x.id === dealId);
+  if (!d || !newStage || d.stage === newStage) return;
+  if (newStage === 'kontakt_aufgenommen') {
+    const art = await _askKontaktArt();
+    if (!art) return;
+    const today = new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+    await db.from('notizen').insert({ deal_id: dealId, typ: art, titel: art, text:`Kontakt aufgenommen am ${today}`, erstellt: new Date().toISOString() });
+  }
+  const fromLabel = STAGE_MAP[d.stage]?.label || d.stage;
+  const toLabel   = STAGE_MAP[newStage]?.label  || newStage;
+  const payload   = { stage: newStage };
+  if (newStage === 'rollout'  && !d.gewonnen_datum) payload.gewonnen_datum = new Date().toISOString().slice(0,10);
+  if (newStage === 'churned'  && !d.churn_datum)    payload.churn_datum    = new Date().toISOString().slice(0,10);
+  const { error } = await db.from('pipeline_deals').update(payload).eq('id', dealId);
+  if (error) { showToast('Fehler: ' + error.message, true); return; }
+  await db.from('deal_verlauf').insert({ deal_id: dealId, text: `${fromLabel} → ${toLabel}` });
+  Object.assign(d, payload);
+  // Snap-Chips aktualisieren (nur aktive Stages)
+  const snapStages = PIPELINE_STAGES.filter(s => s.key !== 'rollout' && s.key !== 'churned');
+  qi('h-pipe-snap').querySelectorAll('.h-ps-chip').forEach((chip, i) => {
+    const s = snapStages[i];
+    if (s) chip.querySelector('.h-ps-count').textContent = _heuteLeads.filter(x => x.stage === s.key).length;
+  });
+  renderHeutePipeExpanded();
+  showToast('Phase geändert ✓');
+}
+
+// Close drop when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.h-search-box-wrap')) {
+    const drop = qi('h-search-drop');
+    if (drop) drop.style.display = 'none';
+  }
+  if (!e.target.closest('.h-qp-entity-wrap')) {
+    qi('qnp-entity-drop')?.style && (qi('qnp-entity-drop').style.display = 'none');
+    qi('qnt-entity-drop')?.style && (qi('qnt-entity-drop').style.display = 'none');
+  }
+});
+
+// ── Quick-Note Panel ──────────────────────────────────────
+let _qnpMode      = 'firma'; // 'firma' | 'lead'
+let _qnpEntityId  = null;
+let _qnpEntityType = null;   // 'firma' | 'lead'
+let _qnpType      = '📝 Notiz';
+let _qntEntityId  = null;
+let _qntEntityType = null;
+
+function openHeuteQuickPanel(which) {
+  closeHeuteQuickPanel('note');
+  closeHeuteQuickPanel('task');
+  if (which === 'note') {
+    qi('qnp-titel').value = '';
+    qi('qnp-text').value  = '';
+    qi('qnp-entity-inp').value = '';
+    _qnpEntityId = null; _qnpType = '📝 Notiz';
+    renderQnpTypes();
+    qi('h-quick-note').style.display = 'block';
+    setTimeout(() => qi('qnp-text').focus(), 80);
+  } else {
+    qi('qnt-titel').value = '';
+    qi('qnt-datum').value = new Date().toISOString().slice(0,10);
+    qi('qnt-entity-inp').value = '';
+    _qntEntityId = null;
+    qi('h-quick-task').style.display = 'block';
+    setTimeout(() => qi('qnt-titel').focus(), 80);
+  }
+}
+function closeHeuteQuickPanel(which) {
+  if (which === 'note') qi('h-quick-note').style.display = 'none';
+  else qi('h-quick-task').style.display = 'none';
+}
+
+function renderQnpTypes() {
+  qi('qnp-types').innerHTML = NOTE_TYPES.map(t =>
+    `<div class="h-qp-type-chip${t===_qnpType?' on':''}" onclick="_qnpType='${t}';renderQnpTypes()">${t}</div>`
+  ).join('');
+}
+
+function setQnpMode(mode) {
+  _qnpMode = mode;
+  _qnpEntityId = null;
+  qi('qnp-t-firma').classList.toggle('on', mode==='firma');
+  qi('qnp-t-lead').classList.toggle('on',  mode==='lead');
+  qi('qnp-entity-inp').placeholder = mode==='firma' ? 'Unternehmen suchen…' : 'Lead suchen…';
+  qi('qnp-entity-inp').value = '';
+  qi('qnp-entity-drop').style.display = 'none';
+}
+
+function _renderEntityDrop(dropId, items, onSelect) {
+  const drop = qi(dropId);
+  if (!items.length) { drop.style.display='none'; return; }
+  drop.innerHTML = items.map((it,i) =>
+    `<div class="h-drop-item" onmousedown="${onSelect}(${i})">`+
+    `<div class="h-drop-ico" style="background:${it._color||'#888'}">${it._ico||'?'}</div>`+
+    `<div><div class="h-drop-name">${escHtml(it._label)}</div><div class="h-drop-sub">${escHtml(it._sub||'')}</div></div></div>`
+  ).join('');
+  drop.style.display = 'block';
+  drop._items = items;
+}
+
+function renderQnpDrop() {
+  const q = qi('qnp-entity-inp').value.trim().toLowerCase();
+  if (!q) { qi('qnp-entity-drop').style.display='none'; return; }
+  if (_qnpMode === 'firma') {
+    const hits = _firms.filter(f=>f.name.toLowerCase().includes(q)).slice(0,10).map(f=>({
+      ...f, _label:f.name, _sub:f.status||'', _ico:f.name.slice(0,2).toUpperCase(), _color:stringToColor(f.name)
+    }));
+    _renderEntityDrop('qnp-entity-drop', hits, 'selectQnpEntity');
+  } else {
+    const hits = _pipeDeals.filter(d=>(d.titel||'').toLowerCase().includes(q)).slice(0,10).map(d=>({
+      ...d, _label:d.titel||'–', _sub:STAGE_MAP[d.stage]?.label||'', _ico:'🎯', _color:STAGE_MAP[d.stage]?.color||'#888'
+    }));
+    _renderEntityDrop('qnp-entity-drop', hits, 'selectQnpEntity');
+  }
+}
+function selectQnpEntity(i) {
+  const items = qi('qnp-entity-drop')._items;
+  if (!items?.[i]) return;
+  _qnpEntityId   = items[i].id;
+  _qnpEntityType = _qnpMode;
+  qi('qnp-entity-inp').value = items[i]._label;
+  qi('qnp-entity-drop').style.display = 'none';
+}
+
+async function saveHeuteQuickNote() {
+  const text  = qi('qnp-text').value.trim();
+  const titel = qi('qnp-titel').value.trim();
+  if (!text) { qi('qnp-text').focus(); return; }
+  const payload = { typ:_qnpType, titel:titel||_qnpType, text, erstellt:new Date().toISOString() };
+  if (_qnpEntityId && _qnpEntityType==='firma') payload.kunde_id = _qnpEntityId;
+  if (_qnpEntityId && _qnpEntityType==='lead')  payload.deal_id  = _qnpEntityId;
+  const { error } = await db.from('notizen').insert(payload);
+  if (error) { showToast('Fehler: '+error.message, true); return; }
+  showToast('Notiz gespeichert ✓');
+  closeHeuteQuickPanel('note');
+  loadHeute();
+}
+
+// ── Quick-Task Panel ──────────────────────────────────────
+function renderQntDrop() {
+  const q = qi('qnt-entity-inp').value.trim().toLowerCase();
+  if (!q) { qi('qnt-entity-drop').style.display='none'; return; }
+  if (!_firms.length) {
+    qi('qnt-entity-drop').style.display = 'block';
+    qi('qnt-entity-drop').innerHTML = `<div class="h-drop-empty">Lädt…</div>`;
+    db.from('kunden').select('id,name,status,umsatz,typ,ort,telefon,zustaendig,kundennr,logo').order('name').then(({ data }) => {
+      if (data) _firms = data;
+      renderQntDrop();
+    });
+    return;
+  }
+  const firmHits = _firms.filter(f=>f.name.toLowerCase().includes(q)).slice(0,5).map(f=>({
+    ...f, _label:f.name, _sub:'Unternehmen', _ico:f.name.slice(0,2).toUpperCase(), _color:stringToColor(f.name), _type:'firma'
+  }));
+  const leadHits = _pipeDeals.filter(d=>(d.titel||'').toLowerCase().includes(q)).slice(0,5).map(d=>({
+    ...d, _label:d.titel||'–', _sub:'Lead · '+(STAGE_MAP[d.stage]?.label||''), _ico:'🎯', _color:STAGE_MAP[d.stage]?.color||'#888', _type:'lead'
+  }));
+  _renderEntityDrop('qnt-entity-drop', [...firmHits,...leadHits], 'selectQntEntity');
+}
+function selectQntEntity(i) {
+  const items = qi('qnt-entity-drop')._items;
+  if (!items?.[i]) return;
+  _qntEntityId   = items[i].id;
+  _qntEntityType = items[i]._type;
+  qi('qnt-entity-inp').value = items[i]._label;
+  qi('qnt-entity-drop').style.display = 'none';
+}
+
+async function saveHeuteQuickTask() {
+  const titel = qi('qnt-titel').value.trim();
+  const datum = qi('qnt-datum').value;
+  if (!titel) { qi('qnt-titel').focus(); return; }
+  const payload = { titel, faellig:datum||null, erledigt:false, erstellt:new Date().toISOString() };
+  if (_qntEntityId && _qntEntityType==='firma') payload.kunde_id = _qntEntityId;
+  if (_qntEntityId && _qntEntityType==='lead')  payload.deal_id  = _qntEntityId;
+  const { error } = await db.from('tasks').insert(payload);
+  if (error) { showToast('Fehler: '+error.message, true); return; }
+  showToast('Aufgabe erstellt ✓');
+  closeHeuteQuickPanel('task');
+  loadHeute();
+}
+
 async function loadHeute() {
-  const now = new Date();
+  const now  = new Date();
   const DAYS   = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
   const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
   const h = now.getHours();
@@ -2000,79 +2723,85 @@ async function loadHeute() {
   qi('h-dt').textContent = `${DAYS[now.getDay()]}, ${now.getDate()}. ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
   const today = now.toISOString().slice(0,10);
 
-  const [kR, tR, termR, nR] = await Promise.all([
-    db.from('kunden').select('id,name,status,umsatz').eq('status','Aktiv'),
-    db.from('tasks').select('id,titel,faellig,erledigt,kunde_id,kunden(name)').eq('erledigt',false).order('faellig',{ascending:true}).limit(60),
-    db.from('termine').select('id,art,datum,uhrzeit_von,betreff,kunde_id,kunden(name)').eq('datum',today).order('uhrzeit_von',{ascending:true}),
-    db.from('notizen').select('id,typ,titel,erstellt,kunde_id,kunden(name)').order('erstellt',{ascending:false}).limit(12),
+  const [tR, termR, nR, pR] = await Promise.all([
+    db.from('tasks').select('id,titel,faellig,erledigt,kunde_id,deal_id,kunden(name)').eq('erledigt',false).order('faellig',{ascending:true}).limit(80),
+    db.from('termine').select('id,art,datum,uhrzeit_von,betreff,kunde_id,deal_id,kunden(name)').eq('datum',today).order('uhrzeit_von',{ascending:true}),
+    db.from('notizen').select('id,typ,titel,erstellt,kunde_id,kunden(name)').order('erstellt',{ascending:false}).limit(15),
+    db.from('pipeline_deals').select('id,titel,stage').neq('stage','rollout').neq('stage','churned'),
   ]);
 
-  const kunden  = kR.data  || [];
-  const tasks   = tR.data  || [];
+  const tasks   = tR.data   || [];
   const termine = termR.data || [];
-  const notizen = nR.data  || [];
-  const mrr = kunden.reduce((s,k)=>s+(parseFloat(k.umsatz)||0),0);
-  const due = tasks.filter(t=>t.faellig&&t.faellig<=today);
+  const notizen = nR.data   || [];
+  const leads   = pR.data   || [];
+  const due     = tasks.filter(t => t.faellig && t.faellig <= today);
 
-  qi('h-kpi').innerHTML = `
-    <div class="kpi"><div class="kpi-ico">💰</div><div class="kpi-val">${mrr?fmtMrr(mrr):kunden.length}</div><div class="kpi-lbl">${mrr?'Umsatz':'Aktive Kunden'}</div></div>
-    <div class="kpi"><div class="kpi-ico">🏢</div><div class="kpi-val">${kunden.length}</div><div class="kpi-lbl">Aktive Kunden</div></div>
-    <div class="kpi"><div class="kpi-ico">✅</div><div class="kpi-val">${tasks.length}</div><div class="kpi-lbl">Offene Tasks</div></div>
-    <div class="kpi"><div class="kpi-ico">📅</div><div class="kpi-val">${termine.length}</div><div class="kpi-lbl">Heute</div></div>`;
+  // Ensure search caches are warm
+  if (!_pipeDeals.length && leads.length) _pipeDeals = leads;
 
-  // Unified timeline: merge termine + due tasks sorted by time
-  // Note: termine.art and notizen.typ already contain emojis in the DB values
-  const timeItems = [];
+  // Stats
+  qi('h-stats').innerHTML = `
+    <div class="h-stat"><div class="h-stat-v">${termine.length}</div><div class="h-stat-l">Termine heute</div></div>
+    <div class="h-stat"><div class="h-stat-v">${due.length}</div><div class="h-stat-l">Fällige Tasks</div></div>
+    <div class="h-stat"><div class="h-stat-v">${leads.length}</div><div class="h-stat-l">Offene Leads</div></div>`;
 
-  termine.forEach(t => timeItems.push({
-    time: t.uhrzeit_von ? t.uhrzeit_von.slice(0,5) : '–',
-    sort: t.uhrzeit_von || '00:00',
-    icon: '',  // art already has emoji
-    color: '#EDE9FE',
-    dot: 'var(--acc)',
-    title: (t.betreff || t.art) + (t.kunden?.name ? ` — ${t.kunden.name}` : ''),
-    sub: (t.uhrzeit_von ? t.uhrzeit_von.slice(0,5)+' Uhr · ' : 'Ganztags · ') + t.art,
-    action: t.kunde_id ? `openPanel('${t.kunde_id}')` : '',
-    type: 'termin'
-  }));
+  // Pipeline-Snapshot — count per stage (exclude terminal stages)
+  const activeStages = PIPELINE_STAGES.filter(s => s.key !== 'rollout' && s.key !== 'churned');
+  _heuteLeads = leads; // cache for expanded view
+  qi('h-pipe-snap').innerHTML = activeStages.map(s => {
+    const count = leads.filter(d => d.stage === s.key).length;
+    return `<div class="h-ps-chip" style="background:${s.color}" onclick="navTo('pipeline')" title="${s.label}">
+      <div class="h-ps-count">${count}</div>
+      <div class="h-ps-label">${s.label}</div>
+    </div>`;
+  }).join('');
+  if (qi('h-pipe-expanded').style.display !== 'none') renderHeutePipeExpanded();
 
-  due.slice(0,5).forEach(t => timeItems.push({
-    time: t.faellig < today ? 'Überfällig' : 'Heute',
-    sort: '23:59',
-    icon: '✅',
-    color: t.faellig < today ? '#FEE2E2' : '#DCFCE7',
-    dot: t.faellig < today ? 'var(--red)' : 'var(--green)',
-    title: t.titel,
-    sub: (t.kunden?.name||'') + (t.faellig < today ? ' · Überfällig' : ' · Fällig heute'),
-    action: t.kunde_id ? `openPanel('${t.kunde_id}')` : `navTo('tasks')`,
-    id: t.id,
-    type: 'task'
-  }));
+  // Timeline — Termine heute
+  qi('h-timeline').innerHTML = termine.length
+    ? termine.map((t, i) => `
+      <div class="timeline-item" onclick="${t.kunde_id ? `openFirmaDetail('${t.kunde_id}')` : t.deal_id ? `openLeadDetail('${t.deal_id}')` : ''}">
+        <div class="tl-time">${t.uhrzeit_von ? t.uhrzeit_von.slice(0,5) : '–'}</div>
+        <div class="tl-dot-col">
+          <div class="tl-dot" style="background:var(--acc)"></div>
+          ${i < termine.length-1 ? '<div class="tl-line"></div>' : ''}
+        </div>
+        <div class="tl-body">
+          <div class="tl-title">${escHtml(t.betreff || t.art || '–')}</div>
+          <div class="tl-sub">${t.art}${t.kunden?.name ? ' · '+escHtml(t.kunden.name) : ''}</div>
+        </div>
+      </div>`).join('')
+    : '<div class="empty" style="padding:24px"><div class="empty-ico">📅</div><div class="empty-msg">Keine Termine heute</div></div>';
 
-  timeItems.sort((a,b) => a.sort.localeCompare(b.sort));
+  // Fällige Aufgaben (inline abhaken)
+  qi('h-tasks').innerHTML = due.length
+    ? due.slice(0,10).map(t => `
+      <div class="t-row" id="htr-${t.id}">
+        <div class="t-check${t.erledigt?' done':''}" onclick="heuteToggleTask('${t.id}',this)"></div>
+        <div class="t-body" onclick="${t.deal_id ? `openLeadDetail('${t.deal_id}')` : t.kunde_id ? `openFirmaDetail('${t.kunde_id}')` : `navTo('tasks')`}">
+          <div class="t-title">${escHtml(t.titel)}</div>
+          <div class="t-sub">${t.kunden?.name ? escHtml(t.kunden.name)+' · ' : ''}${t.faellig < today ? '<span style="color:var(--red)">Überfällig</span>' : 'Heute fällig'}</div>
+        </div>
+      </div>`).join('')
+    : '<div class="empty" style="padding:24px"><div class="empty-ico">🎉</div><div class="empty-msg">Alles erledigt!</div></div>';
 
-  qi('h-timeline').innerHTML = timeItems.length ? timeItems.map((item, i) => `
-    <div class="timeline-item" onclick="${item.action}">
-      <div class="tl-time">${item.time}</div>
-      <div class="tl-dot-col">
-        <div class="tl-dot" style="background:${item.dot}"></div>
-        ${i < timeItems.length-1 ? '<div class="tl-line"></div>' : ''}
-      </div>
-      <div class="tl-body">
-        <div class="tl-title">${item.icon} ${item.title}</div>
-        <div class="tl-sub">${item.sub}</div>
-      </div>
-    </div>`).join('')
-    : '<div class="empty" style="padding:28px"><div class="empty-ico">🎉</div><div class="empty-msg">Alles erledigt für heute</div></div>';
-
-  // Recent activity — typ field already contains emoji+label e.g. "📞 Anruf"
+  // Letzte Aktivitäten
   qi('h-activity').innerHTML = notizen.length
-    ? notizen.map(n=>`<div class="row" onclick="${n.kunde_id?`openPanel('${n.kunde_id}')`:``}">
+    ? notizen.map(n => `
+      <div class="row" onclick="${n.kunde_id ? `openFirmaDetail('${n.kunde_id}')` : ''}">
         <div class="row-icon" style="background:#F2F2F7;font-size:17px">${(n.typ||'').split(' ')[0]||'✏️'}</div>
-        <div class="row-body"><div class="row-title">${n.titel||n.typ||'Notiz'}</div><div class="row-sub">${n.kunden?.name||''}</div></div>
-        <div style="font-size:11.5px;color:var(--muted)">${timeAgo(n.erstellt)}</div>
+        <div class="row-body"><div class="row-title">${escHtml(n.titel||n.typ||'Notiz')}</div><div class="row-sub">${escHtml(n.kunden?.name||'')}</div></div>
+        <div style="font-size:11.5px;color:var(--muted);flex-shrink:0">${timeAgo(n.erstellt)}</div>
       </div>`).join('')
     : '<div class="empty" style="padding:24px"><div class="empty-ico">💬</div><div class="empty-msg">Noch keine Aktivitäten</div></div>';
+}
+
+async function heuteToggleTask(id, checkEl) {
+  checkEl.classList.add('done');
+  const row = qi('htr-' + id);
+  if (row) { row.style.opacity = '.4'; row.style.transition = 'opacity .3s'; }
+  await db.from('tasks').update({ erledigt: true }).eq('id', id);
+  setTimeout(() => { if (row) row.remove(); }, 350);
 }
 
 // ══════════════════════════════════════════════════════════
