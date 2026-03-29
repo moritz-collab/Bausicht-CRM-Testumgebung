@@ -372,6 +372,31 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 .co-right { margin-left:auto; text-align:right; flex-shrink:0; }
 .co-mrr  { font-size:12px; color:var(--muted); margin-top:3px; }
 
+/* ── LIST ROW (Baustellen, Leads, Rechnungen) ──────────── */
+/* Mobile: card with title+badge row, sub line below */
+.ls-row { display:flex; flex-wrap:wrap; align-items:center; gap:2px 10px; padding:12px 14px; border-bottom:.5px solid var(--border); cursor:pointer; transition:background .1s; }
+.ls-row:last-child { border-bottom:none; }
+.ls-row:active { background:#F2F2F7; }
+.ls-title { flex:1; min-width:0; font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ls-badge { font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:6px; white-space:nowrap; flex-shrink:0; }
+.ls-sub { width:100%; font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ls-cell { display:none; } /* hidden on mobile */
+.ls-mods { display:none; } /* hidden on mobile */
+.ls-mod { font-size:10px; padding:2px 6px; border-radius:4px; background:var(--bg); border:1px solid var(--border); color:var(--muted); white-space:nowrap; }
+/* Header row – hidden on mobile */
+.ls-hdr { display:none; }
+.ls-hdr-cell { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+/* Desktop: grid columns */
+@media (min-width:768px) {
+  .ls-row { display:grid; gap:0 14px; align-items:center; padding:11px 16px; }
+  .ls-row.bs-cols { grid-template-columns:2fr 1.2fr 0.7fr 1fr 1.5fr auto; }
+  .ls-hdr { display:grid; padding:10px 16px 8px; cursor:default; border-bottom:1px solid var(--border); background:var(--bg); }
+  .ls-hdr:active { background:var(--bg); }
+  .ls-sub { display:none; }
+  .ls-cell { display:block; font-size:13px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ls-mods { display:flex; gap:4px; flex-wrap:wrap; }
+}
+
 /* ── TASK ROW ───────────────────────────────────────────── */
 .t-row { display:flex; align-items:center; gap:12px; padding:11px 14px; border-bottom:.5px solid var(--border); transition:background .1s; }
 .t-row:last-child { border-bottom:none; }
@@ -2177,30 +2202,16 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         </div>
       </div>
 
-      <!-- Suche + Tabelle -->
-      <div style="padding:0 16px 16px">
-        <div style="margin-bottom:10px">
-          <input id="bs-search" placeholder="Suche Baustelle, Kunde, Ort..." oninput="searchBsGlobal(this.value)"
-            class="crm-input" style="width:260px" />
+      <!-- Suche + Liste -->
+      <div class="search-wrap">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" placeholder="Baustelle, Kunde, Ort…" id="bs-search" oninput="searchBsGlobal(this.value)">
         </div>
-        <div class="crm-table-wrap grp" style="padding:0">
-          <table class="crm-table">
-            <thead>
-              <tr>
-                <th>Projektname</th>
-                <th>Kunde</th>
-                <th class="col-hide-m">Ort</th>
-                <th>Start</th>
-                <th class="col-hide-m">Ende</th>
-                <th class="col-hide-m">Module</th>
-                <th>Status</th>
-                <th class="col-act"></th>
-              </tr>
-            </thead>
-            <tbody id="bs-global-tbody">
-              <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</td></tr>
-            </tbody>
-          </table>
+      </div>
+      <div id="bs-global-list">
+        <div class="grp">
+          <div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</div>
         </div>
       </div>
     </div>
@@ -9528,14 +9539,14 @@ async function loadBsPage() {
 }
 
 async function loadBsGlobal() {
-  const tbody = qi('bs-global-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</td></tr>';
+  const wrap = qi('bs-global-list');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="grp"><div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</div></div>';
   const { data, error } = await db.from('kunde_baustellen')
     .select('*, kunden(name)')
     .order('startdatum', { ascending: false });
   if (error) {
-    tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;text-align:center;color:var(--red);font-size:12px">'+escHtml(error.message)+'</td></tr>';
+    wrap.innerHTML = '<div class="grp"><div style="padding:20px;text-align:center;color:var(--red);font-size:12px">'+escHtml(error.message)+'</div></div>';
     return;
   }
   _bsAll = data || [];
@@ -9586,31 +9597,46 @@ function renderBsTable() {
     (b.ort||'').toLowerCase().includes(_bsSearch) ||
     (b.kunden?.name||'').toLowerCase().includes(_bsSearch)
   );
-  const tbody = qi('bs-global-tbody');
-  if (!tbody) return;
+  const wrap = qi('bs-global-list');
+  if (!wrap) return;
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Keine Baustellen gefunden</td></tr>';
+    wrap.innerHTML = '<div class="grp"><div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Keine Baustellen gefunden</div></div>';
     return;
   }
-  const fmtDate = d => d ? new Date(d).toLocaleDateString('de-DE') : '–';
-  tbody.innerHTML = list.map(b => {
-    const mods = (b.module||[]).map(m => `<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--bg);border:1px solid var(--border);color:var(--muted);white-space:nowrap">${BS_MODULE_LABELS[m]||m}</span>`).join(' ');
-    const safe = encodeURIComponent(JSON.stringify(b));
-    return `<tr style="border-bottom:1px solid var(--border);cursor:pointer" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
-      <td style="font-weight:600;color:var(--text)" onclick="if(_firms.find(f=>f.id==='${b.kunde_id}'))openFirmaDetail('${b.kunde_id}')">${escHtml(b.name)}</td>
-      <td style="color:var(--muted)">${escHtml(b.kunden?.name||'–')}</td>
-      <td class="col-hide-m" style="color:var(--muted)">${escHtml(b.ort||'–')}</td>
-      <td class="col-num" style="color:var(--muted)">${fmtDate(b.startdatum)}</td>
-      <td class="col-hide-m col-num" style="color:var(--muted)">${fmtDate(b.enddatum)}</td>
-      <td class="col-hide-m">${mods||'<span style="color:var(--muted)">–</span>'}</td>
-      <td>${bsStatusBadge(b.status)}</td>
-      <td class="col-act" style="text-align:right" onclick="event.stopPropagation()">
-        <button onclick="openBsModal(JSON.parse(decodeURIComponent('${safe}')))"
-          style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:2px 6px;border-radius:4px"
-          onmouseover="this.style.color='var(--acc)'" onmouseout="this.style.color='var(--muted)'" title="Bearbeiten">✎</button>
-      </td>
-    </tr>`;
-  }).join('');
+  const fmtD = d => d ? new Date(d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '–';
+  const SM = {
+    aktiv:['Aktiv','rgba(22,163,74,0.12)','#16a34a'],
+    geplant:['Geplant','rgba(59,130,246,0.12)','#3b82f6'],
+    abgeschlossen:['Abgeschl.','rgba(136,136,136,0.12)','var(--muted)']
+  };
+  // Desktop grid: Name | Kunde | Ort | Zeitraum | Module | Status
+  // Mobile: title + badge top row, sub line below
+  const hdr = `<div class="ls-row bs-cols ls-hdr">
+    <div class="ls-hdr-cell">Projektname</div>
+    <div class="ls-hdr-cell">Kunde</div>
+    <div class="ls-hdr-cell">Ort</div>
+    <div class="ls-hdr-cell">Zeitraum</div>
+    <div class="ls-hdr-cell">Module</div>
+    <div class="ls-hdr-cell">Status</div>
+  </div>`;
+  wrap.innerHTML = `<div class="grp" style="padding:0">${hdr}${list.map(b => {
+    const [sL,sBg,sC] = SM[b.status]||[b.status||'–','var(--bg)','var(--muted)'];
+    const mods = (b.module||[]).map(m => `<span class="ls-mod">${BS_MODULE_LABELS[m]||m}</span>`).join('');
+    const kunde = escHtml(b.kunden?.name||'–');
+    const ort = escHtml(b.ort||'–');
+    const zeit = [fmtD(b.startdatum), fmtD(b.enddatum)].filter(v=>v!=='–').join(' – ') || '–';
+    // Mobile sub line
+    const subParts = [kunde, b.ort?escHtml(b.ort):null, fmtD(b.startdatum)!=='–'?fmtD(b.startdatum):null].filter(Boolean).join(' · ');
+    return `<div class="ls-row bs-cols" onclick="if(_firms.find(f=>f.id==='${b.kunde_id}'))openFirmaDetail('${b.kunde_id}')">
+      <div class="ls-title">${escHtml(b.name)}</div>
+      <div class="ls-cell">${kunde}</div>
+      <div class="ls-cell">${ort}</div>
+      <div class="ls-cell">${zeit}</div>
+      <div class="ls-mods">${mods||'<span style="color:var(--muted)">–</span>'}</div>
+      <span class="ls-badge" style="background:${sBg};color:${sC}">${sL}</span>
+      <div class="ls-sub">${subParts}</div>
+    </div>`;
+  }).join('')}</div>`;
 }
 
 // ── Modal ────────────────────────────────────────────────
