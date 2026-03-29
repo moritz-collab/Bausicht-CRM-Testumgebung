@@ -869,21 +869,23 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 }
 
 /* ── Responsive Tabellen (Leads, Baustellen, Rechnungen) ── */
-.crm-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
-.crm-table-wrap::-webkit-scrollbar { display:none; }
+.crm-table-wrap { overflow-x:hidden; }
 .crm-table { width:100%; border-collapse:collapse; }
-.crm-table th, .crm-table td { padding:10px 14px; text-align:left; font-size:13px; white-space:nowrap; }
-.crm-table th { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); background:var(--bg); }
+.crm-table th, .crm-table td { padding:10px 14px; text-align:left; font-size:13px; }
+.crm-table th { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); background:var(--bg); white-space:nowrap; }
 .crm-table td { border-bottom:.5px solid var(--border); }
 .crm-table tr:last-child td { border-bottom:none; }
 .crm-table tr { cursor:pointer; transition:background .1s; }
 .crm-table tbody tr:hover { background:rgba(124,58,237,0.03); }
 .crm-table .col-hide-m { /* hidden on mobile */ }
+.crm-table .col-act { width:36px; padding:10px 6px; }
+.crm-table .col-num { text-align:right; white-space:nowrap; }
 .crm-input { font-size:13px; padding:8px 12px; border:1.5px solid var(--border); border-radius:var(--r); background:var(--surf); color:var(--text); font-family:inherit; width:100%; box-sizing:border-box; }
 .crm-filter-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 @media (max-width:767px) {
   .crm-table .col-hide-m { display:none; }
-  .crm-table th, .crm-table td { padding:8px 10px; font-size:12px; }
+  .crm-table th, .crm-table td { padding:7px 6px; font-size:12px; }
+  .crm-table .col-act { width:28px; padding:7px 2px; }
   .crm-input { width:100% !important; }
   .crm-filter-row { flex-direction:column; align-items:stretch; }
   .crm-filter-row > * { width:100% !important; }
@@ -2184,7 +2186,7 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         <div class="crm-table-wrap grp" style="padding:0">
           <table class="crm-table">
             <thead>
-              <tr style="background:var(--bg)">
+              <tr>
                 <th>Projektname</th>
                 <th>Kunde</th>
                 <th class="col-hide-m">Ort</th>
@@ -2192,7 +2194,7 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
                 <th class="col-hide-m">Ende</th>
                 <th class="col-hide-m">Module</th>
                 <th>Status</th>
-                <th style="width:40px"></th>
+                <th class="col-act"></th>
               </tr>
             </thead>
             <tbody id="bs-global-tbody">
@@ -2348,7 +2350,7 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         <div class="crm-table-wrap grp" style="padding:0">
           <table class="crm-table">
             <thead>
-              <tr style="background:var(--bg)">
+              <tr>
                 <th>Titel</th>
                 <th>Unternehmen</th>
                 <th>Stage</th>
@@ -2401,17 +2403,17 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         <div class="crm-table-wrap grp" style="padding:0">
           <table class="crm-table">
             <thead>
-              <tr style="background:var(--bg)">
-                <th>Rechnungsnr.</th>
+              <tr>
+                <th>Re.-Nr.</th>
                 <th>Unternehmen</th>
                 <th class="col-hide-m">Baustelle</th>
                 <th>Datum</th>
-                <th class="col-hide-m" style="text-align:right">Rabatt</th>
-                <th style="text-align:right">Netto</th>
-                <th class="col-hide-m" style="text-align:right">MwSt.</th>
-                <th style="text-align:right">Brutto</th>
+                <th class="col-hide-m col-num">Rabatt</th>
+                <th class="col-hide-m col-num">Netto</th>
+                <th class="col-hide-m col-num">MwSt.</th>
+                <th class="col-num">Brutto</th>
                 <th class="col-hide-m">Quelle</th>
-                <th style="width:40px"></th>
+                <th class="col-act"></th>
               </tr>
             </thead>
             <tbody id="rv-table-body">
@@ -2438,16 +2440,16 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         <div class="crm-table-wrap grp" style="padding:0">
           <table class="crm-table">
             <thead>
-              <tr style="background:var(--bg)">
+              <tr>
                 <th>Datum</th>
-                <th class="col-hide-m">Rechnungsnr.</th>
+                <th class="col-hide-m">Re.-Nr.</th>
                 <th>Unternehmen</th>
                 <th>Titel / Modul</th>
                 <th class="col-hide-m">Typ</th>
                 <th class="col-hide-m">Einheit</th>
-                <th class="col-hide-m" style="text-align:right">Menge</th>
-                <th class="col-hide-m" style="text-align:right">Einzelpreis</th>
-                <th style="text-align:right">Gesamt</th>
+                <th class="col-hide-m col-num">Menge</th>
+                <th class="col-hide-m col-num">Einzelpreis</th>
+                <th class="col-num">Gesamt</th>
               </tr>
             </thead>
             <tbody id="rv-pos-table-body">
@@ -9504,7 +9506,7 @@ function renderAlLeadsTable(list) {
       <td><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:${sc}20;color:${sc}">${stageLabel}</span></td>
       <td class="col-hide-m" style="color:var(--text);font-weight:600">${escHtml(d.lead_typ||'–')}</td>
       <td class="col-hide-m" style="color:var(--muted)">${escHtml(d.zustaendig||'–')}</td>
-      <td style="color:var(--muted)">${d.erstellt ? new Date(d.erstellt).toLocaleDateString('de-DE') : '–'}</td>
+      <td class="col-num" style="color:var(--muted)">${d.erstellt ? new Date(d.erstellt).toLocaleDateString('de-DE') : '–'}</td>
       <td class="col-hide-m" style="font-size:11px;color:${lost?'#dc2626':'var(--muted)'}">${lost ? escHtml(d.churn_grund||'–') : '–'}</td>
     </tr>`;
   }).join('');
@@ -9598,11 +9600,11 @@ function renderBsTable() {
       <td style="font-weight:600;color:var(--text)" onclick="if(_firms.find(f=>f.id==='${b.kunde_id}'))openFirmaDetail('${b.kunde_id}')">${escHtml(b.name)}</td>
       <td style="color:var(--muted)">${escHtml(b.kunden?.name||'–')}</td>
       <td class="col-hide-m" style="color:var(--muted)">${escHtml(b.ort||'–')}</td>
-      <td style="color:var(--muted)">${fmtDate(b.startdatum)}</td>
-      <td class="col-hide-m" style="color:var(--muted)">${fmtDate(b.enddatum)}</td>
+      <td class="col-num" style="color:var(--muted)">${fmtDate(b.startdatum)}</td>
+      <td class="col-hide-m col-num" style="color:var(--muted)">${fmtDate(b.enddatum)}</td>
       <td class="col-hide-m">${mods||'<span style="color:var(--muted)">–</span>'}</td>
       <td>${bsStatusBadge(b.status)}</td>
-      <td style="text-align:right" onclick="event.stopPropagation()">
+      <td class="col-act" style="text-align:right" onclick="event.stopPropagation()">
         <button onclick="openBsModal(JSON.parse(decodeURIComponent('${safe}')))"
           style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:2px 6px;border-radius:4px"
           onmouseover="this.style.color='var(--acc)'" onmouseout="this.style.color='var(--muted)'" title="Bearbeiten">✎</button>
@@ -9740,22 +9742,22 @@ function renderRvTable(list) {
       <td style="font-weight:700;color:var(--acc)">${escHtml(r.rechnungsnr||'–')}</td>
       <td style="font-weight:500;color:var(--text)">${escHtml(r.kunden?.name||r.kundennr||'–')}</td>
       <td class="col-hide-m" style="color:var(--muted)">${escHtml(r.baustelle_name||'–')}</td>
-      <td style="color:var(--muted)">${r.datum?new Date(r.datum).toLocaleDateString('de-DE'):'–'}</td>
-      <td class="col-hide-m" style="text-align:right">${(() => {
+      <td class="col-num" style="color:var(--muted)">${r.datum?new Date(r.datum).toLocaleDateString('de-DE'):'–'}</td>
+      <td class="col-hide-m col-num" style="text-align:right">${(() => {
         const pos = r.rechnung_positionen||[];
         const vals = [...new Set(pos.map(p => p.rabatt_pct||p.rabatt||0).filter(v => v > 0))].sort((a,b)=>a-b);
         if (!vals.length) return '<span style="color:var(--muted)">–</span>';
         return '<span style="color:#d97706;font-weight:600">'+vals.map(v=>'-'+v+' %').join(', ')+'</span>';
       })()}</td>
-      <td style="color:var(--text);text-align:right">${fmt(r.netto)}</td>
-      <td class="col-hide-m" style="color:var(--muted);text-align:right">${fmt(r.mwst)}</td>
-      <td style="font-weight:600;color:var(--text);text-align:right">${fmt(r.brutto)}</td>
+      <td class="col-hide-m col-num" style="color:var(--text);text-align:right">${fmt(r.netto)}</td>
+      <td class="col-hide-m col-num" style="color:var(--muted);text-align:right">${fmt(r.mwst)}</td>
+      <td class="col-num" style="font-weight:600;color:var(--text);text-align:right">${fmt(r.brutto)}</td>
       <td class="col-hide-m">
         <span style="font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;background:${r.manuell?'var(--bg)':'rgba(16,185,129,0.1)'};color:${r.manuell?'var(--muted)':'#059669'}">
           ${r.manuell?'Manuell':'PDF'}
         </span>
       </td>
-      <td style="text-align:right" onclick="event.stopPropagation()">
+      <td class="col-act" style="text-align:right" onclick="event.stopPropagation()">
         <button onclick="deleteRvRechnung('${r.id}','${(r.rechnungsnr||'').replace(/'/g,"\\'")}','${r.kunde_id||''}')"
           style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:2px 6px;border-radius:4px"
           onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='var(--muted)'"
@@ -9843,9 +9845,9 @@ function renderRvPositionenTable(rows) {
       </td>
       <td class="col-hide-m"><span style="font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;${typStyle}">${typLabel}</span></td>
       <td class="col-hide-m">${einheitBadge}</td>
-      <td class="col-hide-m" style="text-align:right;color:var(--muted)">${p.menge||1}</td>
-      <td class="col-hide-m" style="text-align:right;color:var(--muted)">${(p.einzelpreis||0).toLocaleString('de-DE',{minimumFractionDigits:2})} €</td>
-      <td style="text-align:right;font-size:13px;font-weight:700;color:var(--text)">${(p.gesamt||0).toLocaleString('de-DE',{minimumFractionDigits:2})} €</td>
+      <td class="col-hide-m col-num" style="color:var(--muted)">${p.menge||1}</td>
+      <td class="col-hide-m col-num" style="color:var(--muted)">${(p.einzelpreis||0).toLocaleString('de-DE',{minimumFractionDigits:2})} €</td>
+      <td class="col-num" style="font-weight:700;color:var(--text)">${(p.gesamt||0).toLocaleString('de-DE',{minimumFractionDigits:2})} €</td>
     </tr>`;
   }).join('');
 }
