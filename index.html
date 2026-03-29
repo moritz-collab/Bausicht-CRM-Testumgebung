@@ -382,6 +382,7 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 .ls-sub { width:100%; font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ls-cell { display:none; } /* hidden on mobile */
 .ls-mods { display:none; } /* hidden on mobile */
+.ls-badge-m { } /* mobile-only badge, visible by default */
 .ls-mod { font-size:10px; padding:2px 6px; border-radius:4px; background:var(--bg); border:1px solid var(--border); color:var(--muted); white-space:nowrap; }
 /* Header row – hidden on mobile */
 .ls-hdr { display:none; }
@@ -390,9 +391,14 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 @media (min-width:768px) {
   .ls-row { display:grid; gap:0 14px; align-items:center; padding:11px 16px; }
   .ls-row.bs-cols { grid-template-columns:2fr 1.2fr 0.7fr 1fr 1.5fr auto; }
+  .ls-row.al-cols { grid-template-columns:2fr 1.2fr auto 0.8fr 0.8fr 0.8fr; }
+  .ls-row.rv-cols { grid-template-columns:1fr 1.8fr 1.2fr 0.8fr 1fr 1fr auto; }
+  .ls-row.pos-cols { grid-template-columns:0.7fr 1fr 1.5fr 2fr auto 0.6fr 0.8fr 1fr; }
   .ls-hdr { display:grid; padding:10px 16px 8px; cursor:default; border-bottom:1px solid var(--border); background:var(--bg); }
   .ls-hdr:active { background:var(--bg); }
   .ls-sub { display:none; }
+  .ls-badge-m { display:none; } /* hide mobile-only badge on desktop */
+  .ls-row.pos-cols .ls-title { display:none; } /* pos rows use ls-cell for all desktop cols */
   .ls-cell { display:block; font-size:13px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .ls-mods { display:flex; gap:4px; flex-wrap:wrap; }
 }
@@ -2344,38 +2350,25 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
       </div>
 
       <!-- Filter + Suche -->
-      <div style="padding:0 16px;margin-bottom:12px">
-        <div class="crm-filter-row">
-          <input id="al-search" placeholder="Suche Titel, Unternehmen, Zuständig..." oninput="filterAlLeads()"
-            class="crm-input" style="width:260px" />
+      <div style="padding:0 16px;margin-bottom:6px">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <select id="al-stage-filter" onchange="filterAlLeads()"
-            class="crm-input" style="width:170px">
+            style="font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surf);color:var(--text);font-family:inherit">
             <option value="">Alle Stages</option>
           </select>
           <div id="al-count" style="font-size:12px;color:var(--muted);margin-left:auto"></div>
         </div>
       </div>
-
-      <!-- Tabelle -->
-      <div style="padding:0 16px 16px">
-        <div class="crm-table-wrap grp" style="padding:0">
-          <table class="crm-table">
-            <thead>
-              <tr>
-                <th>Titel</th>
-                <th>Unternehmen</th>
-                <th>Stage</th>
-                <th class="col-hide-m">Lead-Typ</th>
-                <th class="col-hide-m">Zuständig</th>
-                <th>Erstellt</th>
-                <th class="col-hide-m">Verlustgrund</th>
-              </tr>
-            </thead>
-            <tbody id="al-table-body">
-              <tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</td></tr>
-            </tbody>
-          </table>
+      <div class="search-wrap">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" placeholder="Titel, Unternehmen, Zuständig…" id="al-search" oninput="filterAlLeads()">
         </div>
+      </div>
+
+      <!-- Liste -->
+      <div id="al-list-wrap">
+        <div class="grp"><div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</div></div>
       </div>
     </div>
 
@@ -2405,42 +2398,24 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
       </div>
 
       <!-- Tab 1: Rechnungen -->
-      <div id="rv-panel-rechnungen" style="padding:0 16px 16px">
-        <div class="crm-filter-row" style="margin:12px 0">
-          <input id="rv-search" placeholder="Suche Rechnungsnr., Kunde, Baustelle..." oninput="filterRvTable(this.value)"
-            class="crm-input" style="width:260px" />
-          <div id="rv-count" style="font-size:12px;color:var(--muted);margin-left:auto"></div>
+      <div id="rv-panel-rechnungen">
+        <div class="search-wrap" style="padding-top:10px">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" placeholder="Rechnungsnr., Kunde, Baustelle…" id="rv-search" oninput="filterRvTable(this.value)">
+          </div>
         </div>
-        <div class="crm-table-wrap grp" style="padding:0">
-          <table class="crm-table">
-            <thead>
-              <tr>
-                <th>Re.-Nr.</th>
-                <th>Unternehmen</th>
-                <th class="col-hide-m">Baustelle</th>
-                <th>Datum</th>
-                <th class="col-hide-m col-num">Rabatt</th>
-                <th class="col-hide-m col-num">Netto</th>
-                <th class="col-hide-m col-num">MwSt.</th>
-                <th class="col-num">Brutto</th>
-                <th class="col-hide-m">Quelle</th>
-                <th class="col-act"></th>
-              </tr>
-            </thead>
-            <tbody id="rv-table-body">
-              <tr><td colspan="10" style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</td></tr>
-            </tbody>
-          </table>
+        <div style="padding:0 14px 2px;text-align:right"><span id="rv-count" style="font-size:12px;color:var(--muted)"></span></div>
+        <div id="rv-list-wrap">
+          <div class="grp"><div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</div></div>
         </div>
       </div>
 
       <!-- Tab 2: Alle Positionen -->
-      <div id="rv-panel-positionen" style="display:none;padding:0 16px 16px">
-        <div class="crm-filter-row" style="margin:12px 0">
-          <input id="rv-pos-search" placeholder="Suche Titel, Modul, Unternehmen..." oninput="filterRvPositionen(this.value)"
-            class="crm-input" style="width:240px" />
+      <div id="rv-panel-positionen" style="display:none">
+        <div style="padding:6px 16px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <select id="rv-pos-type-filter" onchange="filterRvPositionen(document.getElementById('rv-pos-search').value)"
-            class="crm-input" style="width:150px">
+            style="font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surf);color:var(--text);font-family:inherit">
             <option value="">Alle Typen</option>
             <option value="software">Software</option>
             <option value="hardware">Hardware</option>
@@ -2448,25 +2423,14 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
           </select>
           <div id="rv-pos-count" style="font-size:12px;color:var(--muted);margin-left:auto"></div>
         </div>
-        <div class="crm-table-wrap grp" style="padding:0">
-          <table class="crm-table">
-            <thead>
-              <tr>
-                <th>Datum</th>
-                <th class="col-hide-m">Re.-Nr.</th>
-                <th>Unternehmen</th>
-                <th>Titel / Modul</th>
-                <th class="col-hide-m">Typ</th>
-                <th class="col-hide-m">Einheit</th>
-                <th class="col-hide-m col-num">Menge</th>
-                <th class="col-hide-m col-num">Einzelpreis</th>
-                <th class="col-num">Gesamt</th>
-              </tr>
-            </thead>
-            <tbody id="rv-pos-table-body">
-              <tr><td colspan="9" style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</td></tr>
-            </tbody>
-          </table>
+        <div class="search-wrap">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" placeholder="Titel, Modul, Unternehmen…" id="rv-pos-search" oninput="filterRvPositionen(this.value)">
+          </div>
+        </div>
+        <div id="rv-pos-list-wrap">
+          <div class="grp"><div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</div></div>
         </div>
       </div>
     </div>
@@ -9465,14 +9429,14 @@ async function loadAlLeadsPage() {
 }
 
 async function loadAlLeads() {
-  const tbody = qi('al-table-body');
-  if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</td></tr>';
+  const wrap = qi('al-list-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="grp"><div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</div></div>';
   const { data, error } = await db.from('pipeline_deals')
     .select('*, kunden(name)')
     .order('erstellt', { ascending: false });
   if (error) {
-    tbody.innerHTML = '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--muted)">Fehler beim Laden</td></tr>';
+    wrap.innerHTML = '<div class="grp"><div style="padding:20px;text-align:center;color:var(--muted)">Fehler beim Laden</div></div>';
     return;
   }
   _alLeadsData = data || [];
@@ -9497,30 +9461,41 @@ function filterAlLeads() {
 }
 
 function renderAlLeadsTable(list) {
-  const tbody = qi('al-table-body');
+  const wrap = qi('al-list-wrap');
   const countEl = qi('al-count');
-  if (!tbody) return;
+  if (!wrap) return;
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Keine Leads gefunden</td></tr>';
+    wrap.innerHTML = '<div class="grp"><div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Keine Leads gefunden</div></div>';
     if (countEl) countEl.textContent = '';
     return;
   }
-  const fmtVol = v => v ? Number(v).toLocaleString('de-DE') + ' €' : '–';
-  tbody.innerHTML = list.map(d => {
+  const fmtD = d => d ? new Date(d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '–';
+  // Desktop: Titel | Unternehmen | Stage | Lead-Typ | Zuständig | Erstellt
+  // Mobile:  Titel + Stage-Badge, Unternehmen · Erstellt
+  const hdr = `<div class="ls-row al-cols ls-hdr">
+    <div class="ls-hdr-cell">Titel</div>
+    <div class="ls-hdr-cell">Unternehmen</div>
+    <div class="ls-hdr-cell">Stage</div>
+    <div class="ls-hdr-cell">Lead-Typ</div>
+    <div class="ls-hdr-cell">Zuständig</div>
+    <div class="ls-hdr-cell">Erstellt</div>
+  </div>`;
+  wrap.innerHTML = `<div class="grp" style="padding:0">${hdr}${list.map(d => {
     const st = STAGE_MAP[d.stage];
     const sc = st?.color || '#6b7280';
     const stageLabel = st?.label || d.stage || '–';
-    const lost = d.stage === 'churned';
-    return `<tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="openLeadDetail('${d.id}')" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
-      <td style="font-weight:500;color:var(--text)">${escHtml(d.titel||'–')}</td>
-      <td style="color:var(--muted)">${escHtml(d.kunden?.name||'–')}</td>
-      <td><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:${sc}20;color:${sc}">${stageLabel}</span></td>
-      <td class="col-hide-m" style="color:var(--text);font-weight:600">${escHtml(d.lead_typ||'–')}</td>
-      <td class="col-hide-m" style="color:var(--muted)">${escHtml(d.zustaendig||'–')}</td>
-      <td class="col-num" style="color:var(--muted)">${d.erstellt ? new Date(d.erstellt).toLocaleDateString('de-DE') : '–'}</td>
-      <td class="col-hide-m" style="font-size:11px;color:${lost?'#dc2626':'var(--muted)'}">${lost ? escHtml(d.churn_grund||'–') : '–'}</td>
-    </tr>`;
-  }).join('');
+    const kunde = escHtml(d.kunden?.name||'–');
+    const subParts = [kunde, fmtD(d.erstellt)!=='–'?fmtD(d.erstellt):null].filter(Boolean).join(' · ');
+    return `<div class="ls-row al-cols" onclick="openLeadDetail('${d.id}')">
+      <div class="ls-title">${escHtml(d.titel||'–')}</div>
+      <div class="ls-cell">${kunde}</div>
+      <span class="ls-badge" style="background:${sc}20;color:${sc}">${stageLabel}</span>
+      <div class="ls-cell" style="font-weight:600;color:var(--text)">${escHtml(d.lead_typ||'–')}</div>
+      <div class="ls-cell">${escHtml(d.zustaendig||'–')}</div>
+      <div class="ls-cell">${fmtD(d.erstellt)}</div>
+      <div class="ls-sub">${subParts}</div>
+    </div>`;
+  }).join('')}</div>`;
   if (countEl) countEl.textContent = `${list.length} Lead${list.length !== 1 ? 's' : ''}`;
 }
 
@@ -9733,9 +9708,9 @@ function switchRvTab(tab) {
 
 // ── Tab 1: Rechnungen laden & rendern ───────────────────
 async function loadRvRechnungen() {
-  const tbody = qi('rv-table-body');
-  if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="10" style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</td></tr>';
+  const wrap = qi('rv-list-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="grp"><div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt…</div></div>';
   let { data, error } = await db.from('rechnungen')
     .select('*, kunden(name), rechnung_positionen(id, titel, modul, positionstyp, menge, einheit, einzelpreis, rabatt, rabatt_pct, gesamt)')
     .order('datum', { ascending: false });
@@ -9745,7 +9720,7 @@ async function loadRvRechnungen() {
       .order('datum', { ascending: false }));
   }
   if (error) {
-    tbody.innerHTML = '<tr><td colspan="10" style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Fehler beim Laden</td></tr>';
+    wrap.innerHTML = '<div class="grp"><div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Fehler beim Laden</div></div>';
     return;
   }
   _rvAllRechnungen = data || [];
@@ -9753,43 +9728,46 @@ async function loadRvRechnungen() {
 }
 
 function renderRvTable(list) {
-  const tbody = qi('rv-table-body');
+  const wrap = qi('rv-list-wrap');
   const countEl = qi('rv-count');
-  if (!tbody) return;
+  if (!wrap) return;
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="10" style="padding:32px;text-align:center;color:var(--muted);font-size:13px">🧾 Keine Rechnungen vorhanden</td></tr>';
+    wrap.innerHTML = '<div class="grp"><div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Keine Rechnungen vorhanden</div></div>';
     if (countEl) countEl.textContent = '';
     return;
   }
   _rvTableRows = list;
   const fmt = v => v != null ? Number(v).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €' : '–';
-  tbody.innerHTML = list.map((r, idx) => `
-    <tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="openRechnungDetail(_rvTableRows[${idx}])" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
-      <td style="font-weight:700;color:var(--acc)">${escHtml(r.rechnungsnr||'–')}</td>
-      <td style="font-weight:500;color:var(--text)">${escHtml(r.kunden?.name||r.kundennr||'–')}</td>
-      <td class="col-hide-m" style="color:var(--muted)">${escHtml(r.baustelle_name||'–')}</td>
-      <td class="col-num" style="color:var(--muted)">${r.datum?new Date(r.datum).toLocaleDateString('de-DE'):'–'}</td>
-      <td class="col-hide-m col-num" style="text-align:right">${(() => {
-        const pos = r.rechnung_positionen||[];
-        const vals = [...new Set(pos.map(p => p.rabatt_pct||p.rabatt||0).filter(v => v > 0))].sort((a,b)=>a-b);
-        if (!vals.length) return '<span style="color:var(--muted)">–</span>';
-        return '<span style="color:#d97706;font-weight:600">'+vals.map(v=>'-'+v+' %').join(', ')+'</span>';
-      })()}</td>
-      <td class="col-hide-m col-num" style="color:var(--text);text-align:right">${fmt(r.netto)}</td>
-      <td class="col-hide-m col-num" style="color:var(--muted);text-align:right">${fmt(r.mwst)}</td>
-      <td class="col-num" style="font-weight:600;color:var(--text);text-align:right">${fmt(r.brutto)}</td>
-      <td class="col-hide-m">
-        <span style="font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;background:${r.manuell?'var(--bg)':'rgba(16,185,129,0.1)'};color:${r.manuell?'var(--muted)':'#059669'}">
-          ${r.manuell?'Manuell':'PDF'}
-        </span>
-      </td>
-      <td class="col-act" style="text-align:right" onclick="event.stopPropagation()">
-        <button onclick="deleteRvRechnung('${r.id}','${(r.rechnungsnr||'').replace(/'/g,"\\'")}','${r.kunde_id||''}')"
-          style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:2px 6px;border-radius:4px"
-          onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='var(--muted)'"
-          title="Rechnung löschen">🗑</button>
-      </td>
-    </tr>`).join('');
+  const fmtD = d => d ? new Date(d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '–';
+  // Desktop: Re.-Nr. | Unternehmen | Baustelle | Datum | Netto | Brutto | Quelle
+  // Mobile:  Re.-Nr. + Brutto, Unternehmen · Datum
+  const hdr = `<div class="ls-row rv-cols ls-hdr">
+    <div class="ls-hdr-cell">Re.-Nr.</div>
+    <div class="ls-hdr-cell">Unternehmen</div>
+    <div class="ls-hdr-cell">Baustelle</div>
+    <div class="ls-hdr-cell">Datum</div>
+    <div class="ls-hdr-cell" style="text-align:right">Netto</div>
+    <div class="ls-hdr-cell" style="text-align:right">Brutto</div>
+    <div class="ls-hdr-cell">Quelle</div>
+  </div>`;
+  wrap.innerHTML = `<div class="grp" style="padding:0">${hdr}${list.map((r, idx) => {
+    const kunde = escHtml(r.kunden?.name||r.kundennr||'–');
+    const qBg = r.manuell ? 'var(--bg)' : 'rgba(16,185,129,0.1)';
+    const qCol = r.manuell ? 'var(--muted)' : '#059669';
+    const qLabel = r.manuell ? 'Manuell' : 'PDF';
+    const subParts = [kunde, fmtD(r.datum)!=='–'?fmtD(r.datum):null].filter(Boolean).join(' · ');
+    return `<div class="ls-row rv-cols" onclick="openRechnungDetail(_rvTableRows[${idx}])">
+      <div class="ls-title" style="font-size:13px;color:var(--acc)">${escHtml(r.rechnungsnr||'–')}</div>
+      <div class="ls-cell" style="font-weight:500;color:var(--text)">${kunde}</div>
+      <div class="ls-cell">${escHtml(r.baustelle_name||'–')}</div>
+      <div class="ls-cell">${fmtD(r.datum)}</div>
+      <div class="ls-cell" style="text-align:right">${fmt(r.netto)}</div>
+      <div class="ls-cell" style="text-align:right;font-weight:600;color:var(--text)">${fmt(r.brutto)}</div>
+      <div class="ls-cell"><span style="font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;background:${qBg};color:${qCol}">${qLabel}</span></div>
+      <span class="ls-badge ls-badge-m" style="background:var(--bg);color:var(--text);font-weight:700">${fmt(r.brutto)}</span>
+      <div class="ls-sub">${subParts}</div>
+    </div>`;
+  }).join('')}</div>`;
   if (countEl) countEl.textContent = `${list.length} Rechnung${list.length!==1?'en':''}`;
 }
 
@@ -9821,16 +9799,16 @@ async function deleteRvRechnung(id, nr, kundeId) {
 
 // ── Tab 2: Alle Positionen ──────────────────────────────
 async function loadRvPositionenTab() {
-  const tbody = qi('rv-pos-table-body');
-  if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="9" style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt Positionen…</td></tr>';
+  const wrap = qi('rv-pos-list-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="grp"><div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">Lädt Positionen…</div></div>';
   const cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear()-1);
   const cutoffStr = cutoff.toISOString().slice(0,10);
   const { data, error } = await db.from('rechnungen')
     .select('rechnungsnr, datum, kunden(name), rechnung_positionen(id, titel, modul, positionstyp, menge, einheit, einzelpreis, gesamt)')
     .gte('datum', cutoffStr)
     .order('datum', { ascending: false });
-  if (error) { tbody.innerHTML = `<tr><td colspan="9" style="color:#f87171;padding:16px">${error.message}</td></tr>`; return; }
+  if (error) { wrap.innerHTML = `<div class="grp"><div style="color:#f87171;padding:16px;text-align:center">${error.message}</div></div>`; return; }
   const rows = [];
   (data||[]).forEach(r => {
     (r.rechnung_positionen||[]).forEach(p => {
@@ -9843,39 +9821,48 @@ async function loadRvPositionenTab() {
 }
 
 function renderRvPositionenTable(rows) {
-  const tbody = qi('rv-pos-table-body');
+  const wrap = qi('rv-pos-list-wrap');
   const countEl = qi('rv-pos-count');
-  if (!tbody) return;
+  if (!wrap) return;
   if (countEl) countEl.textContent = rows.length + ' Positionen';
-  const typColors = { software:'background:#ede9fe;color:#5b21b6', hardware:'background:#dbeafe;color:#1e40af', sonstiges:'background:#f3f4f6;color:#374151' };
-  const isJahresLizenz = p => /jähr|annual|p\.a\./i.test(p.einheit||'') || (Number(p.menge)>=12 && /monat/i.test(p.einheit||''));
+  const typColors = { software:['#ede9fe','#5b21b6'], hardware:['#dbeafe','#1e40af'], sonstiges:['#f3f4f6','#374151'] };
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;color:var(--muted);text-align:center">Keine Positionen gefunden</td></tr>';
+    wrap.innerHTML = '<div class="grp"><div style="padding:20px;color:var(--muted);text-align:center">Keine Positionen gefunden</div></div>';
     return;
   }
-  tbody.innerHTML = rows.map(p => {
-    const typStyle = typColors[p.positionstyp]||typColors.sonstiges;
+  const fmtD = d => d ? new Date(d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '–';
+  const fmtE = v => (v||0).toLocaleString('de-DE',{minimumFractionDigits:2}) + ' €';
+  // Desktop: Datum | Re.-Nr. | Unternehmen | Titel/Modul | Typ | Menge | Einzelpr. | Gesamt
+  // Mobile: Titel/Modul + Gesamt, Unternehmen · Datum
+  const hdr = `<div class="ls-row pos-cols ls-hdr">
+    <div class="ls-hdr-cell">Datum</div>
+    <div class="ls-hdr-cell">Re.-Nr.</div>
+    <div class="ls-hdr-cell">Unternehmen</div>
+    <div class="ls-hdr-cell">Titel / Modul</div>
+    <div class="ls-hdr-cell">Typ</div>
+    <div class="ls-hdr-cell" style="text-align:right">Menge</div>
+    <div class="ls-hdr-cell" style="text-align:right">Einzelpreis</div>
+    <div class="ls-hdr-cell" style="text-align:right">Gesamt</div>
+  </div>`;
+  wrap.innerHTML = `<div class="grp" style="padding:0">${hdr}${rows.map(p => {
+    const [tBg, tCol] = typColors[p.positionstyp]||typColors.sonstiges;
     const typLabel = p.positionstyp||'–';
-    const isYear = isJahresLizenz(p);
-    const einheitBadge = isYear
-      ? '<span style="font-size:10px;padding:1px 6px;background:#fef3c7;color:#92400e;border-radius:4px;font-weight:600">jährl.</span>'
-      : p.einheit ? `<span style="font-size:11px;color:var(--muted)">${escHtml(p.einheit)}</span>` : '–';
-    const dateFmt = p.datum ? new Date(p.datum).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '–';
-    return `<tr style="border-bottom:1px solid var(--border)" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
-      <td style="color:var(--muted);white-space:nowrap">${dateFmt}</td>
-      <td class="col-hide-m" style="font-size:11px;color:var(--muted)">${escHtml(p.rechnungsnr||'–')}</td>
-      <td style="font-weight:600;color:var(--text);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(p.kundeName)}">${escHtml(p.kundeName)}</td>
-      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">
-        <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(p.modul||p.titel||'')}">${escHtml(p.modul||p.titel||'–')}</div>
-        ${p.modul&&p.modul!==p.titel?`<div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(p.titel||'')}</div>`:''}
-      </td>
-      <td class="col-hide-m"><span style="font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;${typStyle}">${typLabel}</span></td>
-      <td class="col-hide-m">${einheitBadge}</td>
-      <td class="col-hide-m col-num" style="color:var(--muted)">${p.menge||1}</td>
-      <td class="col-hide-m col-num" style="color:var(--muted)">${(p.einzelpreis||0).toLocaleString('de-DE',{minimumFractionDigits:2})} €</td>
-      <td class="col-num" style="font-weight:700;color:var(--text)">${(p.gesamt||0).toLocaleString('de-DE',{minimumFractionDigits:2})} €</td>
-    </tr>`;
-  }).join('');
+    const modulTitle = escHtml(p.modul||p.titel||'–');
+    const subParts = [escHtml(p.kundeName), fmtD(p.datum)!=='–'?fmtD(p.datum):null].filter(Boolean).join(' · ');
+    return `<div class="ls-row pos-cols">
+      <div class="ls-cell">${fmtD(p.datum)}</div>
+      <div class="ls-cell" style="font-size:11px">${escHtml(p.rechnungsnr||'–')}</div>
+      <div class="ls-cell" style="font-weight:500;color:var(--text)">${escHtml(p.kundeName)}</div>
+      <div class="ls-cell" style="font-weight:600;color:var(--text)" title="${modulTitle}">${modulTitle}</div>
+      <div class="ls-cell"><span class="ls-badge" style="background:${tBg};color:${tCol}">${typLabel}</span></div>
+      <div class="ls-cell" style="text-align:right">${p.menge||1}</div>
+      <div class="ls-cell" style="text-align:right">${fmtE(p.einzelpreis)}</div>
+      <div class="ls-cell" style="text-align:right;font-weight:700;color:var(--text)">${fmtE(p.gesamt)}</div>
+      <div class="ls-title">${modulTitle}</div>
+      <span class="ls-badge ls-badge-m" style="background:var(--bg);color:var(--text);font-weight:700">${fmtE(p.gesamt)}</span>
+      <div class="ls-sub">${subParts}</div>
+    </div>`;
+  }).join('')}</div>`;
 }
 
 let _rvPosFilterTimer = null;
