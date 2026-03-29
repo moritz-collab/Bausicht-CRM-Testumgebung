@@ -29,7 +29,8 @@
 html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica Neue','Inter',sans-serif; background:var(--bg); color:var(--text); font-size:15px; line-height:1.45; -webkit-font-smoothing:antialiased; }
 
 /* ── AUTH ──────────────────────────────────────────────── */
-#auth { position:fixed; inset:0; z-index:9000; display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,#EDE9FE,#F5F3FF 50%,#E0E7FF); }
+#auth { position:fixed; inset:0; z-index:9000; display:none; align-items:center; justify-content:center; background:linear-gradient(160deg,#EDE9FE,#F5F3FF 50%,#E0E7FF); }
+#auth.on { display:flex; }
 .auth-card { width:360px; max-width:calc(100vw - 40px); background:white; border-radius:22px; padding:36px 32px; box-shadow:0 24px 64px rgba(124,58,237,.18); }
 .auth-logo { margin-bottom:6px; text-align:center; }
 .auth-tag  { font-size:13px; color:var(--muted); margin-bottom:28px; }
@@ -165,21 +166,46 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 .h-gr-title { font-size:22px; font-weight:800; letter-spacing:-.4px; }
 .h-gr-sub   { font-size:13px; color:var(--muted); margin-top:2px; }
 
-/* ── HEUTE: SCHNELLAKTIONEN ──────────────────────────────── */
-.h-actions {
-  display:grid; grid-template-columns:repeat(4,1fr);
-  gap:8px; padding:12px 14px 4px;
+/* ── HEUTE: DASHBOARD CHARTS ────────────────────────────── */
+.h-charts-row {
+  display:grid; grid-template-columns:1fr; gap:10px;
+  padding:10px 14px 4px;
 }
-.h-action-btn {
+.h-charts-row .h-chart-card:nth-child(2) { display:none; }
+@media (min-width:768px) {
+  .h-charts-row { grid-template-columns:1fr 1fr; }
+  .h-charts-row .h-chart-card:nth-child(2) { display:block; }
+}
+.h-chart-card {
   background:var(--surf); border:.5px solid var(--border);
-  border-radius:14px; padding:12px 6px 10px;
-  display:flex; flex-direction:column; align-items:center; gap:5px;
-  cursor:pointer; transition:background .12s, transform .08s;
-  box-shadow:var(--sh);
+  border-radius:var(--r-lg); padding:12px 12px 8px;
+  box-shadow:var(--sh); overflow:hidden;
 }
-.h-action-btn:active { background:var(--bg); transform:scale(.96); }
-.h-action-ico { font-size:22px; line-height:1; }
-.h-action-lbl { font-size:11.5px; font-weight:600; color:var(--text); }
+.h-chart-title {
+  font-size:10.5px; font-weight:700; color:var(--muted);
+  text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px;
+}
+.h-chart-val {
+  font-size:16px; font-weight:800; letter-spacing:-.3px;
+  color:var(--text); margin-bottom:6px;
+}
+.h-chart-svg { width:100%; aspect-ratio:300/100; display:block; }
+.h-chart-labels {
+  display:flex; justify-content:space-between;
+  font-size:8.5px; color:var(--muted); margin-top:3px; padding:0 2px;
+}
+.h-chart-legend {
+  display:flex; flex-wrap:wrap; gap:6px 10px;
+  margin-top:6px; padding-top:6px;
+  border-top:.5px solid var(--border);
+}
+.h-chart-legend-item {
+  display:flex; align-items:center; gap:4px;
+  font-size:9px; color:var(--muted); font-weight:600;
+}
+.h-chart-legend-dot {
+  width:7px; height:7px; border-radius:50%; flex-shrink:0;
+}
 
 /* ── HEUTE: QUICK PANELS ─────────────────────────────────── */
 .h-quick-panel {
@@ -530,7 +556,7 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 #capture { position:fixed; inset:0; z-index:600; display:none; }
 #capture.on { display:block; }
 #cap-bg { position:absolute; inset:0; background:rgba(0,0,0,.45); animation:fadeIn .18s; }
-#cap-body { position:absolute; left:0; right:0; bottom:0; background:white; border-radius:22px 22px 0 0; padding:16px 18px calc(18px + var(--safe-b)); transform:translateY(100%); transition:transform .3s cubic-bezier(.32,.72,0,1); }
+#cap-body { position:absolute; left:0; right:0; bottom:0; min-height:66vh; background:white; border-radius:22px 22px 0 0; padding:16px 18px calc(18px + var(--safe-b)); display:flex; flex-direction:column; transform:translateY(100%); transition:transform .3s cubic-bezier(.32,.72,0,1); }
 #capture.on #cap-body { transform:translateY(0); }
 .cap-handle { width:38px; height:4px; border-radius:2px; background:#E0E0E0; margin:0 auto 16px; }
 .cap-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
@@ -543,8 +569,13 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 .cap-f:focus { border-color:var(--acc); }
 .cap-row { display:flex; gap:8px; }
 .cap-row .cap-f { flex:1; }
-.cap-save { width:100%; padding:14px; background:var(--acc); color:white; border:none; border-radius:13px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; margin-top:4px; transition:opacity .15s; }
+#cap-txt { flex:1; min-height:60px; }
+.cap-save { width:100%; padding:14px; background:var(--acc); color:white; border:none; border-radius:13px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; margin-top:auto; flex-shrink:0; transition:opacity .15s; }
 .cap-save:active { opacity:.85; }
+.cap-entity-btn { padding:6px 12px; font-size:12px; font-weight:600; border:none; background:none; color:var(--muted); cursor:pointer; font-family:inherit; transition:all .12s; }
+.cap-entity-btn.on { background:var(--text); color:white; border-radius:7px; }
+.cap-prio-btn { flex:1; padding:8px 6px; border-radius:9px; border:1.5px solid var(--border); background:white; font-size:12px; font-weight:600; cursor:pointer; text-align:center; color:var(--muted); transition:all .12s; font-family:inherit; }
+.cap-prio-btn.on { border-color:var(--acc); color:var(--acc); background:var(--acc-s); }
 
 /* ── SKELETON ───────────────────────────────────────────── */
 .sk { border-radius:8px; background:linear-gradient(90deg,#F0F0F2 25%,#E8E8EC 50%,#F0F0F2 75%); background-size:200% 100%; animation:shimmer 1.4s ease-in-out infinite; }
@@ -785,7 +816,8 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 .fd-tb svg { width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 .fd-tb.on svg { stroke-width:2.2; }
 .fd-tb-back { color:var(--acc); max-width:48px; }
-.fd-tb-back svg { stroke-width:2.5; }
+.fd-tb-back span { display:none; }
+.fd-tb-back svg { width:26px; height:26px; stroke-width:2.5; }
 
 @media (min-width:768px) {
   #app.fd-mode #sidebar { display:flex !important; }
@@ -836,7 +868,34 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
   #ld-tab-bar { left:14px; right:14px; }
 }
 
+/* ── Responsive Tabellen (Leads, Baustellen, Rechnungen) ── */
+.crm-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.crm-table-wrap::-webkit-scrollbar { display:none; }
+.crm-table { width:100%; border-collapse:collapse; }
+.crm-table th, .crm-table td { padding:10px 14px; text-align:left; font-size:13px; white-space:nowrap; }
+.crm-table th { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); background:var(--bg); }
+.crm-table td { border-bottom:.5px solid var(--border); }
+.crm-table tr:last-child td { border-bottom:none; }
+.crm-table tr { cursor:pointer; transition:background .1s; }
+.crm-table tbody tr:hover { background:rgba(124,58,237,0.03); }
+.crm-table .col-hide-m { /* hidden on mobile */ }
+.crm-input { font-size:13px; padding:8px 12px; border:1.5px solid var(--border); border-radius:var(--r); background:var(--surf); color:var(--text); font-family:inherit; width:100%; box-sizing:border-box; }
+.crm-filter-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+@media (max-width:767px) {
+  .crm-table .col-hide-m { display:none; }
+  .crm-table th, .crm-table td { padding:8px 10px; font-size:12px; }
+  .crm-input { width:100% !important; }
+  .crm-filter-row { flex-direction:column; align-items:stretch; }
+  .crm-filter-row > * { width:100% !important; }
+}
+
 /* ── Lizenz-Kachel (Übersicht) ────────────────────────── */
+.fd-liz-hw-row { padding:0 14px 14px; display:flex; flex-direction:column; gap:14px; }
+.fd-liz-hw-row > .fd-liz-card { margin:0; }
+@media (min-width:768px) {
+  .fd-liz-hw-row { flex-direction:row; }
+  .fd-liz-hw-row > .fd-liz-card { flex:1; min-width:0; }
+}
 .fd-liz-card {
   margin:0 14px 14px;
   background:var(--surf);
@@ -845,6 +904,7 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
   overflow:hidden;
   cursor:pointer;
   transition:transform .12s, box-shadow .12s;
+  display:flex; flex-direction:column;
   -webkit-tap-highlight-color:transparent;
 }
 .fd-liz-card:active { transform:scale(.985); box-shadow:none; }
@@ -868,7 +928,7 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 .fd-liz-arr   { font-size:15px; color:var(--muted); }
 
 /* ── Lizenz-Modal ─────────────────────────────────────── */
-#fd-liz-modal {
+#fd-liz-modal, #fd-hw-modal {
   display:none;
   position:fixed; inset:0; z-index:9999;
   background:rgba(0,0,0,.45);
@@ -879,7 +939,7 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
   padding:56px 12px 0;
   box-sizing:border-box;
 }
-#fd-liz-modal.on { display:flex; }
+#fd-liz-modal.on, #fd-hw-modal.on { display:flex; }
 .fd-liz-sheet {
   width:100%; max-width:780px;
   max-height:calc(100vh - 76px);
@@ -1497,8 +1557,8 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
       <div class="sb-divider sb-desk-only"></div>
       <button class="sb-i sb-desk-only" data-v="report"     onclick="navTo('report')"><svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>Report</button>
       <button class="sb-i sb-desk-only" data-v="baustellen" onclick="navTo('baustellen')"><svg viewBox="0 0 24 24"><path d="M2 20h20"/><path d="M5 20V8l7-5 7 5v12"/><path d="M9 20v-5h6v5"/></svg>Baustellen</button>
-      <button class="sb-i sb-desk-only" data-v="importe"    onclick="navTo('importe')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Importe</button>
       <button class="sb-i sb-desk-only" data-v="alle-leads" onclick="navTo('alle-leads')"><svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>Alle Leads</button>
+      <button class="sb-i sb-desk-only" data-v="importe"    onclick="navTo('importe')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Importe</button>
       <button class="sb-i sb-desk-only" data-v="rechnungen" onclick="navTo('rechnungen')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Rechnungen</button>
       <button class="sb-i sb-desk-only" data-v="schake"     onclick="navTo('schake')"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 9h20"/><path d="M10 3v18"/></svg>Schake</button>
       <div class="sb-divider sb-desk-only"></div>
@@ -1520,6 +1580,23 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         <div class="h-gr-sub"   id="h-dt"></div>
       </div>
 
+      <!-- ── Dashboard Charts ── -->
+      <div class="h-charts-row">
+        <div class="h-chart-card">
+          <div class="h-chart-title">MRR (€)</div>
+          <div class="h-chart-val" id="h-mrr-val">–</div>
+          <svg class="h-chart-svg" id="h-mrr-svg" viewBox="0 0 300 100"></svg>
+          <div class="h-chart-labels" id="h-mrr-labels"></div>
+        </div>
+        <div class="h-chart-card">
+          <div class="h-chart-title">Lizenzen je Modul</div>
+          <div class="h-chart-val" id="h-mod-val">–</div>
+          <svg class="h-chart-svg" id="h-mod-svg" viewBox="0 0 300 100"></svg>
+          <div class="h-chart-labels" id="h-mod-labels"></div>
+          <div class="h-chart-legend" id="h-mod-legend"></div>
+        </div>
+      </div>
+
       <!-- ── Suchleiste ── -->
       <div class="h-search-wrap">
         <div class="h-search-toggle">
@@ -1539,25 +1616,6 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         </div>
       </div>
 
-      <!-- ── Schnellaktionen ── -->
-      <div class="h-actions">
-        <button class="h-action-btn" onclick="openHeuteQuickPanel('note')">
-          <div class="h-action-ico">✏️</div>
-          <div class="h-action-lbl">Notiz</div>
-        </button>
-        <button class="h-action-btn" onclick="openHeuteQuickPanel('task')">
-          <div class="h-action-ico">✅</div>
-          <div class="h-action-lbl">Aufgabe</div>
-        </button>
-        <button class="h-action-btn" onclick="openTerminEdit(null)">
-          <div class="h-action-ico">📅</div>
-          <div class="h-action-lbl">Termin</div>
-        </button>
-        <button class="h-action-btn" onclick="openDealModal(null)">
-          <div class="h-action-ico">🎯</div>
-          <div class="h-action-lbl">Lead</div>
-        </button>
-      </div>
 
       <!-- ── Quick-Note Panel ── -->
       <div class="h-quick-panel" id="h-quick-note" style="display:none">
@@ -1613,7 +1671,10 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
       <!-- ── Pipeline-Snapshot ── -->
       <div class="h-sec-hd">
         <span>Pipeline</span>
-        <button onclick="navTo('pipeline')" class="h-sec-more">Öffnen →</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button onclick="openDealModal(null)" class="h-sec-more" style="background:var(--acc);color:white;border-radius:8px;padding:4px 10px;font-weight:700">+ Lead</button>
+          <button onclick="navTo('pipeline')" class="h-sec-more">Öffnen →</button>
+        </div>
       </div>
       <div class="h-pipe-snap" id="h-pipe-snap">
         <div class="h-ps-chip sk" style="height:52px;border-radius:14px"> </div>
@@ -1622,9 +1683,9 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         <div class="h-ps-chip sk" style="height:52px;border-radius:14px"> </div>
       </div>
 
-      <!-- ── Fällige & überfällige Aufgaben ── -->
+      <!-- ── Neueste Aufgaben ── -->
       <div class="h-sec-hd">
-        <span>Fällige Aufgaben</span>
+        <span>Aufgaben</span>
         <button onclick="navTo('tasks')" class="h-sec-more">Alle →</button>
       </div>
       <div class="grp" id="h-tasks" style="padding:0">
@@ -1634,7 +1695,10 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
       <!-- ── Termine heute ── -->
       <div class="h-sec-hd" style="margin-top:18px">
         <span>Termine heute</span>
-        <button onclick="navTo('termine')" class="h-sec-more">Alle →</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button onclick="openTerminEdit(null)" class="h-sec-more" style="background:var(--acc);color:white;border-radius:8px;padding:4px 10px;font-weight:700">+ Termin</button>
+          <button onclick="navTo('termine')" class="h-sec-more">Alle →</button>
+        </div>
       </div>
       <div class="grp" id="h-timeline" style="padding:0">
         <div class="timeline-item"><div class="sk" style="width:100%;height:18px;border-radius:5px"> </div></div>
@@ -1660,25 +1724,11 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
           </div>
         </div>
       </div>
-      <div id="f-stats"></div>
       <div class="search-wrap">
         <div class="search-box">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="search" placeholder="Name, Branche, Ort…" id="f-q" oninput="renderFirmen()">
         </div>
-      </div>
-      <div class="chips" id="f-chips">
-        <div class="chip on" data-f="all"     onclick="setFF(this)">Alle</div>
-        <div class="chip"    data-f="Aktiv"   onclick="setFF(this)">Aktiv</div>
-        <div class="chip"    data-f="Lead"    onclick="setFF(this)">Lead</div>
-        <div class="chip"    data-f="Inaktiv" onclick="setFF(this)">Inaktiv</div>
-        <div class="chip"    data-f="Churned" onclick="setFF(this)">Churned</div>
-      </div>
-      <div class="sort-row">
-        <span class="sort-lbl">Sortieren:</span>
-        <div class="sort-chip on" data-s="name"   onclick="setFSort(this)">A–Z</div>
-        <div class="sort-chip"    data-s="mrr"    onclick="setFSort(this)">MRR ↓</div>
-        <div class="sort-chip"    data-s="status" onclick="setFSort(this)">Status</div>
       </div>
       <div id="f-list">
         <div class="grp">
@@ -1702,6 +1752,12 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         <div class="chip"    data-tf="today"    onclick="setTF(this)">Heute fällig</div>
         <div class="chip"    data-tf="overdue"  onclick="setTF(this)">Überfällig</div>
         <div class="chip"    data-tf="done"     onclick="setTF(this)">Erledigt</div>
+      </div>
+      <div class="sort-row" id="t-sort-row">
+        <span class="sort-lbl">Sortieren:</span>
+        <div class="sort-chip on" data-ts="deadline"  onclick="setTSort(this)">Deadline</div>
+        <div class="sort-chip"    data-ts="prio"      onclick="setTSort(this)">Prio</div>
+        <div class="sort-chip"    data-ts="erstellt"  onclick="setTSort(this)">Erstellt</div>
       </div>
       <div id="t-content">
         <div class="grp"><div class="t-row"><div class="sk" style="width:100%;height:17px;border-radius:5px"> </div></div></div>
@@ -1785,8 +1841,14 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
             <label class="dm-lbl">Phase</label>
             <select class="dm-sel" id="dm-stage"></select>
           </div>
-          <div style="display:none">
-            <input id="dm-vol" type="hidden">
+          <div>
+            <label class="dm-lbl">Lead-Typ</label>
+            <select class="dm-inp" id="dm-lead-typ" style="appearance:auto">
+              <option value="">– Typ wählen –</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+            </select>
           </div>
           <div>
             <label class="dm-lbl">Zuständig</label>
@@ -2104,8 +2166,8 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
       </div>
 
       <!-- Filter + Suche -->
-      <div style="display:flex;gap:10px;align-items:center;padding:0 16px;margin-bottom:12px;flex-wrap:wrap">
-        <div id="bs-filters" style="display:flex;gap:6px">
+      <div class="crm-filter-row" style="padding:0 16px;margin-bottom:12px">
+        <div id="bs-filters" style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="bs-filter-pill active" onclick="filterBsGlobal('alle',this)" style="padding:5px 14px;font-size:12px;font-weight:600;border:1.5px solid var(--acc);background:var(--acc);color:#fff;border-radius:20px;cursor:pointer;font-family:inherit">Alle</button>
           <button class="bs-filter-pill" onclick="filterBsGlobal('aktiv',this)" style="padding:5px 14px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--surf);color:var(--text);border-radius:20px;cursor:pointer;font-family:inherit">Aktiv</button>
           <button class="bs-filter-pill" onclick="filterBsGlobal('geplant',this)" style="padding:5px 14px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--surf);color:var(--text);border-radius:20px;cursor:pointer;font-family:inherit">Geplant</button>
@@ -2117,20 +2179,20 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
       <div style="padding:0 16px 16px">
         <div style="margin-bottom:10px">
           <input id="bs-search" placeholder="Suche Baustelle, Kunde, Ort..." oninput="searchBsGlobal(this.value)"
-            style="font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surf);color:var(--text);width:260px;font-family:inherit" />
+            class="crm-input" style="width:260px" />
         </div>
-        <div class="grp" style="padding:0;overflow:hidden">
-          <table style="width:100%;border-collapse:collapse">
+        <div class="crm-table-wrap grp" style="padding:0">
+          <table class="crm-table">
             <thead>
               <tr style="background:var(--bg)">
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Projektname</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Kunde</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Ort</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Start</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Ende</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Module</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Status</th>
-                <th style="padding:10px 12px;width:40px"></th>
+                <th>Projektname</th>
+                <th>Kunde</th>
+                <th class="col-hide-m">Ort</th>
+                <th>Start</th>
+                <th class="col-hide-m">Ende</th>
+                <th class="col-hide-m">Module</th>
+                <th>Status</th>
+                <th style="width:40px"></th>
               </tr>
             </thead>
             <tbody id="bs-global-tbody">
@@ -2210,13 +2272,13 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 
     <!-- ── REPORT ────────────────────── -->
     <div class="view" id="view-report">
-      <div class="v-head">
-        <div class="v-head-row">
+      <div style="margin:0 14px 16px;padding:20px 22px 18px;background:linear-gradient(135deg,#7c3aed 0%,#a78bfa 100%);border-radius:var(--r-lg);box-shadow:0 4px 18px rgba(124,58,237,.3);color:#fff">
+        <div style="display:flex;align-items:center;justify-content:space-between">
           <div>
-            <button onclick="navTo('mehr')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:0 0 2px;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round"><polyline points="15 18 9 12 15 6"/></svg>Mehr</button>
-            <div class="v-title" style="margin-top:2px">Report</div>
-            <div class="v-sub">Dashboards &amp; Auswertungen</div>
+            <div style="font-size:20px;font-weight:800;letter-spacing:-.3px">Report</div>
+            <div style="font-size:12px;opacity:.8;margin-top:2px">Dashboards & Auswertungen</div>
           </div>
+          <div style="font-size:28px">📊</div>
         </div>
       </div>
       <div style="padding:0 var(--px);padding-bottom:120px">
@@ -2270,11 +2332,11 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 
       <!-- Filter + Suche -->
       <div style="padding:0 16px;margin-bottom:12px">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div class="crm-filter-row">
           <input id="al-search" placeholder="Suche Titel, Unternehmen, Zuständig..." oninput="filterAlLeads()"
-            style="font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surf);color:var(--text);width:260px;font-family:inherit" />
+            class="crm-input" style="width:260px" />
           <select id="al-stage-filter" onchange="filterAlLeads()"
-            style="font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surf);color:var(--text);width:170px;font-family:inherit">
+            class="crm-input" style="width:170px">
             <option value="">Alle Stages</option>
           </select>
           <div id="al-count" style="font-size:12px;color:var(--muted);margin-left:auto"></div>
@@ -2283,17 +2345,17 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 
       <!-- Tabelle -->
       <div style="padding:0 16px 16px">
-        <div class="grp" style="padding:0;overflow:hidden">
-          <table style="width:100%;border-collapse:collapse">
+        <div class="crm-table-wrap grp" style="padding:0">
+          <table class="crm-table">
             <thead>
               <tr style="background:var(--bg)">
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Titel</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Unternehmen</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Stage</th>
-                <th style="padding:10px 14px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Volumen</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Zuständig</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Erstellt</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Verlustgrund</th>
+                <th>Titel</th>
+                <th>Unternehmen</th>
+                <th>Stage</th>
+                <th class="col-hide-m">Lead-Typ</th>
+                <th class="col-hide-m">Zuständig</th>
+                <th>Erstellt</th>
+                <th class="col-hide-m">Verlustgrund</th>
               </tr>
             </thead>
             <tbody id="al-table-body">
@@ -2331,25 +2393,25 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 
       <!-- Tab 1: Rechnungen -->
       <div id="rv-panel-rechnungen" style="padding:0 16px 16px">
-        <div style="display:flex;gap:10px;align-items:center;margin:12px 0;flex-wrap:wrap">
+        <div class="crm-filter-row" style="margin:12px 0">
           <input id="rv-search" placeholder="Suche Rechnungsnr., Kunde, Baustelle..." oninput="filterRvTable(this.value)"
-            style="font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surf);color:var(--text);width:260px;font-family:inherit" />
+            class="crm-input" style="width:260px" />
           <div id="rv-count" style="font-size:12px;color:var(--muted);margin-left:auto"></div>
         </div>
-        <div class="grp" style="padding:0;overflow:hidden">
-          <table style="width:100%;border-collapse:collapse">
+        <div class="crm-table-wrap grp" style="padding:0">
+          <table class="crm-table">
             <thead>
               <tr style="background:var(--bg)">
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Rechnungsnr.</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Unternehmen</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Baustelle</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Datum</th>
-                <th style="padding:10px 14px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Rabatt</th>
-                <th style="padding:10px 14px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Netto</th>
-                <th style="padding:10px 14px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">MwSt.</th>
-                <th style="padding:10px 14px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Brutto</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Quelle</th>
-                <th style="padding:10px 12px;width:40px"></th>
+                <th>Rechnungsnr.</th>
+                <th>Unternehmen</th>
+                <th class="col-hide-m">Baustelle</th>
+                <th>Datum</th>
+                <th class="col-hide-m" style="text-align:right">Rabatt</th>
+                <th style="text-align:right">Netto</th>
+                <th class="col-hide-m" style="text-align:right">MwSt.</th>
+                <th style="text-align:right">Brutto</th>
+                <th class="col-hide-m">Quelle</th>
+                <th style="width:40px"></th>
               </tr>
             </thead>
             <tbody id="rv-table-body">
@@ -2361,11 +2423,11 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
 
       <!-- Tab 2: Alle Positionen -->
       <div id="rv-panel-positionen" style="display:none;padding:0 16px 16px">
-        <div style="display:flex;gap:10px;align-items:center;margin:12px 0;flex-wrap:wrap">
+        <div class="crm-filter-row" style="margin:12px 0">
           <input id="rv-pos-search" placeholder="Suche Titel, Modul, Unternehmen..." oninput="filterRvPositionen(this.value)"
-            style="font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surf);color:var(--text);width:240px;font-family:inherit" />
+            class="crm-input" style="width:240px" />
           <select id="rv-pos-type-filter" onchange="filterRvPositionen(document.getElementById('rv-pos-search').value)"
-            style="font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surf);color:var(--text);width:150px;font-family:inherit">
+            class="crm-input" style="width:150px">
             <option value="">Alle Typen</option>
             <option value="software">Software</option>
             <option value="hardware">Hardware</option>
@@ -2373,19 +2435,19 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
           </select>
           <div id="rv-pos-count" style="font-size:12px;color:var(--muted);margin-left:auto"></div>
         </div>
-        <div class="grp" style="padding:0;overflow:hidden">
-          <table style="width:100%;border-collapse:collapse">
+        <div class="crm-table-wrap grp" style="padding:0">
+          <table class="crm-table">
             <thead>
               <tr style="background:var(--bg)">
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Datum</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Rechnungsnr.</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Unternehmen</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Titel / Modul</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Typ</th>
-                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Einheit</th>
-                <th style="padding:10px 14px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Menge</th>
-                <th style="padding:10px 14px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Einzelpreis</th>
-                <th style="padding:10px 14px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Gesamt</th>
+                <th>Datum</th>
+                <th class="col-hide-m">Rechnungsnr.</th>
+                <th>Unternehmen</th>
+                <th>Titel / Modul</th>
+                <th class="col-hide-m">Typ</th>
+                <th class="col-hide-m">Einheit</th>
+                <th class="col-hide-m" style="text-align:right">Menge</th>
+                <th class="col-hide-m" style="text-align:right">Einzelpreis</th>
+                <th style="text-align:right">Gesamt</th>
               </tr>
             </thead>
             <tbody id="rv-pos-table-body">
@@ -2599,6 +2661,17 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         <button class="fd-liz-sh-close" onclick="closeLizenzModal()">✕</button>
       </div>
       <div class="fd-liz-sh-body" id="fd-liz-sh-body"></div>
+    </div>
+  </div>
+
+  <!-- ── Hardware-Detail-Modal ───────────────────────── -->
+  <div id="fd-hw-modal" onclick="if(event.target===this)closeHardwareModal()">
+    <div class="fd-liz-sheet">
+      <div class="fd-liz-sh-hd">
+        <div class="fd-liz-sh-title">Hardware</div>
+        <button class="fd-liz-sh-close" onclick="closeHardwareModal()">✕</button>
+      </div>
+      <div class="fd-liz-sh-body" id="fd-hw-sh-body"></div>
     </div>
   </div>
 
@@ -2942,7 +3015,6 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
       <div class="cp-quick-btns">
         <button class="cp-qbtn" onclick="openCapture(_pid,'notiz')"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4z"/></svg>Notiz</button>
         <button class="cp-qbtn" onclick="openCapture(_pid,'task')"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Aufgabe</button>
-        <button class="cp-qbtn" onclick="openCapture(_pid,'termin')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Termin</button>
         <button class="cp-qbtn" id="cp-call-btn" onclick="callCompany()"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.33 10.5a19.79 19.79 0 01-3.07-8.67A2 2 0 013.44 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.91 7.91a16 16 0 006.18 6.18l.79-.79a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>Anrufen</button>
       </div>
     </div>
@@ -2965,17 +3037,55 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
       <div class="cap-title">Schnell erfassen</div>
       <button class="cap-x" onclick="closeCapture()">×</button>
     </div>
+
+    <!-- Entity search (top) -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <div style="display:flex;background:var(--bg);border-radius:9px;overflow:hidden;flex-shrink:0">
+        <button class="cap-entity-btn on" id="cap-ent-firma" onclick="setCapEntity('firma')">Firma</button>
+        <button class="cap-entity-btn" id="cap-ent-lead" onclick="setCapEntity('lead')">Lead</button>
+      </div>
+      <div style="position:relative;flex:1">
+        <input type="text" class="cap-f" id="cap-search" placeholder="Unternehmen suchen…" autocomplete="off" oninput="capSearchFilter()" onfocus="capSearchFilter()" style="margin-bottom:0">
+        <input type="hidden" id="cap-entity-id">
+        <div id="cap-search-drop" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:10;background:var(--surf);border:1px solid var(--border);border-radius:10px;max-height:180px;overflow-y:auto;box-shadow:var(--sh);margin-top:2px"></div>
+      </div>
+    </div>
+
+    <!-- Type tabs -->
     <div class="cap-types">
       <div class="cap-type on" data-t="notiz"  onclick="setCapT(this)">📝 Notiz</div>
       <div class="cap-type"    data-t="task"   onclick="setCapT(this)">✅ Aufgabe</div>
-      <div class="cap-type"    data-t="termin" onclick="setCapT(this)">📅 Termin</div>
     </div>
-    <input type="text"   class="cap-f" id="cap-txt" placeholder="Was möchtest du erfassen?">
-    <div class="cap-row">
-      <input type="date"   class="cap-f" id="cap-date" style="display:none">
-      <input type="time"   class="cap-f" id="cap-time" style="display:none" value="09:00">
+
+    <!-- Note fields -->
+    <div id="cap-fields-notiz">
+      <textarea class="cap-f" id="cap-txt" placeholder="Was möchtest du notieren?" rows="1" style="resize:none;overflow:hidden;flex:1;min-height:60px" oninput="autoResizeCapTxt()"></textarea>
     </div>
-    <select class="cap-f" id="cap-co" style="font-family:inherit"><option value="">Kein Unternehmen</option></select>
+
+    <!-- Task fields -->
+    <div id="cap-fields-task" style="display:none;flex:1;flex-direction:column;gap:0">
+      <input class="cap-f" id="cap-task-titel" type="text" placeholder="Aufgabentitel">
+      <textarea class="cap-f" id="cap-task-beschreibung" placeholder="Optionale Beschreibung…" rows="2" style="resize:none;overflow:hidden;flex:1;min-height:50px" oninput="autoResizeCapTxt2(this)"></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Fällig am</div>
+          <input class="cap-f" id="cap-task-faellig" type="date" style="margin-bottom:6px">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Zuständig</div>
+          <select class="cap-f" id="cap-task-zustaendig" style="margin-bottom:6px;appearance:auto"></select>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Priorität</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px" id="cap-task-prio-row">
+          <button class="cap-prio-btn" data-prio="hoch" onclick="setCapPrio('hoch')">🔴 Hoch</button>
+          <button class="cap-prio-btn" data-prio="mittel" onclick="setCapPrio('mittel')">🟡 Mittel</button>
+          <button class="cap-prio-btn on" data-prio="niedrig" onclick="setCapPrio('niedrig')">🟢 Niedrig</button>
+        </div>
+      </div>
+    </div>
+
     <button class="cap-save" onclick="saveCapture()">Speichern</button>
   </div>
 </div>
@@ -3267,6 +3377,10 @@ html, body { height:100%; overflow:hidden; font-family:-apple-system,'Helvetica 
         </div>
 
         <div id="prf-team-list"></div>
+
+        <div style="margin-top:24px;padding-top:16px;border-top:.5px solid var(--border)">
+          <button onclick="logoutUser()" style="width:100%;padding:12px;font-size:14px;font-weight:600;color:#dc2626;background:none;border:1.5px solid #dc262644;border-radius:12px;cursor:pointer;font-family:inherit;transition:all .15s" onmouseenter="this.style.background='#dc26260a'" onmouseleave="this.style.background='none'">Abmelden</button>
+        </div>
       </div>
 
     </div>
@@ -3334,6 +3448,7 @@ let _userNames = []; // team member names for zuständig dropdowns
 let _userName  = ''; // current user display name
 let _ff     = 'all';          // firmen filter
 let _tf     = 'open';         // task filter
+let _tsort  = 'deadline';    // task sort: deadline | prio | erstellt
 let _termf  = 'upcoming';     // termin filter
 let _pid    = null;           // panel company id (legacy – now delegates to firma-detail)
 let _ptab   = 'timeline';     // panel tab
@@ -3365,8 +3480,11 @@ async function init() {
       if (new URLSearchParams(window.location.search).get('google_callback')) {
         handleGoogleCallback();
       }
+      return;
     }
   } catch(e) {}
+  // No session — show login
+  qi('auth').classList.add('on');
 }
 
 async function doLogin() {
@@ -3382,7 +3500,7 @@ async function doLogout() {
   await db.auth.signOut();
   _user = null; _firms = [];
   qi('app').classList.remove('on');
-  qi('auth').style.display = 'flex';
+  qi('auth').classList.add('on');
 }
 
 async function startApp(user) {
@@ -3400,10 +3518,10 @@ async function startApp(user) {
   qi('m-email').textContent = user.email;
   qi('sb-name').textContent = nm;
   qi('sb-email').textContent = user.email;
-  qi('auth').style.display = 'none';
+  qi('auth').classList.remove('on');
   qi('app').classList.add('on');
   const h = location.hash.replace('#','');
-  const valid = ['heute','firmen','tasks','pipeline','mehr'];
+  const valid = ['heute','firmen','tasks','termine','pipeline','mehr','report','baustellen','alle-leads','importe','rechnungen','schake','google-settings'];
   const startPage = valid.includes(h) ? h : 'heute';
   history.replaceState({ view: startPage }, '', '#' + startPage);
   navTo(startPage, { fromPopstate: true });
@@ -3587,6 +3705,11 @@ async function saveProfile() {
   btn.textContent = 'Speichern'; btn.disabled = false;
   showToast('Profil gespeichert ✓');
   closeModal('modal-profile');
+}
+
+async function logoutUser() {
+  await db.auth.signOut();
+  location.reload();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -3832,6 +3955,10 @@ document.addEventListener('click', e => {
     qi('qnp-entity-drop')?.style && (qi('qnp-entity-drop').style.display = 'none');
     qi('qnt-entity-drop')?.style && (qi('qnt-entity-drop').style.display = 'none');
   }
+  if (!e.target.closest('#cap-search') && !e.target.closest('#cap-search-drop')) {
+    const cd = qi('cap-search-drop');
+    if (cd) cd.style.display = 'none';
+  }
 });
 
 // ── Quick-Note Panel ──────────────────────────────────────
@@ -3977,6 +4104,220 @@ async function saveHeuteQuickTask() {
   loadHeute();
 }
 
+// ── Heute Dashboard Charts ──────────────────────────────
+const _hPad = 6, _hLPad = 28;
+function hMiniLine(pts, W, H, color, fill, opts={}) {
+  if (!pts || pts.length < 2) return '';
+  const gW = W - _hLPad - 4;
+  const xs = pts.map((_,i) => _hLPad + (i/(pts.length-1))*gW);
+  const max = opts.maxOverride || Math.max(...pts, 1);
+  const ys = pts.map(v => H - _hPad - (v/max)*(H-_hPad*2));
+  const coords = xs.map((x,i) => [x, ys[i]]);
+  const d = coords.map((c,i) => (i===0?'M':'L')+c[0].toFixed(1)+','+c[1].toFixed(1)).join(' ');
+  const sw = opts.strokeWidth || 2;
+  const dr = opts.dotRadius || 0;
+  let out = '';
+  if (fill) {
+    out += `<path d="${d} L${coords[coords.length-1][0].toFixed(1)},${(H-_hPad)} L${coords[0][0].toFixed(1)},${(H-_hPad)} Z" fill="${fill}" />`;
+  }
+  out += `<path d="${d}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  if (dr > 0) coords.forEach(c => { out += `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${dr}" fill="${color}" />`; });
+  return out;
+}
+function hMiniGrid(W, H, n, maxVal) {
+  let out = '';
+  for (let i=0; i<=n; i++) {
+    const y = (_hPad + (i/n)*(H-_hPad*2)).toFixed(1);
+    out += `<line x1="${_hLPad}" y1="${y}" x2="${W}" y2="${y}" stroke="rgba(139,92,246,0.07)" stroke-width="1"/>`;
+    if (maxVal != null) {
+      const val = Math.round(maxVal * (1 - i/n));
+      const label = val >= 1000000 ? (val/1000000).toFixed(1).replace('.0','')+'M'
+                  : val >= 1000    ? (val/1000).toFixed(val>=10000?0:1).replace('.0','')+'k'
+                  : String(val);
+      out += `<text x="${_hLPad-3}" y="${(parseFloat(y)+3)}" fill="rgba(107,114,128,0.6)" font-size="7" text-anchor="end" font-family="Inter,sans-serif">${label}</text>`;
+    }
+  }
+  return out;
+}
+
+function hMiniHover(svgEl, months, series) {
+  // series: [{label, color, vals}] — single or multi-line
+  if (!svgEl || !series.length) return;
+  const vb = svgEl.getAttribute('viewBox')?.split(' ') || [];
+  const W = parseFloat(vb[2]) || 300, H = parseFloat(vb[3]) || 100;
+  const gW = W - _hLPad - 4;
+  const allMax = Math.max(...series.flatMap(s=>s.vals), 1);
+  const ns = 'http://www.w3.org/2000/svg';
+  svgEl.querySelectorAll('.hh-overlay,.hh-hit').forEach(el => el.remove());
+  const g = document.createElementNS(ns, 'g');
+  g.setAttribute('class', 'hh-overlay'); g.style.display = 'none';
+  const vline = document.createElementNS(ns, 'line');
+  vline.setAttribute('stroke', 'rgba(124,58,237,0.35)'); vline.setAttribute('stroke-width', '1');
+  vline.setAttribute('stroke-dasharray', '3,2');
+  g.appendChild(vline);
+  // dots per series
+  const dots = series.map(s => {
+    const dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('r', series.length > 1 ? '3' : '4');
+    dot.setAttribute('fill', s.color); dot.setAttribute('stroke', '#fff'); dot.setAttribute('stroke-width', '1.5');
+    g.appendChild(dot); return dot;
+  });
+  const ttg = document.createElementNS(ns, 'g');
+  const ttrect = document.createElementNS(ns, 'rect');
+  ttrect.setAttribute('rx', '4'); ttrect.setAttribute('fill', 'rgba(24,16,48,0.92)');
+  ttg.appendChild(ttrect); g.appendChild(ttg); svgEl.appendChild(g);
+  const hit = document.createElementNS(ns, 'rect');
+  hit.setAttribute('class', 'hh-hit');
+  hit.setAttribute('x', _hLPad); hit.setAttribute('y', 0);
+  hit.setAttribute('width', gW); hit.setAttribute('height', H);
+  hit.setAttribute('fill', 'transparent'); hit.setAttribute('pointer-events', 'all');
+  hit.style.cursor = 'crosshair'; svgEl.appendChild(hit);
+
+  function update(svgX) {
+    const frac = Math.max(0, Math.min(1, (svgX - _hLPad) / gW));
+    const i = Math.round(frac * (series[0].vals.length - 1));
+    const cx = _hLPad + (i / (series[0].vals.length - 1)) * gW;
+    const m = months[i];
+    const MNAMES = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+    const monthLabel = m ? MNAMES[m.month] + ' ' + String(m.year).slice(2) : '';
+
+    // Position dots
+    series.forEach((s, si) => {
+      const val = s.vals[i] || 0;
+      const cy = H - _hPad - (val / allMax) * (H - _hPad * 2);
+      dots[si].setAttribute('cx', cx.toFixed(1)); dots[si].setAttribute('cy', cy.toFixed(1));
+    });
+    vline.setAttribute('x1', cx.toFixed(1)); vline.setAttribute('x2', cx.toFixed(1));
+    vline.setAttribute('y1', _hPad); vline.setAttribute('y2', H - _hPad);
+
+    // Build tooltip lines
+    const lines = [{ text: monthLabel, color: 'rgba(255,255,255,0.55)', size: 7.5, bold: false }];
+    series.forEach(s => {
+      const v = s.vals[i] || 0;
+      const txt = s.label ? `${s.label}: ${v.toLocaleString('de-DE')}` : v.toLocaleString('de-DE');
+      lines.push({ text: txt, color: s.color, size: 8.5, bold: true });
+    });
+    const lineH = 11, padX = 7, padY = 5;
+    const boxW = Math.max(...lines.map(l => l.text.length * (l.size > 8 ? 5 : 4.5))) + padX * 2;
+    const boxH = lines.length * lineH + padY * 2 - 2;
+    let bx = cx - boxW / 2;
+    let by = (H - boxH) / 2;
+    bx = Math.max(_hLPad, Math.min(W - boxW - 2, bx));
+    ttrect.setAttribute('x', bx); ttrect.setAttribute('y', by);
+    ttrect.setAttribute('width', boxW); ttrect.setAttribute('height', boxH);
+    ttg.querySelectorAll('text').forEach(t => t.remove());
+    lines.forEach((l, li) => {
+      const t = document.createElementNS(ns, 'text');
+      t.setAttribute('x', bx + padX); t.setAttribute('y', by + padY + lineH * li + (l.size > 8 ? 8 : 7));
+      t.setAttribute('fill', l.color); t.setAttribute('font-size', l.size);
+      t.setAttribute('font-family', 'Inter,sans-serif');
+      if (l.bold) t.setAttribute('font-weight', '600');
+      t.textContent = l.text; ttg.appendChild(t);
+    });
+    g.style.display = '';
+  }
+  hit.addEventListener('mousemove', e => {
+    const rect = svgEl.getBoundingClientRect();
+    update((e.clientX - rect.left) * (W / rect.width));
+  });
+  hit.addEventListener('mouseleave', () => { g.style.display = 'none'; });
+}
+
+async function loadHeuteCharts() {
+  const months = rpGetLast12();
+  const monthStrs = months.map(m => `${m.year}-${String(m.month+1).padStart(2,'0')}`);
+  const MNAMES = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+  // ── MRR Chart ──
+  const [{ data: mrrData }, { data: schakeProv }] = await Promise.all([
+    db.from('mrr_gesamt_monat').select('monat, mrr').in('monat', monthStrs),
+    db.from('schake_provisionen').select('monat, betrag').in('monat', monthStrs),
+  ]);
+  const mrrByMonth = {}; (mrrData||[]).forEach(r => { mrrByMonth[r.monat] = r.mrr||0; });
+  const schakeByMonth = {}; (schakeProv||[]).forEach(r => { schakeByMonth[r.monat] = r.betrag||0; });
+  const mrrVals = months.map(m => {
+    const ms = `${m.year}-${String(m.month+1).padStart(2,'0')}`;
+    return Math.max(0, Math.round(((mrrByMonth[ms]||0) - (schakeByMonth[ms]||0)) * 100) / 100);
+  });
+  const curMrr = mrrVals[mrrVals.length - 2] || mrrVals[mrrVals.length - 1] || 0;
+  const mrrValEl = qi('h-mrr-val');
+  if (mrrValEl) mrrValEl.textContent = curMrr > 0 ? curMrr.toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0})+' €' : '–';
+  const mrrSvg = qi('h-mrr-svg');
+  if (mrrSvg) {
+    const W=300, H=100, maxM = Math.max(...mrrVals, 1);
+    mrrSvg.innerHTML = hMiniGrid(W,H,3,maxM) + hMiniLine(mrrVals,W,H,'#7c3aed','rgba(124,58,237,0.10)');
+    hMiniHover(mrrSvg, months, [{label:'MRR', color:'#c4b5fd', vals:mrrVals.map(v=>Math.round(v))}]);
+  }
+  const mrrLabels = qi('h-mrr-labels');
+  if (mrrLabels) {
+    const step = 3;
+    mrrLabels.innerHTML = months.filter((_,i)=>i%step===0||i===months.length-1).map(m=>`<span>${MNAMES[m.month]}</span>`).join('');
+  }
+
+  // ── Module Lizenzen Chart (multi-line) ──
+  const { data: allModData } = await db.from('lizenzen_modul_monat').select('modul_name, monat, anzahl').in('monat', monthStrs);
+  if (!allModData?.length) {
+    const modValEl2 = qi('h-mod-val');
+    if (modValEl2) modValEl2.textContent = 'Keine Daten';
+    return;
+  }
+
+  // Group by module, build series
+  const byMod = {};
+  for (const r of allModData) {
+    const n = r.modul_name || 'Unbekannt';
+    if (!byMod[n]) byMod[n] = { name: n, total: 0, byMonat: {} };
+    byMod[n].byMonat[r.monat] = (byMod[n].byMonat[r.monat]||0) + (r.anzahl||0);
+    byMod[n].total += (r.anzahl||0);
+  }
+  const topMods = Object.values(byMod).sort((a,b)=>b.total-a.total).slice(0,4);
+  const modColors = ['#7c3aed','#ec4899','#f59e0b','#10b981'];
+
+  const modSeries = topMods.map((mod,ci) => ({
+    name: mod.name,
+    color: modColors[ci],
+    vals: monthStrs.map(ms => mod.byMonat[ms] || 0)
+  }));
+
+  // Current month value
+  const curIdx = monthStrs.indexOf(rpLastCompleted());
+  const curModTotal = modSeries.reduce((s,sr) => s + (sr.vals[curIdx >= 0 ? curIdx : sr.vals.length-1]||0), 0);
+  const modValEl = qi('h-mod-val');
+  if (modValEl) modValEl.textContent = curModTotal > 0 ? Math.round(curModTotal)+' Lizenzen' : '–';
+
+  // Render multi-line SVG
+  const modSvg = qi('h-mod-svg');
+  if (modSvg) {
+    const W=300, H=100;
+    const allVals = modSeries.flatMap(s=>s.vals);
+    const maxV = Math.max(...allVals, 1);
+    let svgContent = hMiniGrid(W,H,3,maxV);
+    modSeries.forEach(s => {
+      svgContent += hMiniLine(s.vals,W,H,s.color,null,{maxOverride:maxV, strokeWidth:1.8, dotRadius:1.5});
+    });
+    modSvg.innerHTML = svgContent;
+    hMiniHover(modSvg, months, modSeries.map(s => ({
+      label: s.name, color: s.color,
+      vals: s.vals.map(v => Math.round(v))
+    })));
+  }
+
+  // Labels
+  const modLabels = qi('h-mod-labels');
+  if (modLabels) {
+    const step = 3;
+    modLabels.innerHTML = months.filter((_,i)=>i%step===0||i===months.length-1).map(m=>`<span>${MNAMES[m.month]}</span>`).join('');
+  }
+
+  // Legend
+  const legendEl = qi('h-mod-legend');
+  if (legendEl) {
+    legendEl.innerHTML = modSeries.map(s =>
+      `<div class="h-chart-legend-item"><div class="h-chart-legend-dot" style="background:${s.color}"></div>${escHtml(s.name)}</div>`
+    ).join('');
+  }
+}
+
 async function loadHeute() {
   const now  = new Date();
   const DAYS   = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
@@ -3986,8 +4327,11 @@ async function loadHeute() {
   qi('h-dt').textContent = `${DAYS[now.getDay()]}, ${now.getDate()}. ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
   const today = now.toISOString().slice(0,10);
 
+  // Load charts in parallel with main data
+  loadHeuteCharts();
+
   const [tR, termR, nR, pR] = await Promise.all([
-    db.from('tasks').select('id,titel,faellig,erledigt,kunde_id,deal_id,kunden(name)').eq('erledigt',false).order('faellig',{ascending:true}).limit(80),
+    db.from('tasks').select('id,titel,erstellt,erledigt').eq('erledigt',false).order('erstellt',{ascending:false}).limit(200),
     db.from('termine').select('id,art,datum,uhrzeit_von,betreff,kunde_id,deal_id,kunden(name)').eq('datum',today).order('uhrzeit_von',{ascending:true}),
     db.from('notizen').select('id,typ,titel,erstellt,kunde_id,kunden(name)').order('erstellt',{ascending:false}).limit(15),
     db.from('pipeline_deals').select('id,titel,stage').neq('stage','rollout').neq('stage','churned'),
@@ -3997,7 +4341,6 @@ async function loadHeute() {
   const termine = termR.data || [];
   const notizen = nR.data   || [];
   const leads   = pR.data   || [];
-  const due     = tasks.filter(t => t.faellig && t.faellig <= today);
 
   // Ensure search caches are warm
   if (!_pipeDeals.length && leads.length) _pipeDeals = leads;
@@ -4022,17 +4365,25 @@ async function loadHeute() {
       </div>`).join('')
     : '<div class="empty" style="padding:24px"><div class="empty-ico">📅</div><div class="empty-msg">Keine Termine heute</div></div>';
 
-  // Fällige Aufgaben (inline abhaken)
-  qi('h-tasks').innerHTML = due.length
-    ? due.slice(0,10).map(t => `
-      <div class="t-row" id="htr-${t.id}">
-        <div class="t-check${t.erledigt?' done':''}" onclick="heuteToggleTask('${t.id}',this)"></div>
-        <div class="t-body" onclick="openTaskEditModal('${t.id}')" style="cursor:pointer">
-          <div class="t-title">${escHtml(t.titel)}</div>
-          <div class="t-sub">${t.kunden?.name ? escHtml(t.kunden.name)+' · ' : ''}${t.faellig < today ? '<span style="color:var(--red)">Überfällig</span>' : 'Heute fällig'}</div>
-        </div>
-      </div>`).join('')
-    : '<div class="empty" style="padding:24px"><div class="empty-ico">🎉</div><div class="empty-msg">Alles erledigt!</div></div>';
+  // Neueste Aufgaben (4 sichtbar, Rest ausklappbar)
+  _heuteTasks = tasks;
+  const PREVIEW = 4;
+  const taskRow = t => `
+    <div class="t-row" id="htr-${t.id}" onclick="openTaskEditModal('${t.id}')" style="cursor:pointer">
+      <div class="t-check${t.erledigt?' done':''}" onclick="event.stopPropagation();heuteToggleTask('${t.id}',this)"></div>
+      <div class="t-body"><div class="t-title">${escHtml(t.titel)}</div></div>
+    </div>`;
+  if (tasks.length) {
+    const preview = tasks.slice(0, PREVIEW).map(taskRow).join('');
+    const rest = tasks.length > PREVIEW
+      ? `<div id="h-tasks-more" style="display:none">${tasks.slice(PREVIEW).map(taskRow).join('')}</div>
+         <div id="h-tasks-toggle" style="text-align:center;padding:8px 0">
+           <button onclick="toggleHeuteTasks()" class="h-sec-more" style="font-size:12px">${tasks.length - PREVIEW} weitere anzeigen ▾</button>
+         </div>` : '';
+    qi('h-tasks').innerHTML = preview + rest;
+  } else {
+    qi('h-tasks').innerHTML = '<div class="empty" style="padding:24px"><div class="empty-ico">✅</div><div class="empty-msg">Keine offenen Aufgaben</div></div>';
+  }
 
   // Letzte Aktivitäten
   qi('h-activity').innerHTML = notizen.length
@@ -4045,12 +4396,25 @@ async function loadHeute() {
     : '<div class="empty" style="padding:24px"><div class="empty-ico">💬</div><div class="empty-msg">Noch keine Aktivitäten</div></div>';
 }
 
+let _heuteTasks = [];
+let _heuteTasksExpanded = false;
+
 async function heuteToggleTask(id, checkEl) {
   checkEl.classList.add('done');
   const row = qi('htr-' + id);
   if (row) { row.style.opacity = '.4'; row.style.transition = 'opacity .3s'; }
   await db.from('tasks').update({ erledigt: true }).eq('id', id);
   setTimeout(() => { if (row) row.remove(); }, 350);
+}
+
+function toggleHeuteTasks() {
+  _heuteTasksExpanded = !_heuteTasksExpanded;
+  const more = qi('h-tasks-more');
+  const btn = qi('h-tasks-toggle');
+  if (more) more.style.display = _heuteTasksExpanded ? '' : 'none';
+  if (btn) btn.innerHTML = _heuteTasksExpanded
+    ? '<button onclick="toggleHeuteTasks()" class="h-sec-more" style="font-size:12px">Weniger anzeigen ▴</button>'
+    : `<button onclick="toggleHeuteTasks()" class="h-sec-more" style="font-size:12px">${_heuteTasks.length - 4} weitere anzeigen ▾</button>`;
 }
 
 // ══════════════════════════════════════════════════════════
@@ -4060,7 +4424,6 @@ async function loadFirmen() {
   if (_firms.length) { renderFirmen(); return; }
 
   // Show skeleton while loading
-  qi('f-stats').innerHTML = '';
   qi('f-list').innerHTML = `<div class="grp">${skRows(5)}</div>`;
 
   const { data, error } = await db
@@ -4093,9 +4456,6 @@ async function loadFirmen() {
     return;
   }
 
-  // Populate capture dropdown
-  qi('cap-co').innerHTML = '<option value="">Kein Unternehmen</option>' +
-    _firms.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
 
   renderFirmen();
 }
@@ -4103,9 +4463,6 @@ async function loadFirmen() {
 function renderFirmen() {
   const q = (qi('f-q')?.value || '').toLowerCase();
   let list = [..._firms];
-
-  // Status filter
-  if (_ff !== 'all') list = list.filter(f => f.status === _ff);
 
   // Search filter
   if (q) list = list.filter(f =>
@@ -4115,76 +4472,32 @@ function renderFirmen() {
     (f.email || '').toLowerCase().includes(q)
   );
 
-  // Sort
-  if (_fsort === 'mrr') {
-    list.sort((a, b) => (parseFloat(b.umsatz) || 0) - (parseFloat(a.umsatz) || 0));
-  } else if (_fsort === 'status') {
-    const ord = {aktiv:0, lead:1, inaktiv:2, churned:3};
-    list.sort((a, b) => (ord[a.status] ?? 9) - (ord[b.status] ?? 9) || a.name.localeCompare(b.name, 'de'));
-  } else {
-    list.sort((a, b) => a.name.localeCompare(b.name, 'de'));
-  }
-
-  // Stats strip
-  const aktCount  = list.filter(f => f.status === 'Aktiv').length;
-  const leadCount = list.filter(f => f.status === 'Lead').length;
-  const totalMrr  = list.filter(f => f.status === 'Aktiv').reduce((s, f) => s + (parseFloat(f.umsatz) || 0), 0);
-  qi('f-stats').innerHTML = list.length ? `
-    <div class="stats-strip">
-      <div class="stat-pill">
-        <div class="stat-pill-val">${list.length}</div>
-        <div class="stat-pill-lbl">Gesamt</div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-val" style="color:var(--green)">${aktCount}</div>
-        <div class="stat-pill-lbl">Aktiv</div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-val" style="color:var(--blue)">${leadCount}</div>
-        <div class="stat-pill-lbl">Leads</div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-pill-val" style="color:var(--acc)">${fmtMrr(totalMrr)}</div>
-        <div class="stat-pill-lbl">MRR</div>
-      </div>
-    </div>` : '';
+  // Sort alphabetically
+  list.sort((a, b) => a.name.localeCompare(b.name, 'de'));
 
   qi('firmen-count').textContent = list.length
     ? `${list.length} Firma${list.length !== 1 ? 'en' : ''}`
     : '';
 
   if (!list.length) {
-    qi('f-list').innerHTML = '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-msg">Keine Ergebnisse</div><div class="empty-sub">Suchbegriff oder Filter anpassen</div></div>';
+    qi('f-list').innerHTML = '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-msg">Keine Ergebnisse</div><div class="empty-sub">Suchbegriff anpassen</div></div>';
     return;
   }
 
-  const SM = {'Aktiv':{c:'b-g',l:'Aktiv'}, 'Lead':{c:'b-b',l:'Lead'}, 'Inaktiv':{c:'b-x',l:'Inaktiv'}, 'Churned':{c:'b-r',l:'Churned'}};
-
   qi('f-list').innerHTML = `<div class="grp">${list.map(f => {
-    const s = SM[f.status] || {c:'b-x', l: f.status || '–'};
     const initials = f.name.trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
-    const meta = [f.typ, f.ort].filter(Boolean).join(' · ') || '–';
-    const avContent = f.logo
-      ? `<img src="${f.logo}" style="width:100%;height:100%;object-fit:contain;border-radius:9px;display:block;" />`
+    const hasLogo = f.logo && f.logo.startsWith('http');
+    const avContent = hasLogo
+      ? `<img src="${f.logo}" style="width:100%;height:100%;object-fit:contain;border-radius:9px;display:block;" onerror="this.style.display='none';this.parentElement.textContent='${initials}';this.parentElement.style.fontSize='';this.parentElement.style.background=''" />`
       : initials;
-    const avStyle = f.logo ? 'style="background:var(--bg);font-size:0"' : '';
+    const avStyle = hasLogo ? 'style="background:var(--bg);font-size:0"' : '';
     return `
       <div class="co-card" onclick="openPanel('${f.id}')">
         <div class="co-av" ${avStyle}>${avContent}</div>
         <div style="flex:1;min-width:0">
           <div class="co-name">${f.name}</div>
-          <div class="co-meta">${meta}</div>
-          <div class="co-bottom">
-            <span class="badge ${s.c}">${s.l}</span>
-            ${f.umsatz ? `<span class="co-mrr-tag">${f.umsatz}</span>` : ''}
-            ${f.zustaendig ? `<span class="co-mrr-tag">👤 ${f.zustaendig}</span>` : ''}
-          </div>
+          <div class="co-meta">${f.typ || '–'}</div>
         </div>
-        ${f.telefon
-          ? `<button class="co-act-btn co-call-btn" title="Anrufen" onclick="event.stopPropagation();window.location.href='tel:${f.telefon}'">
-               <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.33 10.5a19.79 19.79 0 01-3.07-8.67A2 2 0 013.44 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.91 7.91a16 16 0 006.18 6.18l.79-.79a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-             </button>`
-          : '<div style="width:38px;flex-shrink:0"></div>'}
       </div>`;
   }).join('')}</div>`;
 }
@@ -4209,7 +4522,7 @@ async function loadTasks() {
   const el = qi('t-content');
   el.innerHTML = skGrp();
 
-  let q = db.from('tasks').select('id,titel,faellig,erledigt,kunde_id,kunden(name)');
+  let q = db.from('tasks').select('id,titel,faellig,erledigt,prio,erstellt,kunde_id,kunden(name)');
   if (_tf === 'done')    q = q.eq('erledigt',true).order('faellig',{ascending:false}).limit(50);
   else if (_tf === 'overdue') q = q.eq('erledigt',false).lt('faellig',today).order('faellig',{ascending:true});
   else if (_tf === 'today')   q = q.eq('erledigt',false).eq('faellig',today).order('faellig',{ascending:true});
@@ -4218,8 +4531,17 @@ async function loadTasks() {
   const { data, error } = await q;
   if (error || !data?.length) { el.innerHTML = '<div class="empty"><div class="empty-ico">🎉</div><div class="empty-msg">Keine Aufgaben hier</div></div>'; return; }
 
-  if (_tf === 'open') {
-    // Group by urgency
+  // Client-side sort
+  const PRIO_ORD = {hoch:0, mittel:1, niedrig:2};
+  const sortFn = _tsort === 'prio'
+    ? (a,b) => (PRIO_ORD[a.prio]??1) - (PRIO_ORD[b.prio]??1) || (a.faellig||'9').localeCompare(b.faellig||'9')
+    : _tsort === 'erstellt'
+    ? (a,b) => (b.erstellt||'').localeCompare(a.erstellt||'')
+    : (a,b) => (a.faellig||'9999').localeCompare(b.faellig||'9999');
+  data.sort(sortFn);
+
+  if (_tf === 'open' && _tsort === 'deadline') {
+    // Group by urgency only when sorting by deadline
     const groups = [
       {label:'Überfällig', color:'var(--red)',    items:data.filter(t=>t.faellig&&t.faellig<today)},
       {label:'Heute',      color:'var(--orange)', items:data.filter(t=>t.faellig===today)},
@@ -4235,13 +4557,17 @@ async function loadTasks() {
 }
 
 function taskRow(t, today) {
+  const erstelltStr = t.erstellt ? fmtDate(t.erstellt.slice(0,10)) : '';
+  const prioLabel = t.prio === 'hoch' ? '<span style="color:var(--red);font-weight:600">Hoch</span>'
+                  : t.prio === 'niedrig' ? '<span style="color:var(--muted)">Niedrig</span>' : '';
+  const metaParts = [t.kunden?.name, t.faellig ? 'Fällig: '+fmtDate(t.faellig) : '', erstelltStr ? 'Erstellt: '+erstelltStr : '', prioLabel].filter(Boolean);
   return `<div class="t-row" id="tr-${t.id}">
     <div class="t-check ${t.erledigt?'done':''}" onclick="${!t.erledigt?`doneTask('${t.id}','tr-${t.id}')`:``}">
       <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
     <div class="t-body" onclick="openTaskEditModal('${t.id}')" style="cursor:pointer">
       <div class="t-name ${t.erledigt?'done':''}">${t.titel}</div>
-      <div class="t-meta">${t.kunden?.name||''}${t.faellig?' · '+fmtDate(t.faellig):''}</div>
+      <div class="t-meta">${metaParts.join(' · ')}</div>
     </div>
   </div>`;
 }
@@ -4257,6 +4583,12 @@ async function doneTask(id, rowId) {
 function setTF(el) {
   _tf = el.dataset.tf;
   qAll('#t-chips .chip').forEach(c => c.classList.toggle('on', c===el));
+  loadTasks();
+}
+
+function setTSort(el) {
+  _tsort = el.dataset.ts;
+  qAll('#t-sort-row .sort-chip').forEach(c => c.classList.toggle('on', c===el));
   loadTasks();
 }
 
@@ -4332,7 +4664,7 @@ async function loadPipeline() {
   board.innerHTML = `<div class="k-col"><div class="k-body"><div class="k-card sk" style="height:72px"></div><div class="k-card sk" style="height:72px"></div></div></div><div class="k-col"><div class="k-body"><div class="k-card sk" style="height:72px"></div></div></div><div class="k-col"><div class="k-body"><div class="k-card sk" style="height:72px"></div></div></div>`;
 
   const { data, error } = await db.from('pipeline_deals')
-    .select('id,titel,stage,volumen,zustaendig,erstellt,gewonnen_datum,churn_datum,kunde_id,kunden(id,name)')
+    .select('id,titel,stage,lead_typ,zustaendig,erstellt,gewonnen_datum,churn_datum,kunde_id,kunden(id,name)')
     .order('erstellt', { ascending: false });
 
   if (error) {
@@ -4363,18 +4695,16 @@ function renderPipelineBoard() {
       }
       return true;
     });
-    const colVol = cards.reduce((a,d) => a + (Number(d.volumen)||0), 0);
-    const volStr = colVol > 0 ? (colVol >= 1000 ? (colVol/1000).toFixed(0)+'k€' : colVol.toLocaleString('de-DE')+'€') : '';
     const cardsHtml = cards.map(d => {
       const co  = d.kunden?.name || '';
       const ttl = d.titel || '';
-      const vol = d.volumen ? (Number(d.volumen) >= 1000 ? (Number(d.volumen)/1000).toFixed(0)+'k€' : Number(d.volumen).toLocaleString('de-DE')+'€') : '';
+      const typ = d.lead_typ || '';
       const age = d.erstellt ? Math.floor((Date.now() - new Date(d.erstellt)) / 86400000) : null;
       return `<div class="k-card" draggable="true" data-deal-id="${d.id}">
         <div class="k-card-co">${escHtml(co || ttl || '–')}</div>
         ${co && ttl ? `<div class="k-card-ttl">${escHtml(ttl)}</div>` : ''}
         <div class="k-card-foot">
-          <span class="k-card-vol">${escHtml(vol)}</span>
+          ${typ ? `<span class="k-card-vol">${escHtml(typ)}</span>` : ''}
           <span class="k-card-meta">${d.zustaendig ? escHtml(d.zustaendig) : ''}${age !== null ? (d.zustaendig ? ' · ' : '') + age + 'd' : ''}</span>
         </div>
       </div>`;
@@ -4385,7 +4715,6 @@ function renderPipelineBoard() {
           <span class="k-head-lbl">${s.label}</span>
           <span class="k-cnt">${cards.length}</span>
         </div>
-        ${volStr ? `<div class="k-vol">${volStr}</div>` : ''}
         ${isTerminal ? `<div style="font-size:9.5px;color:var(--muted);margin-top:1px">letzte 30 Tage</div>` : ''}
       </div>
       <div class="k-body" data-stage="${s.key}">
@@ -4414,11 +4743,10 @@ function openDealSheet(id) {
       onclick="dshChangeStage('${d.id}','${st.key}')">${st.label}</button>`
   ).join('');
   // Body rows
-  const vol = d.volumen ? Number(d.volumen).toLocaleString('de-DE') + ' €' : '–';
   const dt  = d.erstellt ? new Date(d.erstellt).toLocaleDateString('de-DE', {day:'numeric',month:'short',year:'numeric'}) : '–';
   qi('dsh-body').innerHTML = `
     <div class="dsh-row"><span class="dsh-row-k">Phase</span><span class="dsh-row-v" style="color:${s.color}">${s.label}</span></div>
-    <div class="dsh-row"><span class="dsh-row-k">Volumen</span><span class="dsh-row-v">${vol}</span></div>
+    ${d.lead_typ ? `<div class="dsh-row"><span class="dsh-row-k">Lead-Typ</span><span class="dsh-row-v">${escHtml(d.lead_typ)}</span></div>` : ''}
     ${d.zustaendig ? `<div class="dsh-row"><span class="dsh-row-k">Zuständig</span><span class="dsh-row-v">${escHtml(d.zustaendig)}</span></div>` : ''}
     <div class="dsh-row"><span class="dsh-row-k">Erstellt</span><span class="dsh-row-v">${dt}</span></div>
   `;
@@ -4701,7 +5029,7 @@ async function openDealModal(dealOrNull, defaultStage) {
   const d = typeof dealOrNull === 'object' && dealOrNull !== null ? dealOrNull : null;
   qi('dm-title').textContent = d ? 'Deal bearbeiten' : 'Neuer Deal';
   qi('dm-titel').value      = d?.titel || '';
-  qi('dm-vol').value        = d?.volumen || '';
+  qi('dm-lead-typ').value   = d?.lead_typ || '';
   qi('dm-zustaendig').innerHTML = zustaendigOptions(d?.zustaendig || _userName || '');
   qi('dm-co-inp').value     = d?.kunden?.name || '';
   qi('dm-co-id').value      = d?.kunde_id || '';
@@ -4743,20 +5071,20 @@ function dmCoSelect(id, name) {
 }
 
 async function saveDeal() {
-  const titel = qi('dm-titel').value.trim();
-  const stage = qi('dm-stage').value;
-  const vol   = parseFloat(qi('dm-vol').value) || null;
-  const zust  = qi('dm-zustaendig').value.trim() || null;
-  const coId  = qi('dm-co-id').value || null;
+  const titel   = qi('dm-titel').value.trim();
+  const stage   = qi('dm-stage').value;
+  const leadTyp = qi('dm-lead-typ').value || null;
+  const zust    = qi('dm-zustaendig').value.trim() || null;
+  const coId    = qi('dm-co-id').value || null;
   if (!titel) { showToast('Bitte Titel eingeben', true); qi('dm-titel').focus(); return; }
-  const payload = { titel, stage, volumen: vol, zustaendig: zust, kunde_id: coId };
+  const payload = { titel, stage, lead_typ: leadTyp, zustaendig: zust, kunde_id: coId };
   let error;
   if (_dmDealId) {
     ({ error } = await db.from('pipeline_deals').update(payload).eq('id', _dmDealId));
     if (!error) { const idx = _pipeDeals.findIndex(x => x.id === _dmDealId); if (idx >= 0) Object.assign(_pipeDeals[idx], payload); }
   } else {
     payload.erstellt = new Date().toISOString();
-    const { data: nd, error: e } = await db.from('pipeline_deals').insert(payload).select('id,titel,stage,volumen,zustaendig,erstellt,gewonnen_datum,churn_datum,kunde_id,kunden(id,name)').single();
+    const { data: nd, error: e } = await db.from('pipeline_deals').insert(payload).select('id,titel,stage,lead_typ,zustaendig,erstellt,gewonnen_datum,churn_datum,kunde_id,kunden(id,name)').single();
     error = e;
     if (!error && nd) {
       _pipeDeals.unshift(nd);
@@ -5048,9 +5376,21 @@ async function openLizenzModal(kundeId) {
     return;
   }
 
-  // All unique months sorted descending
-  const allMonths = [...new Set(data.map(r=>r.monat))].sort().reverse();
-  let _selMonth = allMonths[0]; // default = most recent
+  // All unique months sorted ascending (oldest left, newest right)
+  const allMonths = [...new Set(data.map(r=>r.monat))].sort();
+  // Default = letzter komplett abgeschlossener Monat
+  const curMonth = new Date().toISOString().slice(0,7); // e.g. "2026-03"
+  let _selMonth = [...allMonths].reverse().find(m => m < curMonth) || allMonths[allMonths.length-1];
+
+  function _scrollMonthCenter() {
+    const wrap = body.querySelector('.fd-liz-months');
+    const active = wrap?.querySelector('.fd-liz-mchip.on');
+    if (wrap && active) {
+      const wrapRect = wrap.getBoundingClientRect();
+      const chipRect = active.getBoundingClientRect();
+      wrap.scrollTo({ left: wrap.scrollLeft + (chipRect.left - wrapRect.left) - (wrapRect.width/2) + (chipRect.width/2), behavior:'smooth' });
+    }
+  }
 
   function renderModal() {
     const rows = data.filter(r=>r.monat===_selMonth);
@@ -5102,13 +5442,77 @@ async function openLizenzModal(kundeId) {
       </div>`:''}`;
   }
 
-  window._fdLizSelMonth = function(m){ _selMonth=m; renderModal(); };
+  window._fdLizSelMonth = function(m){ _selMonth=m; renderModal(); setTimeout(_scrollMonthCenter, 50); };
   renderModal();
+  setTimeout(_scrollMonthCenter, 80);
 }
 
 function closeLizenzModal() {
   const modal = qi('fd-liz-modal');
   if(modal) modal.classList.remove('on');
+}
+
+// ── Hardware-Detail-Modal ────────────────────────────────
+async function openHardwareModal(kundeId) {
+  const modal = qi('fd-hw-modal');
+  const body  = qi('fd-hw-sh-body');
+  if (!modal || !body) return;
+  modal.classList.add('on');
+  body.innerHTML = `<div style="padding:40px 0;text-align:center">${skRows(3)}</div>`;
+
+  const { data, error } = await db.from('kunde_hardware')
+    .select('id,typ,menge,preis,datum')
+    .eq('kunde_id', kundeId)
+    .order('datum', { ascending: false });
+
+  if (error || !data || !data.length) {
+    body.innerHTML = '<div class="empty" style="padding:40px 20px"><div class="empty-ico">🔧</div><div class="empty-msg">Keine Hardware gefunden</div></div>';
+    return;
+  }
+
+  const HW_ICO = {'Drehkreuz':'🔄','Schranke':'🚧','Zutrittskontrolle':'🔐','Kamera':'📷','Terminal':'🖥️','Montage':'🔧','Leser':'📟','Sensor':'📡'};
+  const getIco = n => { for (const [k,v] of Object.entries(HW_ICO)) if (n.toLowerCase().includes(k.toLowerCase())) return v; return '🔧'; };
+  const totalHw = data.reduce((s,r) => s + (Number(r.preis)||0), 0);
+  const totalMenge = data.reduce((s,r) => s + (Number(r.menge)||0), 0);
+
+  const rows = data.map(r => {
+    const datStr = r.datum
+      ? new Date(r.datum+'T00:00:00').toLocaleDateString('de-DE', { day:'2-digit', month:'short', year:'numeric' })
+      : '–';
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:.5px solid var(--border)">
+        <div style="font-size:20px;width:32px;text-align:center;flex-shrink:0">${getIco(r.typ)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;color:var(--text)">${escHtml(r.typ)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${datStr}${r.menge > 1 ? ' · '+r.menge+'×' : ''}</div>
+        </div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);flex-shrink:0;text-align:right">
+          ${r.preis ? Number(r.preis).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €' : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="fd-liz-stats">
+      <div class="fd-liz-stat">
+        <div class="fd-liz-stat-v" style="color:var(--acc)">${totalHw.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})} €</div>
+        <div class="fd-liz-stat-l">Gesamt</div>
+      </div>
+      <div class="fd-liz-stat">
+        <div class="fd-liz-stat-v">${data.length}</div>
+        <div class="fd-liz-stat-l">Positionen</div>
+      </div>
+      <div class="fd-liz-stat">
+        <div class="fd-liz-stat-v">${totalMenge}</div>
+        <div class="fd-liz-stat-l">Einheiten</div>
+      </div>
+    </div>
+    <div class="grp" style="padding:0;overflow:hidden">${rows}</div>`;
+}
+
+function closeHardwareModal() {
+  const modal = qi('fd-hw-modal');
+  if (modal) modal.classList.remove('on');
 }
 
 // ── Baustellen-Modal ─────────────────────────────────────
@@ -6077,14 +6481,16 @@ async function loadFdOverview() {
   // Last completed month (e.g. "2026-02" when today is in March)
   const _lm = new Date(); _lm.setDate(1); _lm.setMonth(_lm.getMonth()-1);
   const lastCompletedMonat = _lm.toISOString().slice(0,7);
-  const [nR, tR, lizR, bsR, apR, dealR, termR] = await Promise.all([
+  const [nR, tR, lizR, hwR, bsR, apR, dealR, termR, mrrR] = await Promise.all([
     db.from('notizen').select('id,typ,titel,text,erstellt').eq('kunde_id',f.id).order('erstellt',{ascending:false}).limit(4),
     db.from('tasks').select('id,titel,faellig,erledigt').eq('kunde_id',f.id).eq('erledigt',false).order('faellig',{ascending:true}).limit(5),
     db.from('lizenz_monatsplan').select('modul_name,anzahl,umsatz,rabatt_abs').eq('kunde_id',f.id).eq('monat',lastCompletedMonat),
+    db.from('kunde_hardware').select('id,typ,menge,preis,datum').eq('kunde_id',f.id).order('datum',{ascending:false}),
     db.from('kunde_baustellen').select('id,name,ort,status,startdatum,enddatum,module').eq('kunde_id',f.id).order('startdatum',{ascending:false}),
     db.from('kunde_ansprechpartner').select('id,name,position,email,telefon').eq('kunde_id',f.id).order('erstellt',{ascending:true}),
-    db.from('pipeline_deals').select('id,titel,stage,volumen').eq('kunde_id',f.id).neq('stage','churned'),
+    db.from('pipeline_deals').select('id,titel,stage,lead_typ').eq('kunde_id',f.id).neq('stage','churned'),
     db.from('termine').select('id,art,datum,uhrzeit_von,betreff').eq('kunde_id',f.id).gte('datum',today).order('datum',{ascending:true}).limit(10),
+    db.from('mrr_kunde_monat').select('mrr').eq('kunde_id',f.id).eq('monat',lastCompletedMonat).maybeSingle(),
   ]);
 
   const notes   = nR.data || [];
@@ -6106,7 +6512,7 @@ async function loadFdOverview() {
     <div class="sd-body">
     <div class="grp sd-grid" style="margin-bottom:14px">
       <div class="sd-cell"><span class="sd-k">Name</span>${sdInp('name', f.name, 'Firmenname')}</div>
-      <div class="sd-cell"><span class="sd-k">Typ</span>${sdInp('typ', f.typ, 'z.B. GmbH, AG …')}</div>
+      <div class="sd-cell"><span class="sd-k">Typ</span><select class="sd-v-sel" data-field="typ" onchange="saveSdField(this)">${['','LOG','Security','AG / GU','Solar','Dokumentenverwaltung','Sonstiges'].map(o=>`<option value="${o}" ${f.typ===o?'selected':''}>${o||'– Typ wählen –'}</option>`).join('')}</select></div>
       <div class="sd-cell"><span class="sd-k">Kundennr.</span>${sdInp('kundennr', f.kundennr, '–')}</div>
       <div class="sd-cell"><span class="sd-k">Zuständig</span><select class="sd-v-sel" data-field="zustaendig" onchange="saveSdField(this)">${zustaendigOptions(f.zustaendig)}</select></div>
       <div class="sd-cell"><span class="sd-k">Telefon</span>${sdInp('telefon', f.telefon, '+49 …')}</div>
@@ -6151,11 +6557,11 @@ async function loadFdOverview() {
       </div>`).join('')}
     </div>` : '';
 
-  // ── Lizenz-Kachel ──
+  // ── Lizenz-Kachel (immer anzeigen) ──
   const lizRows = lizR.data || [];
-  let lizCardHtml = '';
+  let lizBodyHtml = '', lizMrrHtml = '';
+  const monthLabel = _lm.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
   if (lizRows.length) {
-    // Aggregate by module
     const modMap = {};
     lizRows.forEach(r => {
       const k = r.modul_name || 'Unbekannt';
@@ -6163,15 +6569,14 @@ async function loadFdOverview() {
       modMap[k].anzahl += (r.anzahl||0);
       modMap[k].umsatz += (r.umsatz||0);
     });
-    const totalMrr = lizRows.reduce((s,r)=>s+(r.umsatz||0),0);
-    const monthLabel = _lm.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+    const totalMrr = mrrR.data?.mrr || lizRows.reduce((s,r)=>s+(r.umsatz||0),0);
     const LICO = {'Baustellen':'🏗️','Zutritt':'🔑','OAS':'🛡️','Fläche':'📐','NU':'📄','Einweisung':'📋','Entsorgung':'♻️','Dokumentenverwaltung':'📄','Zeiterfassung':'⏱️'};
     const getLIco = n => {
       for(const[k,v]of Object.entries(LICO)) if(n.toLowerCase().includes(k.toLowerCase())) return v;
       return '📦';
     };
     const cleanMN = n => n.replace(/^Softwaremodul\s*/i,'').replace(/^Software\s*/i,'').trim();
-    const modRows = Object.entries(modMap)
+    lizBodyHtml = Object.entries(modMap)
       .sort((a,b)=>b[1].umsatz-a[1].umsatz)
       .map(([name,d])=>`
         <div class="fd-liz-row">
@@ -6180,22 +6585,59 @@ async function loadFdOverview() {
           <div class="fd-liz-cnt">${d.anzahl>0?d.anzahl+' Liz.':''}</div>
           <div class="fd-liz-val">${d.umsatz.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})} €</div>
         </div>`).join('');
-    lizCardHtml = `
-      <div class="fd-liz-card" onclick="openLizenzModal('${f.id}')">
-        <div class="fd-liz-hd">
-          <div>
-            <div class="fd-liz-title">Software-Lizenzen</div>
-            <div class="fd-liz-period">${monthLabel}</div>
-          </div>
-          <div class="fd-liz-mrr">${totalMrr.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})} €</div>
-        </div>
-        <div class="fd-liz-body">${modRows}</div>
-        <div class="fd-liz-footer">
-          <span class="fd-liz-hint">Details &amp; Verlauf</span>
-          <span class="fd-liz-arr">›</span>
-        </div>
-      </div>`;
+    lizMrrHtml = `<div class="fd-liz-mrr">${totalMrr.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})} €</div>`;
+  } else {
+    lizBodyHtml = '<div style="padding:16px 0;text-align:center;font-size:12px;color:var(--muted)">Keine Lizenzdaten</div>';
   }
+  const lizCardHtml = `
+    <div class="fd-liz-card" onclick="openLizenzModal('${f.id}')">
+      <div class="fd-liz-hd">
+        <div>
+          <div class="fd-liz-title">Software-Lizenzen</div>
+          <div class="fd-liz-period">${monthLabel}</div>
+        </div>
+        ${lizMrrHtml}
+      </div>
+      <div class="fd-liz-body" style="flex:1">${lizBodyHtml}</div>
+      <div class="fd-liz-footer">
+        <span class="fd-liz-hint">Details &amp; Verlauf</span>
+        <span class="fd-liz-arr">›</span>
+      </div>
+    </div>`;
+
+  // ── Hardware-Kachel (immer anzeigen) ──
+  const hwRows = hwR.data || [];
+  let hwBodyHtml = '', hwMrrHtml = '';
+  if (hwRows.length) {
+    const HW_ICO = {'Drehkreuz':'🔄','Schranke':'🚧','Zutrittskontrolle':'🔐','Kamera':'📷','Terminal':'🖥️','Montage':'🔧','Leser':'📟','Sensor':'📡'};
+    const getHwIco = n => { for(const[k,v]of Object.entries(HW_ICO)) if(n.toLowerCase().includes(k.toLowerCase())) return v; return '🔧'; };
+    const totalHw = hwRows.reduce((s,r)=>s+(Number(r.preis)||0),0);
+    hwBodyHtml = hwRows.map(r => `
+      <div class="fd-liz-row">
+        <div class="fd-liz-ico">${getHwIco(r.typ)}</div>
+        <div class="fd-liz-name">${escHtml(r.typ)}</div>
+        <div class="fd-liz-cnt">${r.menge>0?r.menge+'×':''}</div>
+        <div class="fd-liz-val">${r.preis?Number(r.preis).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €':''}</div>
+      </div>`).join('');
+    if (totalHw > 0) hwMrrHtml = `<div class="fd-liz-mrr">${totalHw.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})} €</div>`;
+  } else {
+    hwBodyHtml = '<div style="padding:16px 0;text-align:center;font-size:12px;color:var(--muted)">Keine Hardware</div>';
+  }
+  const hwCardHtml = `
+    <div class="fd-liz-card" onclick="openHardwareModal('${f.id}')">
+      <div class="fd-liz-hd">
+        <div>
+          <div class="fd-liz-title">Hardware</div>
+          <div class="fd-liz-period">${hwRows.length} Position${hwRows.length!==1?'en':''}</div>
+        </div>
+        ${hwMrrHtml}
+      </div>
+      <div class="fd-liz-body" style="flex:1">${hwBodyHtml}</div>
+      <div class="fd-liz-footer">
+        <span class="fd-liz-hint">Alle anzeigen</span>
+        <span class="fd-liz-arr">›</span>
+      </div>
+    </div>`;
 
   // ── Baustellen-Kachel ──
   const bsAll  = bsR.data || [];
@@ -6270,11 +6712,10 @@ async function loadFdOverview() {
   if (dealList.length) {
     const dealRows = dealList.map(d => {
       const st = _PIPE_STAGES[d.stage] || {l:d.stage,c:'#888'};
-      const vol = d.volumen ? Number(d.volumen).toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0})+' €' : '';
       return `<div class="fd-lead-row" onclick="openDealFromOverview('${d.id}')">
         <span class="fd-lead-stage" style="background:${st.c}22;color:${st.c}">${st.l}</span>
         <div class="fd-lead-name">${escHtml(d.titel||'Deal')}</div>
-        ${vol?`<div class="fd-lead-vol">${vol}</div>`:''}
+        ${d.lead_typ?`<div class="fd-lead-vol">${escHtml(d.lead_typ)}</div>`:''}
         <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
       </div>`;
     }).join('');
@@ -6341,7 +6782,8 @@ async function loadFdOverview() {
 
   const bodyEl = qi('fd-ov-body');
   if (bodyEl) {
-    bodyEl.innerHTML = `${lizCardHtml}${tasksHtml}${notizCardHtml}${termCardHtml}${apCardHtml}${bsCardHtml}${leadCardHtml}${stammdatenHtml}${notesHtml}`;
+    const lizHwRow = `<div class="fd-liz-hw-row">${lizCardHtml}${hwCardHtml}</div>`;
+    bodyEl.innerHTML = `${lizHwRow}${tasksHtml}${notizCardHtml}${termCardHtml}${apCardHtml}${bsCardHtml}${leadCardHtml}${stammdatenHtml}${notesHtml}`;
     const notizTa = bodyEl.querySelector('[data-field="notiz"]');
     if (notizTa) autoResizeTA(notizTa);
     const fdNotizTa = qi('fd-notiz-body');
@@ -6711,21 +7153,44 @@ async function saveQuickNote() {
 // ══════════════════════════════════════════════════════════
 // QUICK CAPTURE
 // ══════════════════════════════════════════════════════════
+let _capEntityMode = 'firma'; // 'firma' | 'lead'
+let _capLeads = []; // cached leads for search
+let _capPrio = 'mittel';
+
 function openCapture(kundeId=null, type=null) {
   qi('capture').classList.add('on');
-  qi('cap-txt').value = '';
-  qi('cap-date').value = new Date().toISOString().slice(0,10);
-  qi('cap-time').value = '09:00';
-  if (kundeId && qi('cap-co')) qi('cap-co').value = kundeId;
+  // Reset note fields
+  const ta = qi('cap-txt');
+  ta.value = ''; ta.style.height = 'auto';
+  // Reset task fields
+  qi('cap-task-titel').value = '';
+  qi('cap-task-beschreibung').value = '';
+  qi('cap-task-faellig').value = new Date().toISOString().slice(0,10);
+  qi('cap-task-zustaendig').innerHTML = zustaendigOptions(_userName);
+  setCapPrio('mittel');
+  // Reset search
+  qi('cap-search').value = '';
+  qi('cap-entity-id').value = '';
+  qi('cap-search-drop').style.display = 'none';
+
+  if (kundeId) {
+    qi('cap-entity-id').value = kundeId;
+    const f = _firms.find(x => x.id === kundeId);
+    if (f) { qi('cap-search').value = f.name; setCapEntity('firma'); }
+  }
 
   const t = type || _ctype;
   _ctype = t;
   qAll('.cap-type').forEach(el => el.classList.toggle('on', el.dataset.t === t));
   updateCapFields();
-  setTimeout(()=>qi('cap-txt').focus(), 320);
+  const focusEl = t === 'task' ? qi('cap-task-titel') : ta;
+  setTimeout(() => focusEl.focus(), 320);
 }
 
-function closeCapture() { qi('capture').classList.remove('on'); }
+function closeCapture() {
+  qi('capture').classList.remove('on');
+  qi('cap-search-drop').style.display = 'none';
+}
 
 function setCapT(el) {
   _ctype = el.dataset.t;
@@ -6735,33 +7200,116 @@ function setCapT(el) {
 
 function updateCapFields() {
   const isNote = _ctype === 'notiz';
-  const isTerm = _ctype === 'termin';
-  qi('cap-date').style.display = isNote ? 'none' : '';
-  qi('cap-time').style.display = isTerm ? '' : 'none';
-  qi('cap-txt').placeholder = isNote ? 'Was möchtest du notieren?' : _ctype==='task' ? 'Aufgabe beschreiben…' : 'Termin Bezeichnung…';
+  qi('cap-fields-notiz').style.display = isNote ? 'flex' : 'none';
+  qi('cap-fields-task').style.display  = isNote ? 'none' : 'flex';
+}
+
+function autoResizeCapTxt() {
+  const ta = qi('cap-txt');
+  if (!ta) return;
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 300) + 'px';
+}
+
+function autoResizeCapTxt2(el) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+}
+
+function setCapPrio(prio) {
+  _capPrio = prio;
+  qAll('#cap-task-prio-row .cap-prio-btn').forEach(b => b.classList.toggle('on', b.dataset.prio === prio));
+}
+
+function setCapEntity(mode) {
+  _capEntityMode = mode;
+  qi('cap-ent-firma').classList.toggle('on', mode === 'firma');
+  qi('cap-ent-lead').classList.toggle('on', mode === 'lead');
+  qi('cap-search').placeholder = mode === 'firma' ? 'Unternehmen suchen…' : 'Lead suchen…';
+  qi('cap-search').value = '';
+  qi('cap-entity-id').value = '';
+  qi('cap-search-drop').style.display = 'none';
+}
+
+async function capSearchFilter() {
+  const q = (qi('cap-search').value || '').toLowerCase().trim();
+  const drop = qi('cap-search-drop');
+  if (!q) { drop.style.display = 'none'; qi('cap-entity-id').value = ''; return; }
+
+  let results = [];
+  if (_capEntityMode === 'firma') {
+    if (!_firms.length) {
+      const { data } = await db.from('kunden').select('id,name,typ,ort,status,email,telefon,logo,umsatz,zustaendig,notiz,mail_domain').order('name');
+      _firms = data || [];
+    }
+    results = _firms.filter(f => f.name.toLowerCase().includes(q)).slice(0, 8)
+      .map(f => ({ id: f.id, label: f.name, sub: f.typ || '' }));
+  } else {
+    if (!_capLeads.length) {
+      const { data } = await db.from('pipeline_deals').select('id,titel,kunden(name)').order('erstellt',{ascending:false}).limit(200);
+      _capLeads = data || [];
+    }
+    results = _capLeads.filter(d => (d.titel||'').toLowerCase().includes(q) || (d.kunden?.name||'').toLowerCase().includes(q)).slice(0, 8)
+      .map(d => ({ id: d.id, label: d.titel || '–', sub: d.kunden?.name || '' }));
+  }
+
+  if (!results.length) { drop.style.display = 'none'; return; }
+  drop.style.display = '';
+  drop.innerHTML = results.map(r =>
+    `<div onclick="capSelectEntity('${r.id}','${escHtml(r.label).replace(/'/g,"\\'")}')" style="padding:9px 13px;font-size:14px;cursor:pointer;border-bottom:.5px solid var(--border)"
+      onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
+      <div style="font-weight:600">${escHtml(r.label)}</div>
+      ${r.sub ? `<div style="font-size:11px;color:var(--muted)">${escHtml(r.sub)}</div>` : ''}
+    </div>`
+  ).join('');
+}
+
+function capSelectEntity(id, name) {
+  qi('cap-entity-id').value = id;
+  qi('cap-search').value = name;
+  qi('cap-search-drop').style.display = 'none';
 }
 
 async function saveCapture() {
-  const text  = qi('cap-txt').value.trim();
-  const date  = qi('cap-date').value;
-  const time  = qi('cap-time').value;
-  const kunde = qi('cap-co').value || null;
-  if (!text) { showToast('Bitte Text eingeben', true); return; }
+  const entityId = qi('cap-entity-id').value || null;
   const btn = qi('capture').querySelector('.cap-save');
-  btn.textContent='Speichert…'; btn.disabled=true;
+
+  const entityPayload = {};
+  if (_capEntityMode === 'firma' && entityId) entityPayload.kunde_id = entityId;
+  if (_capEntityMode === 'lead' && entityId) entityPayload.deal_id = entityId;
 
   let error;
-  if      (_ctype==='notiz')  ({ error } = await db.from('notizen').insert({typ:'Notiz',titel:text,kunde_id:kunde,erstellt:new Date().toISOString()}));
-  else if (_ctype==='task')   ({ error } = await db.from('tasks').insert({titel:text,faellig:date||null,erledigt:false,kunde_id:kunde}));
-  else                        ({ error } = await db.from('termine').insert({art:'Telefonat',datum:date,uhrzeit_von:time||null,notiz:text,kunde_id:kunde}));
+  if (_ctype === 'notiz') {
+    const text = qi('cap-txt').value.trim();
+    if (!text) { showToast('Bitte Text eingeben', true); return; }
+    btn.textContent = 'Speichert…'; btn.disabled = true;
+    ({ error } = await db.from('notizen').insert({ typ:'Notiz', titel:text, ...entityPayload, erstellt:new Date().toISOString() }));
+  } else {
+    const titel = qi('cap-task-titel').value.trim();
+    if (!titel) { showToast('Bitte Titel eingeben', true); qi('cap-task-titel').focus(); return; }
+    btn.textContent = 'Speichert…'; btn.disabled = true;
+    ({ error } = await db.from('tasks').insert({
+      titel,
+      beschreibung: qi('cap-task-beschreibung').value.trim() || null,
+      faellig: qi('cap-task-faellig').value || null,
+      zustaendig: qi('cap-task-zustaendig').value.trim() || null,
+      prio: _capPrio,
+      erledigt: false,
+      ...entityPayload,
+      erstellt: new Date().toISOString(),
+      geaendert: new Date().toISOString(),
+    }));
+  }
 
-  btn.textContent='Speichern'; btn.disabled=false;
+  btn.textContent = 'Speichern'; btn.disabled = false;
   if (error) { showToast('Fehler: '+error.message, true); return; }
   closeCapture();
   showToast('Gespeichert ✓');
   if (_view === 'firma-detail') {
-    // Refresh the current tab of the detail view
     if (_fdId) loadFdSection(_fdTab);
+  } else if (_view === 'lead-detail') {
+    if (_ldDeal) loadLdOverview();
   } else {
     loadView(_view);
   }
@@ -6968,7 +7516,6 @@ async function loadLdOverview() {
   const stageColor = s.color;
   const stageName  = s.label;
   const title      = d.titel || d.kunden?.name || 'Kein Titel';
-  const vol        = d.volumen ? Number(d.volumen).toLocaleString('de-DE') + ' €' : '–';
   const today      = new Date().toISOString().slice(0,10);
 
   const stageIcon  = d.stage === 'rollout' ? '🏆' : d.stage === 'churned' ? '❌' : '🎯';
@@ -7016,6 +7563,7 @@ async function loadLdOverview() {
     <div class="grp sd-grid" style="margin-bottom:14px">
       <div class="sd-cell sd-full"><span class="sd-k">Titel</span>${sdInpLd('titel', d.titel, 'Deal-Bezeichnung')}</div>
       <div class="sd-cell"><span class="sd-k">Phase</span>${stageSelHtml}</div>
+      <div class="sd-cell"><span class="sd-k">Lead-Typ</span><select class="sd-v-sel" data-ld-field="lead_typ" onchange="saveLdField(this)">${['','A','B','C'].map(o=>`<option value="${o}" ${d.lead_typ===o?'selected':''}>${o||'– Typ wählen –'}</option>`).join('')}</select></div>
       <div class="sd-cell"><span class="sd-k">Zuständig</span><select class="sd-v-sel" data-ld-field="zustaendig" onchange="saveLdField(this)">${zustaendigOptions(d.zustaendig)}</select></div>
       <div class="sd-cell sd-full"><span class="sd-k">Unternehmen</span>
         ${d.kunden
@@ -8447,6 +8995,58 @@ async function applyMappingsToAll() {
       }
     }
 
+    // ── MRR-Aggregation: mrr_kunde_monat + mrr_gesamt_monat ──
+    log('⏳ Berechne MRR-Aggregation…');
+    const mrrByKundeMonat = {};
+    for (const e of Object.values(swMonthly)) {
+      const km = `${e.kundeId}|${e.monat}`;
+      if (!mrrByKundeMonat[km]) mrrByKundeMonat[km] = { kunde_id: e.kundeId, monat: e.monat, mrr: 0 };
+      mrrByKundeMonat[km].mrr += e.umsatz;
+    }
+    const mrrKundeInserts = Object.values(mrrByKundeMonat).map(e => ({
+      kunde_id: e.kunde_id, monat: e.monat, mrr: Math.round(e.mrr * 100) / 100
+    }));
+    // Write mrr_kunde_monat
+    await db.from('mrr_kunde_monat').delete().neq('id','00000000-0000-0000-0000-000000000000');
+    const MRR_K_CHUNK = 100;
+    for (let i = 0; i < mrrKundeInserts.length; i += MRR_K_CHUNK) {
+      await db.from('mrr_kunde_monat').upsert(mrrKundeInserts.slice(i, i + MRR_K_CHUNK), { onConflict: 'kunde_id,monat' });
+    }
+    // Aggregate total MRR per month
+    const mrrByMonat = {};
+    for (const e of mrrKundeInserts) {
+      mrrByMonat[e.monat] = (mrrByMonat[e.monat] || 0) + e.mrr;
+    }
+    const mrrGesamtInserts = Object.entries(mrrByMonat).map(([monat, mrr]) => ({
+      monat, mrr: Math.round(mrr * 100) / 100
+    }));
+    await db.from('mrr_gesamt_monat').delete().neq('id','00000000-0000-0000-0000-000000000000');
+    for (let i = 0; i < mrrGesamtInserts.length; i += MRR_K_CHUNK) {
+      await db.from('mrr_gesamt_monat').upsert(mrrGesamtInserts.slice(i, i + MRR_K_CHUNK), { onConflict: 'monat' });
+    }
+    // ── Lizenzen pro Modul pro Monat (gesamt über alle Firmen) ──
+    log('⏳ Berechne Lizenz-Aggregation pro Modul…');
+    const modulMonat = {};
+    for (const e of Object.values(swMonthly)) {
+      const raw = (e.modul||'').trim();
+      const cleanName = raw.replace(/^Softwaremodul\s*[-–]\s*/i,'').trim();
+      const mk = `${cleanName}|${e.monat}`;
+      if (!modulMonat[mk]) modulMonat[mk] = { modul_name: cleanName, modul_raw: raw, monat: e.monat, anzahl: 0, umsatz: 0 };
+      modulMonat[mk].anzahl += e.anzahl;
+      modulMonat[mk].umsatz += e.umsatz;
+    }
+    const modulInserts = Object.values(modulMonat).map(e => ({
+      modul_name: e.modul_name, monat: e.monat,
+      anzahl: Math.round(e.anzahl * 100) / 100,
+      umsatz: Math.round(e.umsatz * 100) / 100
+    }));
+    await db.from('lizenzen_modul_monat').delete().neq('id','00000000-0000-0000-0000-000000000000');
+    for (let i = 0; i < modulInserts.length; i += MRR_K_CHUNK) {
+      await db.from('lizenzen_modul_monat').upsert(modulInserts.slice(i, i + MRR_K_CHUNK), { onConflict: 'modul_name,monat' });
+    }
+
+    log(`✅ MRR berechnet: ${mrrKundeInserts.length} Firmen-Monate, ${mrrGesamtInserts.length} Monate gesamt · ${modulInserts.length} Modul-Monate`);
+
     // Write kunde_hardware
     log('⏳ Synchronisiere Hardware…');
     const hwKundeIds = Object.keys(hwEntries);
@@ -8641,7 +9241,8 @@ function rpLine(pts, W, H, color, fillColor, opts={}) {
     out += `<path d="${fd}" fill="${fillColor}" />`;
   }
   out += `<path d="${d}" fill="none" stroke="${color}" stroke-width="${strokeW}" stroke-linecap="round" stroke-linejoin="round"/>`;
-  coords.forEach(c => { out += `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="3" fill="${color}" />`; });
+  const dotR = opts.dotRadius || 3;
+  coords.forEach(c => { out += `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${dotR}" fill="${color}" />`; });
   return out;
 }
 
@@ -8716,11 +9317,11 @@ async function rpRenderUmsatz() {
   const months = rpGetLast12();
   const monthStrs = months.map(m => `${m.year}-${String(m.month+1).padStart(2,'0')}`);
   const currentMonat = rpLastCompleted();
-  const [{ data: planData }, { data: schakeProv }] = await Promise.all([
-    db.from('lizenz_monatsplan').select('monat, umsatz').in('monat', monthStrs),
+  const [{ data: mrrData }, { data: schakeProv }] = await Promise.all([
+    db.from('mrr_gesamt_monat').select('monat, mrr').in('monat', monthStrs),
     db.from('schake_provisionen').select('monat, betrag').in('monat', monthStrs),
   ]);
-  const byMonth = {}; (planData||[]).forEach(r => { byMonth[r.monat] = (byMonth[r.monat]||0) + (r.umsatz||0); });
+  const byMonth = {}; (mrrData||[]).forEach(r => { byMonth[r.monat] = r.mrr||0; });
   const schakeByMonth = {}; (schakeProv||[]).forEach(r => { schakeByMonth[r.monat] = r.betrag||0; });
   months.forEach(m => {
     const ms = `${m.year}-${String(m.month+1).padStart(2,'0')}`;
@@ -8783,23 +9384,16 @@ async function rpRenderModule() {
   const el = qi('rp-chart-module');
   if (!el) return;
   const todayM = new Date().toISOString().slice(0, 7);
-  const { data: mRows } = await db.from('lizenz_monatsplan').select('monat').lt('monat', todayM).order('monat', { ascending: false }).limit(1);
+  const { data: mRows } = await db.from('mrr_gesamt_monat').select('monat').lt('monat', todayM).order('monat', { ascending: false }).limit(1);
   const currentMonat = mRows?.[0]?.monat || rpLastCompleted();
-  const { data: planData } = await db.from('lizenz_monatsplan').select('modul_name, anzahl, umsatz').eq('monat', currentMonat);
-  if (!planData?.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted)">Keine Lizenzdaten</div>'; return; }
-  const agg = {};
-  planData.forEach(r => {
-    const raw = r.modul_name || 'Unbekannt';
-    const name = raw.replace(/^Softwaremodul\s*[-–]\s*/i,'').trim();
-    const mk = name.replace(/[^a-zäöü]/gi,'').toLowerCase().slice(0,15);
-    if (!agg[mk]) {
-      const icons = {'Zutrittskontrolle':'🔐','Baulogistik':'🏗️','OAS':'🏗️','Dokumentenmanagement':'📋','Dokumentenverwaltung':'📋','Einweisungen':'📝','Flächenmanagement':'📐','Entsorgungslogistik':'♻️'};
-      let icon = '📦'; for (const [k,v] of Object.entries(icons)) if (raw.includes(k)) { icon=v; break; }
-      agg[mk] = { icon, name, anzahl: 0, umsatz: 0 };
-    }
-    agg[mk].anzahl += (r.anzahl||0); agg[mk].umsatz += (r.umsatz||0);
-  });
-  const entries = Object.values(agg).sort((a,b) => b.anzahl - a.anzahl);
+  const { data: modData } = await db.from('lizenzen_modul_monat').select('modul_name, anzahl, umsatz').eq('monat', currentMonat);
+  if (!modData?.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted)">Keine Lizenzdaten</div>'; return; }
+  const icons = {'Zutrittskontrolle':'🔐','Baulogistik':'🏗️','OAS':'🏗️','Dokumentenmanagement':'📋','Dokumentenverwaltung':'📋','Einweisungen':'📝','Flächenmanagement':'📐','Entsorgungslogistik':'♻️'};
+  const entries = modData.map(r => {
+    const name = r.modul_name || 'Unbekannt';
+    let icon = '📦'; for (const [k,v] of Object.entries(icons)) if (name.includes(k)) { icon=v; break; }
+    return { icon, name, anzahl: r.anzahl||0, umsatz: r.umsatz||0 };
+  }).sort((a,b) => b.anzahl - a.anzahl);
   const maxAnzahl = Math.max(...entries.map(e => e.anzahl), 1);
   const monatLabel = new Date(currentMonat+'-01').toLocaleDateString('de-DE',{month:'long',year:'numeric'});
   el.innerHTML = `<div style="font-size:10px;color:var(--muted);margin-bottom:8px">Basis: ${monatLabel}</div>` +
@@ -8818,17 +9412,12 @@ async function rpRenderKundenMrr() {
   const el = qi('rp-chart-kunden-mrr');
   if (!el) return;
   const todayM = new Date().toISOString().slice(0, 7);
-  const { data: mRows } = await db.from('lizenz_monatsplan').select('monat').lt('monat', todayM).order('monat', { ascending: false }).limit(1);
+  const { data: mRows } = await db.from('mrr_gesamt_monat').select('monat').lt('monat', todayM).order('monat', { ascending: false }).limit(1);
   const activeMonat = mRows?.[0]?.monat || rpLastCompleted();
-  const { data: plan } = await db.from('lizenz_monatsplan').select('kunde_id, umsatz, kunden(name)').eq('monat', activeMonat);
-  if (!plan?.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted)">Keine Lizenzdaten</div>'; return; }
-  const byKunde = {};
-  for (const r of plan) {
-    if (!r.kunde_id) continue;
-    if (!byKunde[r.kunde_id]) byKunde[r.kunde_id] = { name: r.kunden?.name || '–', mrr: 0 };
-    byKunde[r.kunde_id].mrr += r.umsatz || 0;
-  }
-  const entries = Object.values(byKunde).filter(e => e.mrr > 0).sort((a,b) => b.mrr - a.mrr);
+  const { data: mrrRows } = await db.from('mrr_kunde_monat').select('kunde_id, mrr, kunden(name)').eq('monat', activeMonat).gt('mrr', 0);
+  if (!mrrRows?.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted)">Keine Lizenzdaten</div>'; return; }
+  const entries = mrrRows.map(r => ({ name: r.kunden?.name || '–', mrr: r.mrr || 0 }))
+    .filter(e => e.mrr > 0).sort((a,b) => b.mrr - a.mrr);
   if (!entries.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted)">Keine Software-Umsätze</div>'; return; }
   const totalMrr = entries.reduce((s,e) => s + e.mrr, 0), maxMrr = entries[0].mrr;
   const monatLabel = new Date(activeMonat+'-01').toLocaleDateString('de-DE',{month:'short',year:'2-digit'});
@@ -8910,13 +9499,13 @@ function renderAlLeadsTable(list) {
     const stageLabel = st?.label || d.stage || '–';
     const lost = d.stage === 'churned';
     return `<tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="openLeadDetail('${d.id}')" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
-      <td style="padding:10px 14px;font-size:13px;font-weight:500;color:var(--text)">${escHtml(d.titel||'–')}</td>
-      <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${escHtml(d.kunden?.name||'–')}</td>
-      <td style="padding:10px 14px"><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:${sc}20;color:${sc}">${stageLabel}</span></td>
-      <td style="padding:10px 14px;font-size:12px;color:var(--text);text-align:right;font-weight:600">${fmtVol(d.volumen)}</td>
-      <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${escHtml(d.zustaendig||'–')}</td>
-      <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${d.erstellt ? new Date(d.erstellt).toLocaleDateString('de-DE') : '–'}</td>
-      <td style="padding:10px 14px;font-size:11px;color:${lost?'#dc2626':'var(--muted)'}">${lost ? escHtml(d.churn_grund||'–') : '–'}</td>
+      <td style="font-weight:500;color:var(--text)">${escHtml(d.titel||'–')}</td>
+      <td style="color:var(--muted)">${escHtml(d.kunden?.name||'–')}</td>
+      <td><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:${sc}20;color:${sc}">${stageLabel}</span></td>
+      <td class="col-hide-m" style="color:var(--text);font-weight:600">${escHtml(d.lead_typ||'–')}</td>
+      <td class="col-hide-m" style="color:var(--muted)">${escHtml(d.zustaendig||'–')}</td>
+      <td style="color:var(--muted)">${d.erstellt ? new Date(d.erstellt).toLocaleDateString('de-DE') : '–'}</td>
+      <td class="col-hide-m" style="font-size:11px;color:${lost?'#dc2626':'var(--muted)'}">${lost ? escHtml(d.churn_grund||'–') : '–'}</td>
     </tr>`;
   }).join('');
   if (countEl) countEl.textContent = `${list.length} Lead${list.length !== 1 ? 's' : ''}`;
@@ -9006,14 +9595,14 @@ function renderBsTable() {
     const mods = (b.module||[]).map(m => `<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--bg);border:1px solid var(--border);color:var(--muted);white-space:nowrap">${BS_MODULE_LABELS[m]||m}</span>`).join(' ');
     const safe = encodeURIComponent(JSON.stringify(b));
     return `<tr style="border-bottom:1px solid var(--border);cursor:pointer" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
-      <td style="padding:10px 14px;font-size:13px;font-weight:600;color:var(--text)" onclick="if(_firms.find(f=>f.id==='${b.kunde_id}'))openFirmaDetail('${b.kunde_id}')">${escHtml(b.name)}</td>
-      <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${escHtml(b.kunden?.name||'–')}</td>
-      <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${escHtml(b.ort||'–')}</td>
-      <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${fmtDate(b.startdatum)}</td>
-      <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${fmtDate(b.enddatum)}</td>
-      <td style="padding:10px 14px">${mods||'<span style="color:var(--muted)">–</span>'}</td>
-      <td style="padding:10px 14px">${bsStatusBadge(b.status)}</td>
-      <td style="padding:10px 12px;text-align:right" onclick="event.stopPropagation()">
+      <td style="font-weight:600;color:var(--text)" onclick="if(_firms.find(f=>f.id==='${b.kunde_id}'))openFirmaDetail('${b.kunde_id}')">${escHtml(b.name)}</td>
+      <td style="color:var(--muted)">${escHtml(b.kunden?.name||'–')}</td>
+      <td class="col-hide-m" style="color:var(--muted)">${escHtml(b.ort||'–')}</td>
+      <td style="color:var(--muted)">${fmtDate(b.startdatum)}</td>
+      <td class="col-hide-m" style="color:var(--muted)">${fmtDate(b.enddatum)}</td>
+      <td class="col-hide-m">${mods||'<span style="color:var(--muted)">–</span>'}</td>
+      <td>${bsStatusBadge(b.status)}</td>
+      <td style="text-align:right" onclick="event.stopPropagation()">
         <button onclick="openBsModal(JSON.parse(decodeURIComponent('${safe}')))"
           style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:2px 6px;border-radius:4px"
           onmouseover="this.style.color='var(--acc)'" onmouseout="this.style.color='var(--muted)'" title="Bearbeiten">✎</button>
@@ -9148,25 +9737,25 @@ function renderRvTable(list) {
   const fmt = v => v != null ? Number(v).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €' : '–';
   tbody.innerHTML = list.map((r, idx) => `
     <tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="openRechnungDetail(_rvTableRows[${idx}])" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
-      <td style="padding:10px 14px;font-size:12px;font-weight:700;color:var(--acc)">${escHtml(r.rechnungsnr||'–')}</td>
-      <td style="padding:10px 14px;font-size:13px;font-weight:500;color:var(--text)">${escHtml(r.kunden?.name||r.kundennr||'–')}</td>
-      <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${escHtml(r.baustelle_name||'–')}</td>
-      <td style="padding:10px 14px;font-size:12px;color:var(--muted)">${r.datum?new Date(r.datum).toLocaleDateString('de-DE'):'–'}</td>
-      <td style="padding:10px 14px;font-size:12px;text-align:right">${(() => {
+      <td style="font-weight:700;color:var(--acc)">${escHtml(r.rechnungsnr||'–')}</td>
+      <td style="font-weight:500;color:var(--text)">${escHtml(r.kunden?.name||r.kundennr||'–')}</td>
+      <td class="col-hide-m" style="color:var(--muted)">${escHtml(r.baustelle_name||'–')}</td>
+      <td style="color:var(--muted)">${r.datum?new Date(r.datum).toLocaleDateString('de-DE'):'–'}</td>
+      <td class="col-hide-m" style="text-align:right">${(() => {
         const pos = r.rechnung_positionen||[];
         const vals = [...new Set(pos.map(p => p.rabatt_pct||p.rabatt||0).filter(v => v > 0))].sort((a,b)=>a-b);
         if (!vals.length) return '<span style="color:var(--muted)">–</span>';
         return '<span style="color:#d97706;font-weight:600">'+vals.map(v=>'-'+v+' %').join(', ')+'</span>';
       })()}</td>
-      <td style="padding:10px 14px;font-size:12px;color:var(--text);text-align:right">${fmt(r.netto)}</td>
-      <td style="padding:10px 14px;font-size:12px;color:var(--muted);text-align:right">${fmt(r.mwst)}</td>
-      <td style="padding:10px 14px;font-size:12px;font-weight:600;color:var(--text);text-align:right">${fmt(r.brutto)}</td>
-      <td style="padding:10px 14px">
+      <td style="color:var(--text);text-align:right">${fmt(r.netto)}</td>
+      <td class="col-hide-m" style="color:var(--muted);text-align:right">${fmt(r.mwst)}</td>
+      <td style="font-weight:600;color:var(--text);text-align:right">${fmt(r.brutto)}</td>
+      <td class="col-hide-m">
         <span style="font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;background:${r.manuell?'var(--bg)':'rgba(16,185,129,0.1)'};color:${r.manuell?'var(--muted)':'#059669'}">
           ${r.manuell?'Manuell':'PDF'}
         </span>
       </td>
-      <td style="padding:10px 12px;text-align:right" onclick="event.stopPropagation()">
+      <td style="text-align:right" onclick="event.stopPropagation()">
         <button onclick="deleteRvRechnung('${r.id}','${(r.rechnungsnr||'').replace(/'/g,"\\'")}','${r.kunde_id||''}')"
           style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:2px 6px;border-radius:4px"
           onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='var(--muted)'"
@@ -9245,18 +9834,18 @@ function renderRvPositionenTable(rows) {
       : p.einheit ? `<span style="font-size:11px;color:var(--muted)">${escHtml(p.einheit)}</span>` : '–';
     const dateFmt = p.datum ? new Date(p.datum).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '–';
     return `<tr style="border-bottom:1px solid var(--border)" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
-      <td style="padding:8px 14px;font-size:12px;color:var(--muted);white-space:nowrap">${dateFmt}</td>
-      <td style="padding:8px 14px;font-size:11px;color:var(--muted)">${escHtml(p.rechnungsnr||'–')}</td>
-      <td style="padding:8px 14px;font-size:12px;font-weight:600;color:var(--text);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(p.kundeName)}">${escHtml(p.kundeName)}</td>
-      <td style="padding:8px 14px;max-width:220px;overflow:hidden;text-overflow:ellipsis">
+      <td style="color:var(--muted);white-space:nowrap">${dateFmt}</td>
+      <td class="col-hide-m" style="font-size:11px;color:var(--muted)">${escHtml(p.rechnungsnr||'–')}</td>
+      <td style="font-weight:600;color:var(--text);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(p.kundeName)}">${escHtml(p.kundeName)}</td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">
         <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(p.modul||p.titel||'')}">${escHtml(p.modul||p.titel||'–')}</div>
         ${p.modul&&p.modul!==p.titel?`<div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(p.titel||'')}</div>`:''}
       </td>
-      <td style="padding:8px 14px"><span style="font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;${typStyle}">${typLabel}</span></td>
-      <td style="padding:8px 14px">${einheitBadge}</td>
-      <td style="padding:8px 14px;text-align:right;font-size:12px;color:var(--muted)">${p.menge||1}</td>
-      <td style="padding:8px 14px;text-align:right;font-size:12px;color:var(--muted)">${(p.einzelpreis||0).toLocaleString('de-DE',{minimumFractionDigits:2})} €</td>
-      <td style="padding:8px 14px;text-align:right;font-size:13px;font-weight:700;color:var(--text)">${(p.gesamt||0).toLocaleString('de-DE',{minimumFractionDigits:2})} €</td>
+      <td class="col-hide-m"><span style="font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;${typStyle}">${typLabel}</span></td>
+      <td class="col-hide-m">${einheitBadge}</td>
+      <td class="col-hide-m" style="text-align:right;color:var(--muted)">${p.menge||1}</td>
+      <td class="col-hide-m" style="text-align:right;color:var(--muted)">${(p.einzelpreis||0).toLocaleString('de-DE',{minimumFractionDigits:2})} €</td>
+      <td style="text-align:right;font-size:13px;font-weight:700;color:var(--text)">${(p.gesamt||0).toLocaleString('de-DE',{minimumFractionDigits:2})} €</td>
     </tr>`;
   }).join('');
 }
